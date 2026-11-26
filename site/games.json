@@ -1,0 +1,51 @@
+{
+  "updatedAt": "2026-11-26T02:20:32.057Z",
+  "games": [
+    {
+      "id": "3105",
+      "studentNo": "3105",
+      "name": "민상원",
+      "title": "나만의 건강 & 바디 메이킹 코치",
+      "desc": "목표별 맞춤 루틴 · 식단 · 자동 스케줄 알람",
+      "category": "health",
+      "file": "3105.html",
+      "driveId": "1u8EjlawLq6u4qO0R_jcaHl4gG8wrD-Ou",
+      "sourceName": "code_artifact (1) - 3105민상원.html",
+      "hash": "29570ebed4d72b49",
+      "size": 104863,
+      "addedAt": "2026-11-26T02:20:32.057Z",
+      "updatedAt": "2026-11-26T02:20:32.057Z"
+    },
+    {
+      "id": "3108",
+      "studentNo": "3108",
+      "name": "염성빈",
+      "title": "MathViz Studio - 수학 시각화 스튜디오",
+      "desc": "대수창 (Algebra & Expressions)",
+      "category": "study",
+      "file": "3108.html",
+      "driveId": "1cVGLoldKDou3VlvTBef1imnHhftZaWAG",
+      "sourceName": "mathviz_studio (1) - 3108염 성 빈.html",
+      "hash": "d562b30ed602a5ce",
+      "size": 164457,
+      "addedAt": "2026-11-26T02:20:32.057Z",
+      "updatedAt": "2026-11-26T02:20:32.057Z"
+    },
+    {
+      "id": "3113",
+      "studentNo": "3113",
+      "name": "이은혁",
+      "title": "공부비책 - 한국 기준 연령별 맞춤 공부법 & 퀴즈",
+      "desc": "한국 교육과정과 학년별 핵심 시기에 맞춘 1:1 학습 전략과 수준별 실전 문제를 바로 추천해 드립니다.",
+      "category": "study",
+      "file": "3113.html",
+      "driveId": "17CXOIjEZAZhe4jTTrfYKCBp7bXC7FSO4",
+      "sourceName": "code_artifact - 3113이은혁.html",
+      "hash": "99cbba93e038a73d",
+      "size": 111918,
+      "addedAt": "2026-11-26T02:20:32.057Z",
+      "updatedAt": "2026-11-26T02:20:32.057Z"
+    }
+  ],
+  "rejected": []
+}

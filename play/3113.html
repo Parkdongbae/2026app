@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공부비책 - 한국 기준 연령별 맞춤 공부법 & 퀴즈</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pretendard / Noto Sans KR 폰트 로드 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome 아이콘 로드 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        /* 부드러운 전환 애니메이션 */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- 상단 네비게이션 바 -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5 cursor-pointer" onclick="resetApp()">
+                <div class="w-9 h-9 bg-brand-600 text-white rounded-xl flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-graduation-cap text-lg"></i>
+                </div>
+                <div>
+                    <span class="font-extrabold text-xl tracking-tight text-slate-900">공부비책</span>
+                    <span class="hidden sm:inline-block text-xs font-medium bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full ml-1.5">한국형 맞춤 학습</span>
+                </div>
+            </div>
+            
+            <!-- 현재 선택된 연령대 뱃지 (선택 후 표시) -->
+            <div id="header-badge-container" class="hidden flex items-center space-x-3">
+                <span id="header-age-badge" class="text-xs sm:text-sm font-semibold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full border border-indigo-100">
+                    <!-- JS로 동적 삽입 -->
+                </span>
+                <button onclick="resetApp()" class="text-xs sm:text-sm text-slate-500 hover:text-slate-800 font-medium underline underline-offset-4 transition">
+                    다시 선택
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 단계 표시기 (Stepper) -->
+    <div class="bg-white border-b border-slate-100 py-3 px-4">
+        <div class="max-w-3xl mx-auto flex items-center justify-between text-xs sm:text-sm font-medium">
+            <div id="step-ind-1" class="flex items-center space-x-2 text-brand-600 font-bold">
+                <span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs">1</span>
+                <span>학교 · 학년 선택</span>
+            </div>
+            <div class="flex-1 h-0.5 bg-slate-200 mx-2 sm:mx-4">
+                <div id="step-line-1" class="h-full bg-brand-600 transition-all duration-300 w-0"></div>
+            </div>
+            <div id="step-ind-2" class="flex items-center space-x-2 text-slate-400">
+                <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs">2</span>
+                <span>맞춤 공부법 가이드</span>
+            </div>
+            <div class="flex-1 h-0.5 bg-slate-200 mx-2 sm:mx-4">
+                <div id="step-line-2" class="h-full bg-brand-600 transition-all duration-300 w-0"></div>
+            </div>
+            <div id="step-ind-3" class="flex items-center space-x-2 text-slate-400">
+                <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs">3</span>
+                <span>수준별 실전 퀴즈</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        
+        <!-- 알림 메시지 박스 (alert 대체) -->
+        <div id="toast-message" class="hidden fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center space-x-3 transition-all duration-300">
+            <i class="fa-solid fa-circle-exclamation text-amber-400"></i>
+            <span id="toast-text" class="text-sm font-medium">메시지 내용</span>
+        </div>
+
+        <!-- [STEP 1] 학교 및 학년 선택 화면 -->
+        <section id="section-step-1" class="fade-in space-y-8">
+            <div class="text-center max-w-2xl mx-auto space-y-3">
+                <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                    나의 <span class="text-brand-600">학교와 학년</span>을 선택하세요!
+                </h1>
+                <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+                    한국 교육과정과 학년별 핵심 시기에 맞춘 1:1 학습 전략과<br class="hidden sm:inline">
+                    수준별 실전 문제를 바로 추천해 드립니다.
+                </p>
+            </div>
+
+            <!-- 1단계: 학교급 선택 탭 카드 -->
+            <div class="max-w-4xl mx-auto space-y-6">
+                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm font-extrabold text-slate-800 flex items-center">
+                                <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-xs font-extrabold inline-flex items-center justify-center mr-2">1</span>
+                                소속 학교급을 먼저 골라주세요
+                            </span>
+                            <span class="text-xs text-slate-400 font-medium">대한민국 학제 기준</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="school-level-grid">
+                            <button type="button" onclick="selectSchoolLevel('kindergarten')" id="school-btn-kindergarten"
+                                class="school-card group p-4 rounded-2xl border-2 border-slate-200 hover:border-amber-400 bg-white text-center transition-all flex flex-col items-center justify-center space-y-2">
+                                <span class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🐥</span>
+                                <div>
+                                    <div class="font-extrabold text-sm text-slate-900">유치원</div>
+                                    <div class="text-[11px] text-slate-400 font-medium">미취학 아동</div>
+                                </div>
+                            </button>
+
+                            <button type="button" onclick="selectSchoolLevel('elementary')" id="school-btn-elementary"
+                                class="school-card group p-4 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 bg-white text-center transition-all flex flex-col items-center justify-center space-y-2">
+                                <span class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🌱</span>
+                                <div>
+                                    <div class="font-extrabold text-sm text-slate-900">초등학교</div>
+                                    <div class="text-[11px] text-slate-400 font-medium">1 ~ 6학년</div>
+                                </div>
+                            </button>
+
+                            <button type="button" onclick="selectSchoolLevel('middle')" id="school-btn-middle"
+                                class="school-card group p-4 rounded-2xl border-2 border-slate-200 hover:border-sky-400 bg-white text-center transition-all flex flex-col items-center justify-center space-y-2">
+                                <span class="w-11 h-11 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📘</span>
+                                <div>
+                                    <div class="font-extrabold text-sm text-slate-900">중학교</div>
+                                    <div class="text-[11px] text-slate-400 font-medium">1 ~ 3학년</div>
+                                </div>
+                            </button>
+
+                            <button type="button" onclick="selectSchoolLevel('high')" id="school-btn-high"
+                                class="school-card group p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 bg-white text-center transition-all flex flex-col items-center justify-center space-y-2">
+                                <span class="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🔥</span>
+                                <div>
+                                    <div class="font-extrabold text-sm text-slate-900">고등학교</div>
+                                    <div class="text-[11px] text-slate-400 font-medium">1~3학년 · N수</div>
+                                </div>
+                            </button>
+
+                            <button type="button" onclick="selectSchoolLevel('adult')" id="school-btn-adult"
+                                class="school-card col-span-2 sm:col-span-1 group p-4 rounded-2xl border-2 border-slate-200 hover:border-purple-400 bg-white text-center transition-all flex flex-col items-center justify-center space-y-2">
+                                <span class="w-11 h-11 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🎓</span>
+                                <div>
+                                    <div class="font-extrabold text-sm text-slate-900">대학교 / 성인</div>
+                                    <div class="text-[11px] text-slate-400 font-medium">대학 · 취준 · 직장</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2단계: 세부 학년/과정 선택 영역 (동적 렌더링) -->
+                    <div id="grade-selector-wrapper" class="pt-6 border-t border-slate-100 fade-in">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm font-extrabold text-slate-800 flex items-center">
+                                <span class="w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-extrabold inline-flex items-center justify-center mr-2">2</span>
+                                <span id="grade-selector-title">세부 학년을 선택하면 맞춤 공부법이 열립니다</span>
+                            </span>
+                        </div>
+                        <div id="grade-buttons-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <!-- JS로 학년 버튼 동적 생성 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 하단 안내 팁 카드 -->
+                <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 sm:p-5 flex items-start space-x-3.5 text-xs sm:text-sm text-indigo-900">
+                    <i class="fa-solid fa-circle-info text-indigo-600 text-base mt-0.5 shrink-0"></i>
+                    <p class="leading-relaxed">
+                        <strong>학년별 맞춤 커리큘럼 반영:</strong> 초등 3학년(사회·과학 첫 시작), 중1(자유학기제), 고1(고교학점제·첫 모의고사), 고3(수능 실전) 등 한국 학생이 겪는 실제 학년별 변화에 맞춰 공부법과 퀴즈 난이도가 세밀하게 달라집니다.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- [STEP 2] 맞춤형 공부법 가이드 화면 -->
+        <section id="section-step-2" class="hidden fade-in space-y-6">
+            <!-- 상단 요약 배너 -->
+            <div id="guide-banner" class="rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div class="space-y-2">
+                        <div class="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold">
+                            <span id="guide-emoji">📘</span>
+                            <span id="guide-age-range">중학생 (13~15세)</span>
+                        </div>
+                        <h2 id="guide-title" class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                            내신 기초를 다지는 백지 복습과 코넬 노트 전략
+                        </h2>
+                        <p id="guide-subtitle" class="text-white/90 text-sm sm:text-base max-w-2xl">
+                            중학교는 암기 과목이 늘어나고 시험 범위가 넓어지는 시기입니다. 무작정 외우기보다 구조화하여 인출하는 연습이 중요합니다.
+                        </p>
+                    </div>
+                    <button onclick="startQuiz()" class="bg-white text-slate-900 hover:bg-slate-100 font-extrabold px-6 py-4 rounded-2xl shadow-md hover:shadow-xl transition transform hover:-translate-y-0.5 shrink-0 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-pen-to-square text-brand-600"></i>
+                        <span>맞춤 실전 문제 풀기</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 핵심 지표 3가지 (목표, 권장 공부 시간, 집중 주기) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-start space-x-4">
+                    <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 text-lg">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400">핵심 학습 목표</p>
+                        <p id="guide-goal" class="text-sm sm:text-base font-bold text-slate-800 mt-0.5">자기주도 내신 관리 및 개념 구조화</p>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-start space-x-4">
+                    <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 text-lg">
+                        <i class="fa-regular fa-clock"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400">일일 권장 순공 시간</p>
+                        <p id="guide-time" class="text-sm sm:text-base font-bold text-slate-800 mt-0.5">평일 2~3시간 / 주말 4~5시간</p>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-start space-x-4">
+                    <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 text-lg">
+                        <i class="fa-solid fa-stopwatch"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400">추천 집중 & 휴식 비율</p>
+                        <p id="guide-cycle" class="text-sm sm:text-base font-bold text-slate-800 mt-0.5">45분 집중 + 10분 휴식 (학교 수업 리듬)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상세 추천 공부법 리스트 & 과목별 전략 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 왼쪽 2칸: 3대 핵심 공부 비법 -->
+                <div class="lg:col-span-2 space-y-4">
+                    <h3 class="text-lg font-extrabold text-slate-900 flex items-center space-x-2">
+                        <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                        <span>이 시기에 꼭 해야 할 3대 핵심 공부법</span>
+                    </h3>
+                    <div id="guide-methods-list" class="space-y-4">
+                        <!-- JS로 동적 생성 -->
+                    </div>
+                </div>
+
+                <!-- 오른쪽 1칸: 하루 추천 시간 배분표 & 주의할 점 -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-extrabold text-slate-900 flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-pie text-brand-600"></i>
+                        <span>황금 시간 배분 가이드</span>
+                    </h3>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+                        <div id="guide-schedule-bars" class="space-y-4">
+                            <!-- JS로 시간 배분 막대 생성 -->
+                        </div>
+                        <div class="pt-4 border-t border-slate-100">
+                            <h4 class="text-xs font-extrabold text-rose-600 uppercase tracking-wider mb-2">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i>피해야 할 공부 습관
+                            </h4>
+                            <p id="guide-warning" class="text-xs text-slate-600 leading-relaxed bg-rose-50/70 p-3.5 rounded-2xl border border-rose-100">
+                                <!-- JS로 동적 생성 -->
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단 퀴즈 이동 CTA 버튼 -->
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h4 class="font-extrabold text-slate-900 text-base sm:text-lg">공부법을 확인하셨나요? 이제 실력을 테스트해 보세요!</h4>
+                    <p class="text-xs sm:text-sm text-slate-500">선택하신 학년 수준에 맞춘 국어·수학·영어·탐구/상식 5문제가 준비되어 있습니다.</p>
+                </div>
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <button onclick="resetApp()" class="flex-1 sm:flex-none px-5 py-3 rounded-2xl border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 transition">
+                        학교·학년 다시 선택
+                    </button>
+                    <button onclick="startQuiz()" class="flex-1 sm:flex-none px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center space-x-2">
+                        <span>실전 퀴즈 시작</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- [STEP 3] 수준별 맞춤 문제 퀴즈 화면 -->
+        <section id="section-step-3" class="hidden fade-in max-w-3xl mx-auto space-y-6">
+            <!-- 상단 진행바 및 과목 표시 -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+                <div class="flex items-center justify-between text-xs sm:text-sm font-bold">
+                    <span id="quiz-progress-text" class="text-brand-600">문제 1 / 5</span>
+                    <button onclick="backToGuide()" class="text-slate-400 hover:text-slate-700 transition">
+                        <i class="fa-solid fa-book-open mr-1"></i>공부법 다시 보기
+                    </button>
+                </div>
+                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                    <div id="quiz-progress-bar" class="bg-brand-600 h-full rounded-full transition-all duration-300" style="width: 20%"></div>
+                </div>
+            </div>
+
+            <!-- 문제 카드 -->
+            <div id="quiz-card" class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                <div class="flex items-center justify-between">
+                    <span id="quiz-subject-badge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        국어 / 문해력
+                    </span>
+                    <span id="quiz-difficulty-badge" class="text-xs font-semibold text-slate-400">
+                        난이도: ★★☆
+                    </span>
+                </div>
+
+                <!-- 문제 질문 -->
+                <h3 id="quiz-question" class="text-lg sm:text-xl font-extrabold text-slate-900 leading-snug">
+                    문제가 여기에 표시됩니다.
+                </h3>
+
+                <!-- 지문 또는 보기 박스 (필요시 표시) -->
+                <div id="quiz-passage-box" class="hidden bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 text-sm text-slate-700 leading-relaxed">
+                </div>
+
+                <!-- 객관식 선택지 버튼 컨테이너 -->
+                <div id="quiz-options" class="space-y-3">
+                    <!-- JS로 선택지 동적 생성 -->
+                </div>
+
+                <!-- 즉시 채점 및 해설 영역 (정답 선택 후 표시) -->
+                <div id="quiz-feedback" class="hidden fade-in rounded-2xl p-5 border space-y-2">
+                    <div class="flex items-center space-x-2 font-extrabold text-base" id="quiz-feedback-title">
+                        <!-- 정답/오답 타이틀 -->
+                    </div>
+                    <p id="quiz-explanation" class="text-sm text-slate-700 leading-relaxed">
+                        <!-- 상세 해설 -->
+                    </p>
+                </div>
+
+                <!-- 다음 문제 버튼 -->
+                <div class="pt-2 flex justify-end">
+                    <button id="btn-next-question" onclick="nextQuestion()" class="hidden bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3.5 rounded-2xl shadow-md transition flex items-center space-x-2">
+                        <span id="btn-next-text">다음 문제</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- [STEP 4] 퀴즈 최종 결과 리포트 화면 -->
+        <section id="section-step-4" class="hidden fade-in max-w-3xl mx-auto space-y-6">
+            <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm text-center space-y-6">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-brand-50 text-brand-600 text-4xl mb-2">
+                    🏆
+                </div>
+                <div class="space-y-2">
+                    <span id="result-category-label" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600">
+                        중학생 (13~15세) 실력 진단 리포트
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                        총 <span id="result-score" class="text-brand-600">80</span>점입니다!
+                    </h2>
+                    <p id="result-comment" class="text-sm sm:text-base text-slate-600 max-w-lg mx-auto">
+                        훌륭합니다! 기본 개념을 탄탄히 이해하고 있네요. 틀린 문제의 해설을 다시 한 번 복습해 보세요.
+                    </p>
+                </div>
+
+                <!-- 문제별 정오표 요약 -->
+                <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 text-left space-y-3">
+                    <h3 class="text-sm font-extrabold text-slate-800">문항별 채점 결과 요약</h3>
+                    <div id="result-summary-list" class="space-y-2.5">
+                        <!-- JS로 문항별 O/X 결과 리스트 생성 -->
+                    </div>
+                </div>
+
+                <!-- 하단 액션 버튼 그룹 -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                    <button onclick="retryQuiz()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>새로운 문제 풀기</span>
+                    </button>
+                    <button onclick="backToGuide()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>추천 공부법 다시 보기</span>
+                    </button>
+                    <button onclick="resetApp()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl border border-slate-300 hover:bg-slate-50 text-slate-600 font-bold text-sm transition">
+                        다른 학년 선택
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 text-center text-xs text-slate-400 space-y-1">
+            <p class="font-semibold text-slate-500">공부비책 - 한국 교육과정 기반 학교·학년별 맞춤형 학습 가이드 & 퀴즈</p>
+            <p>본 서비스는 대한민국 학교 학제와 학년별 학습 발달 단계를 반영하여 설계되었습니다.</p>
+        </div>
+    </footer>
+
+    <!-- 애플리케이션 데이터 및 로직 스크립트 -->
+    <script>
+        // ==========================================
+        // 1. 학교급 및 세부 학년 매핑 구조
+        // ==========================================
+        const SCHOOL_STRUCTURE = {
+            kindergarten: {
+                label: '유치원 / 미취학',
+                accentColor: 'amber',
+                grades: [
+                    { id: 'kinder_all', label: '유치원 · 미취학 (5~7세)', desc: '한글·수 감각 놀이 & 책 읽기 습관', studyKey: 'kinder', quizKey: 'kinder' }
+                ]
+            },
+            elementary: {
+                label: '초등학교',
+                accentColor: 'emerald',
+                grades: [
+                    { id: 'elem_1', label: '초등학교 1학년', desc: '학교 생활 적응 & 한글·기초 덧셈뺄셈', studyKey: 'elem_1_2', quizKey: 'elem_1_2' },
+                    { id: 'elem_2', label: '초등학교 2학년', desc: '구구단 완성 & 매일 30분 책상 루틴', studyKey: 'elem_1_2', quizKey: 'elem_1_2' },
+                    { id: 'elem_3', label: '초등학교 3학년', desc: '사회·과학·영어 첫 등장 & 분수 기초', studyKey: 'elem_3_4', quizKey: 'elem_3_4' },
+                    { id: 'elem_4', label: '초등학교 4학년', desc: '비문학 독해 시작 & 스스로 플래너 작성', studyKey: 'elem_3_4', quizKey: 'elem_3_4' },
+                    { id: 'elem_5', label: '초등학교 5학년', desc: '약수·배수, 분수의 연산 고비 돌파', studyKey: 'elem_5_6', quizKey: 'elem_5_6' },
+                    { id: 'elem_6', label: '초등학교 6학년', desc: '초등 전 과정 총정리 & 중학교 진학 대비', studyKey: 'elem_5_6', quizKey: 'elem_5_6' }
+                ]
+            },
+            middle: {
+                label: '중학교',
+                accentColor: 'sky',
+                grades: [
+                    { id: 'mid_1', label: '중학교 1학년', desc: '자유학기제 독서·탐구 & 기초 문법·방정식', studyKey: 'mid_1', quizKey: 'mid_1' },
+                    { id: 'mid_2', label: '중학교 2학년', desc: '첫 지필고사 내신 대비 & 백지 복습법', studyKey: 'mid_2', quizKey: 'mid_2_3' },
+                    { id: 'mid_3', label: '중학교 3학년', desc: '중등 내신 마무리 & 고교학점제·고등 대비', studyKey: 'mid_3', quizKey: 'mid_2_3' }
+                ]
+            },
+            high: {
+                label: '고등학교',
+                accentColor: 'indigo',
+                grades: [
+                    { id: 'high_1', label: '고등학교 1학년', desc: '내신 등급제 적응 & 첫 학력평가 시간 배분', studyKey: 'high_1', quizKey: 'high_1' },
+                    { id: 'high_2', label: '고등학교 2학년', desc: '수능 탐구과목 선택 & 내신·모의고사 균형', studyKey: 'high_2', quizKey: 'high_2_3' },
+                    { id: 'high_3', label: '고등학교 3학년 / N수생', desc: '수능 실전 타임어택 & 평가원 기출 오답 분석', studyKey: 'high_3', quizKey: 'high_2_3' }
+                ]
+            },
+            adult: {
+                label: '대학교 / 성인',
+                accentColor: 'purple',
+                grades: [
+                    { id: 'univ_student', label: '대학생 · 취업준비생', desc: '전공 학점 관리, 어학(토익/오픽) & NCS·자격증', studyKey: 'univ', quizKey: 'adult' },
+                    { id: 'worker_adult', label: '직장인 · 평생학습 성인', desc: '자투리 시간 간격 반복 & 실무 역량 아웃풋 학습', studyKey: 'worker', quizKey: 'adult' }
+                ]
+            }
+        };
+
+        // ==========================================
+        // 2. 학년별 맞춤형 공부법 가이드 데이터베이스
+        // ==========================================
+        const STUDY_GUIDES = {
+            kinder: {
+                emoji: '🐥',
+                bannerGradient: 'bg-gradient-to-r from-amber-500 to-orange-500',
+                title: '호기심 질문 놀이와 그림책으로 다지는 첫 배움의 즐거움',
+                subtitle: '유치원·미취학 시기는 학습지 진도보다 어휘 자극, 손 근육 발달, 그리고 부모님과 함께 책을 읽으며 "생각하는 힘"을 키우는 것이 핵심입니다.',
+                goal: '매일 15~20분 그림책 읽기 & 호기심 질문 나누기',
+                time: '하루 20~30분 (놀이형 학습)',
+                cycle: '15분 집중 + 충분한 신체 놀이',
+                methods: [
+                    {
+                        title: '1. 잠자리 15분 그림책 대화식 독서 (하브루타 놀이)',
+                        desc: '글자를 빨리 떼는 것보다 그림을 보며 "주인공 기분이 어떨까?", "다음엔 어떤 일이 일어날까?"처럼 열린 질문을 주고받으며 상상력과 어휘력을 키워주세요.',
+                        tag: '문해력 씨앗'
+                    },
+                    {
+                        title: '2. 생활 속 숫자와 도형 찾기 놀이',
+                        desc: '엘리베이터 숫자 읽기, 간식 똑같이 나누어 먹기, 블록으로 똑같은 모양 만들기 등 일상생활 속에서 수의 크기와 공간 감각을 자연스럽게 익힙니다.',
+                        tag: '수 감각 형성'
+                    },
+                    {
+                        title: '3. 소근육 발달을 돕는 그리기·가위질·종이접기',
+                        desc: '초등학교 입학 후 연필을 바르게 잡고 글씨를 쓰려면 손가락 소근육 힘이 필요합니다. 색칠하기, 점선 따라 그리기, 종이접기를 즐겁게 해보세요.',
+                        tag: '입학 준비 기초'
+                    }
+                ],
+                schedule: [
+                    { label: '그림책 읽기 및 이야기 나누기', percent: 50, color: 'bg-amber-500' },
+                    { label: '블록·보드게임 수 감각 놀이', percent: 30, color: 'bg-orange-500' },
+                    { label: '그리기·종이접기 소근육 활동', percent: 20, color: 'bg-yellow-500' }
+                ],
+                warning: '유아기에 한글이나 연산 학습지를 억지로 시키며 혼내면 학교에 들어가기도 전에 공부에 대한 두려움이 생길 수 있습니다. 칭찬과 놀이가 최고의 선생님입니다.'
+            },
+            elem_1_2: {
+                emoji: '🌱',
+                bannerGradient: 'bg-gradient-to-r from-emerald-500 to-green-600',
+                title: '매일 책상에 앉는 루틴과 바른 글씨·기초 연산 완성기',
+                subtitle: '초등학교 1~2학년은 학교 생활에 적응하고 "매일 정해진 시간에 스스로 공부하는 습관"을 들이는 결정적 시기입니다.',
+                goal: '매일 30분 책상 앉기 루틴 & 받아쓰기·구구단 마스터',
+                time: '평일 30~50분 / 주말 자율 독서',
+                cycle: '20분 집중 + 10분 휴식',
+                methods: [
+                    {
+                        title: '1. 하교 후 "먼저 할 일 2가지" 고정 루틴 만들기',
+                        desc: '학교에서 돌아오면 간식을 먹은 뒤 바로 [① 알림장 확인 및 숙제 ② 독서 15분]을 하는 고정 루틴을 만드세요. 양보다 매일 빠짐없이 하는 것이 중요합니다.',
+                        tag: '공부 습관 형성'
+                    },
+                    {
+                        title: '2. 소리 내어 교과서 읽기 & 또박또박 글씨 쓰기',
+                        desc: '국어 교과서 지문을 손가락으로 짚어가며 소리 내어 읽으면 읽기 유창성과 맞춤법 감각이 동시에 자랍니다. 알림장과 일기는 바른 자세로 천천히 씁니다.',
+                        tag: '기초 문해력'
+                    },
+                    {
+                        title: '3. 10의 보수(가르기·모으기)와 구구단 원리 이해',
+                        desc: '덧셈·뺄셈의 핵심은 10을 만드는 수(예: 7과 3)를 직관적으로 아는 것입니다. 2학년 2학기 구구단은 무조건 외우기 전에 "같은 수를 여러 번 더하는 원리"부터 이해하세요.',
+                        tag: '연산 기초'
+                    }
+                ],
+                schedule: [
+                    { label: '학교 숙제 · 알림장 · 받아쓰기', percent: 40, color: 'bg-emerald-500' },
+                    { label: '기초 연산 및 수 감각 익히기', percent: 35, color: 'bg-green-500' },
+                    { label: '동화책 소리 내어 읽기', percent: 25, color: 'bg-teal-500' }
+                ],
+                warning: '문제를 빨리 풀라고 재촉하면 문제를 끝까지 읽지 않고 숫자만 보고 대충 계산하는 나쁜 습관이 생깁니다. 문제를 소리 내어 끝까지 읽게 해주세요.'
+            },
+            elem_3_4: {
+                emoji: '🌿',
+                bannerGradient: 'bg-gradient-to-r from-teal-500 to-cyan-600',
+                title: '사회·과학 과목 등장과 분수·도형 개념을 잡는 도약기',
+                subtitle: '초등학교 3학년부터 과목 수가 늘어나고 추상적인 한자어와 분수·소수 개념이 등장합니다. 본격적인 자기주도 학습의 첫걸음을 떼야 합니다.',
+                goal: '교과서 한자어 어휘 정복 & 분수·도형 원리 이해',
+                time: '평일 1시간~1시간 30분 / 주말 2시간',
+                cycle: '30분 집중 + 10분 휴식',
+                methods: [
+                    {
+                        title: '1. 사회·과학 교과서 "핵심 낱말 사전" 만들기',
+                        desc: '3~4학년부터 "고장, 공공기관, 화산, 지층, 혼합물" 같은 한자어가 쏟아집니다. 모르는 낱말에 동그라미를 치고 국어사전으로 뜻을 찾아 예문을 만들어 보세요.',
+                        tag: '교과 어휘력'
+                    },
+                    {
+                        title: '2. 그림으로 그려서 이해하는 분수와 도형',
+                        desc: '초등 수학에서 첫 번째 고비가 바로 "분수"입니다. 피자나 막대 그림을 직접 그려보며 전체와 부분의 관계를 눈으로 확인한 뒤 연산 문제를 푸세요.',
+                        tag: '수학 개념 이해'
+                    },
+                    {
+                        title: '3. 주간 학습 플래너 작성 및 스스로 채점하기',
+                        desc: '오늘 풀 문제집 쪽수를 스스로 정하고, 다 푼 뒤에는 직접 채점해 보세요. 틀린 문제는 지우개로 지우지 말고 옆에 다시 풀며 왜 틀렸는지 생각해 봅니다.',
+                        tag: '자기주도 시작'
+                    }
+                ],
+                schedule: [
+                    { label: '수학 개념 이해 및 유형 문제', percent: 40, color: 'bg-teal-600' },
+                    { label: '국어 독해 및 사회·과학 용어 정리', percent: 35, color: 'bg-cyan-600' },
+                    { label: '영어 파닉스·듣기 및 독서', percent: 25, color: 'bg-emerald-500' }
+                ],
+                warning: '사회·과학을 단순 암기 과목으로 여기면 중학교 가서 크게 힘들어집니다. "왜 이런 현상이 일어날까?" 원인과 결과를 연결하며 읽는 습관을 들이세요.'
+            },
+            elem_5_6: {
+                emoji: '🌳',
+                bannerGradient: 'bg-gradient-to-r from-emerald-600 to-teal-700',
+                title: '초등 수학의 고비 돌파 및 중학교 진학 완벽 대비기',
+                subtitle: '초등 5~6학년 수학(약수·배수, 분수의 사칙연산, 비와 비율)은 중·고등 수학의 뿌리입니다. 구멍 없이 탄탄히 다지고 중학교 학습 리듬을 준비하세요.',
+                goal: '초등 고학년 수학 100% 마스터 & 영단어·문법 기초 확립',
+                time: '평일 1시간 30분~2시간 30분 / 주말 3시간',
+                cycle: '40분 집중 + 10분 휴식',
+                methods: [
+                    {
+                        title: '1. 초등 5~6학년 수학 3대 핵심 단원 완벽 정복',
+                        desc: '5학년 1학기 [약수와 배수, 분수의 덧셈·뺄셈]과 6학년 [분수·소수의 나눗셈, 비와 비율]은 중등 방정식·함수로 직결됩니다. 무리한 중등 선행보다 이 단원들의 심화 문제까지 완벽히 소화하세요.',
+                        tag: '중등 수학의 뿌리'
+                    },
+                    {
+                        title: '2. 비문학 독해로 문단별 중심 문장 요약하기',
+                        desc: '긴 글을 읽고 각 문단의 핵심 문장에 밑줄을 긋고, 전체 내용을 2~3줄로 요약하는 연습을 하세요. 모든 과목 서술형 평가와 중등 내신의 기본기가 됩니다.',
+                        tag: '고급 문해력'
+                    },
+                    {
+                        title: '3. 매일 영단어 15개 암기 & 기초 문법 구조 익히기',
+                        desc: '중학교에 들어가면 영어 지문 길이가 확 길어집니다. 초등 필수 영단어 800개를 완성하고, 주어·동사·시제 등 기초 문장 구조를 예문과 함께 익혀두세요.',
+                        tag: '중학 영어 대비'
+                    }
+                ],
+                schedule: [
+                    { label: '수학 개념 심화 및 서술형 풀이', percent: 40, color: 'bg-emerald-600' },
+                    { label: '영어 단어·듣기·기초 문법', percent: 30, color: 'bg-teal-600' },
+                    { label: '국어 비문학 독해 & 사회·과학 정리', percent: 30, color: 'bg-cyan-600' }
+                ],
+                warning: '초등 고학년 개념이 흔들리는 상태에서 학원 진도에 맞춰 중1·중2 선행만 나가는 것은 모래 위에 성을 쌓는 것과 같습니다. 현행 심화가 우선입니다.'
+            },
+            mid_1: {
+                emoji: '📘',
+                bannerGradient: 'bg-gradient-to-r from-sky-500 to-blue-600',
+                title: '자유학기제 골든타임을 활용한 독서·탐구 및 공부 근육 형성기',
+                subtitle: '중학교 1학년은 지필고사 부담이 적은 대신, 스스로 공부 계획을 세우지 않으면 학습 공백이 생기기 쉽습니다. 중2 첫 시험을 대비해 공부법을 체화하세요.',
+                goal: '전 과목 교과서 정독 습관 & 주요 과목 기초 다지기',
+                time: '평일 2시간~2시간 30분 / 주말 3~4시간',
+                cycle: '45분 집중 + 10분 휴식 (중학교 수업 시간 리듬)',
+                methods: [
+                    {
+                        title: '1. 자유학기제를 활용한 폭넓은 독서와 수행평가 관리',
+                        desc: '시험이 없는 시기를 놀면서 보내지 말고, 중·고등 필독서(문학·비문학)를 매주 1권씩 읽으세요. 모둠 활동과 발표 수행평가를 꼼꼼히 챙기며 생기부 기록의 기초를 다집니다.',
+                        tag: '자유학기제 활용'
+                    },
+                    {
+                        title: '2. 중1 수학(정수와 유리수, 문자와 식, 일차방정식) 완벽 마스터',
+                        desc: '음수(-) 개념과 문자(x, y)가 처음 등장하는 중1 수학은 고등 수학까지 이어지는 알파벳과 같습니다. 계산 실수가 0이 될 때까지 꾸준히 연습하세요.',
+                        tag: '대수학의 시작'
+                    },
+                    {
+                        title: '3. 하루 10분 "당일 백지 복습" 습관 들이기',
+                        desc: '학교에서 배운 주요 과목 내용을 그날 저녁 빈 종이에 기억나는 대로 적어보세요. 시험이 없어도 매일 인출하는 연습을 해두면 중2 첫 내신에서 압도적인 차이를 만듭니다.',
+                        tag: '메타인지 훈련'
+                    }
+                ],
+                schedule: [
+                    { label: '수학 연산 정확도 및 개념 유형', percent: 40, color: 'bg-blue-600' },
+                    { label: '영어 문법 기초 및 독해·듣기', percent: 30, color: 'bg-sky-500' },
+                    { label: '국어 독서·문법 및 당일 복습', percent: 30, color: 'bg-indigo-500' }
+                ],
+                warning: '자유학기제 기간에 스마트폰과 게임에 빠져 학습 리듬을 잃어버리면, 중2 첫 중간고사에서 큰 충격을 받게 됩니다. 매일 최소 2시간 책상 루틴을 지키세요.'
+            },
+            mid_2: {
+                emoji: '📗',
+                bannerGradient: 'bg-gradient-to-r from-blue-600 to-indigo-600',
+                title: '본격적인 지필고사 내신 시작! 3주 전 3회독 내신 돌파 전략',
+                subtitle: '중학교 2학년은 인생 첫 중간·기말고사를 치르는 결정적 시기입니다. 시험 범위를 체계적으로 쪼개어 암기하고 문제에 적용하는 내신 전략이 필요합니다.',
+                goal: '첫 지필고사 주요 과목 성취도 A 달성 & 오답 노트 정착',
+                time: '평일 2시간 30분~3시간 30분 / 시험기간 4~5시간',
+                cycle: '45분 집중 + 10분 휴식',
+                methods: [
+                    {
+                        title: '1. 시험 3주 전 "3회독 내신 대비 로드맵"',
+                        desc: '3주 전: 교과서 3번 정독 및 프린트물 개념 정리 → 2주 전: 문제집 1권 풀고 틀린 문제 별표 → 1주 전: 별표 친 오답만 다시 풀고 빈칸 채우기 암기 테스트.',
+                        tag: '내신 필승 로드맵'
+                    },
+                    {
+                        title: '2. 코넬 노트(Cornell Note)와 백지 인출 암기법',
+                        desc: '역사·과학·사회 같은 암기 과목은 노트를 예쁘게 꾸미는 데 시간을 쓰지 마세요. 핵심 키워드만 왼쪽에 적고 오른쪽 내용을 가린 채 입으로 설명하며 외워야 시험장에서 기억납니다.',
+                        tag: '암기 과목 정복'
+                    },
+                    {
+                        title: '3. 영어 교과서 본문 구조 분석 및 영작 연습',
+                        desc: '중학교 영어 내신은 교과서 본문과 핵심 문법에서 출제됩니다. 무작정 통암기하기보다 핵심 문법(관계대명사, 현재완료, 수동태 등)이 쓰인 문장을 중심으로 구조 분석 후 영작해 보세요.',
+                        tag: '영어 내신 전략'
+                    }
+                ],
+                schedule: [
+                    { label: '수학 심화 유형 및 서술형 대비', percent: 35, color: 'bg-blue-600' },
+                    { label: '영어 문법·본문 분석 및 문제 풀이', percent: 30, color: 'bg-indigo-600' },
+                    { label: '국어·역사·과학 교과서 정독 및 백지 복습', percent: 35, color: 'bg-sky-500' }
+                ],
+                warning: '시험 전날 밤을 새워 벼락치기하면 시험 당일 집중력이 떨어져 아는 문제도 실수합니다. 시험 3주 전부터 매일 조금씩 나누어 외우세요.'
+            },
+            mid_3: {
+                emoji: '📙',
+                bannerGradient: 'bg-gradient-to-r from-cyan-600 to-blue-700',
+                title: '중등 내신 유종의 미와 고등학교 입시·고교학점제 준비기',
+                subtitle: '중학교 3학년은 중등 과정을 완벽히 마무리하는 동시에, 고등학교의 높은 학습량과 고교학점제·모의고사 유형에 미리 적응해야 하는 가교 시기입니다.',
+                goal: '중3 내신 마무리 + 고등 국·영·수 기초 개념 예습',
+                time: '평일 3~4시간 / 주말 5~6시간',
+                cycle: '50분 집중 + 10분 휴식 (고등학교 수업 리듬)',
+                methods: [
+                    {
+                        title: '1. 중3 수학(이차방정식·이차함수·삼각비·원) 100% 연결하기',
+                        desc: '중3 수학의 인수분해와 이차함수는 고1 공통수학의 핵심 기반입니다. 중3 내신을 준비하면서 고1 수학(다항식, 방정식과 부등식) 개념서를 차근차근 연결해 보세요.',
+                        tag: '고등 수학 연결'
+                    },
+                    {
+                        title: '2. 고1 학력평가(모의고사) 기출 맛보기',
+                        desc: '중학교 영어·국어와 달리 고등학교 모의고사는 지문이 길고 추론적 사고를 요구합니다. 기말고사 이후에는 고1 3월 모의고사 기출문제를 시간을 재고 풀어보며 난이도를 체감하세요.',
+                        tag: '모의고사 적응'
+                    },
+                    {
+                        title: '3. 진로 탐색과 고교학점제 선택 과목 미리 살펴보기',
+                        desc: '자신이 희망하는 진로와 적성을 탐색하고, 진학할 고등학교(일반고, 특목고, 자사고 등)의 교육과정과 선택 과목 체계를 미리 알아두면 고1 생활이 훨씬 수월해집니다.',
+                        tag: '고교 진학 설계'
+                    }
+                ],
+                schedule: [
+                    { label: '중3 수학 마무리 및 고1 수학 예습', percent: 40, color: 'bg-blue-700' },
+                    { label: '고등 영단어 확장 및 구문 독해', percent: 30, color: 'bg-cyan-600' },
+                    { label: '중3 내신 관리 및 국어 비문학 독해', percent: 30, color: 'bg-indigo-600' }
+                ],
+                warning: '중3 2학기 기말고사가 끝난 뒤 겨울방학까지의 약 3개월은 입시에서 가장 중요한 골든타임입니다. 이 시기를 허비하면 고1 첫 중간고사에서 크게 뒤처집니다.'
+            },
+            high_1: {
+                emoji: '🔥',
+                bannerGradient: 'bg-gradient-to-r from-indigo-600 to-blue-700',
+                title: '고등학교 내신 등급제 적응과 모의고사 시간 배분 훈련기',
+                subtitle: '고등학교 1학년은 중학교와 차원이 다른 시험 난이도와 촘촘한 내신 경쟁을 처음 마주하는 시기입니다. 빠른 내신 대비 루틴과 공부 지구력을 길러야 합니다.',
+                goal: '내신 상위 등급 확보 & 뽀모도로 50/10 집중 루틴 확립',
+                time: '평일 자습 3시간 30분~4시간 30분 / 주말 7~8시간',
+                cycle: '50분 초집중 + 10분 휴식',
+                methods: [
+                    {
+                        title: '1. 학교 수업 필기 단권화 & 부교재·프린트 100% 분석',
+                        desc: '고등학교 내신은 교과서 외에 학교 선생님이 주시는 프린트와 부교재(EBS 올림포스 등)에서 변형 문제가 다수 출제됩니다. 수업 중 선생님이 강조하신 포인트를 단권화 노트에 모두 모으세요.',
+                        tag: '고등 내신 핵심'
+                    },
+                    {
+                        title: '2. 실전 오답 분석 노트 ("행동 강령" 한 줄 적기)',
+                        desc: '문제를 예쁘게 옮겨 적느라 시간을 버리지 마세요. 틀린 이유를 [① 개념 부족 ② 조건 해석 실수 ③ 시간 부족]으로 분류하고, "다음에 이 조건을 보면 무엇을 먼저 할지" 행동 강령 한 줄만 적으세요.',
+                        tag: '오답 효율화'
+                    },
+                    {
+                        title: '3. 고1 전국연합학력평가 시간 배분 연습',
+                        desc: '국어 80분, 수학 100분, 영어 70분이라는 긴 시험 시간을 버텨내는 훈련이 필요합니다. 모의고사 직전에는 실제 시험 시간표에 맞춰 문제를 풀며 시간 안배 감각을 익히세요.',
+                        tag: '모의고사 체력'
+                    }
+                ],
+                schedule: [
+                    { label: '공통수학 개념 심화 및 내신 변형 문제', percent: 40, color: 'bg-indigo-600' },
+                    { label: '국어 문학·비문학 & 영어 구문·어휘', percent: 35, color: 'bg-blue-600' },
+                    { label: '통합사회·통합과학·한국사 내신 정리', percent: 25, color: 'bg-violet-500' }
+                ],
+                warning: '중학교 때처럼 시험 2주 전부터 벼락치기하면 고등학교 시험 범위의 절반도 못 보고 시험장에 들어가게 됩니다. 최소 4주 전부터 내신 대비를 시작하세요.'
+            },
+            high_2: {
+                emoji: '⚡',
+                bannerGradient: 'bg-gradient-to-r from-violet-600 to-indigo-700',
+                title: '수능 선택 과목 결정 및 내신·모의고사 두 마리 토끼 균형기',
+                subtitle: '고등학교 2학년은 수시(학생부)와 정시(수능)의 방향성이 구체화되는 시기입니다. 내신 심화 학습이 곧 수능 기초가 되도록 기출문제 분석을 병행하세요.',
+                goal: '내신 심화 과목 등급 방어 & 수능 평가원 기출 분석 시작',
+                time: '평일 자습 4~5시간 / 주말 8~9시간',
+                cycle: '50분 집중 + 10분 휴식 / 주말 모의고사 루틴',
+                methods: [
+                    {
+                        title: '1. 내신 공부를 수능 기출문제와 연결하기',
+                        desc: '고2 수학(수학Ⅰ, 수학Ⅱ)과 탐구 과목은 수능 출제 범위와 100% 겹칩니다. 내신 대비를 할 때 시중 문제집뿐 아니라 평가원·교육청 기출문제집(마더텅, 자이스토리 등)을 함께 풀며 수능형 사고력을 기르세요.',
+                        tag: '내신·수능 통합'
+                    },
+                    {
+                        title: '2. 진로에 맞는 선택 과목 이수 & 탐구 과목 조기 정착',
+                        desc: '고교학점제에 맞춰 희망 전공과 연계된 일반선택·진로선택 과목을 충실히 이수하세요. 특히 수능에서 응시할 탐구 과목은 고2 내신 때 개념을 완벽히 끝내두어야 고3 때 수월합니다.',
+                        tag: '선택 과목 전략'
+                    },
+                    {
+                        title: '3. 국어 비문학 구조 독해 & 영어 고난도 유형(빈칸·순서) 훈련',
+                        desc: '고2부터 국어·영어 지문의 추상도가 급격히 높아집니다. 매일 아침 국어 비문학 2지문, 영어 고난도 독해 3문제를 꾸준히 풀며 독해 감각을 유지하세요.',
+                        tag: '매일 루틴 훈련'
+                    }
+                ],
+                schedule: [
+                    { label: '수학Ⅰ·Ⅱ 기출 분석 및 준킬러 훈련', percent: 40, color: 'bg-violet-600' },
+                    { label: '국어·영어 고난도 독해 및 내신 대비', percent: 35, color: 'bg-indigo-600' },
+                    { label: '선택 탐구 과목 개념 완성 및 오답 정리', percent: 25, color: 'bg-purple-500' }
+                ],
+                warning: '고2 때 내신 성적이 조금 떨어졌다고 성급하게 "나는 정시파야"라며 내신과 학교 수업을 포기하지 마세요. 학교 수업이 곧 가장 훌륭한 수능 기초 강의입니다.'
+            },
+            high_3: {
+                emoji: '🏆',
+                bannerGradient: 'bg-gradient-to-r from-indigo-700 to-purple-800',
+                title: '수능 실전 타임어택 훈련과 평가원 기출·EBS 완벽 정복기',
+                subtitle: '고3 및 N수생은 새로운 개념을 늘리기보다, 지금까지 배운 개념을 제한 시간 내에 정확히 인출하고 실수를 줄이는 "실전 최적화"가 합격의 열쇠입니다.',
+                goal: '수능 전 영역 목표 등급 달성 & 수능 시간표 생체 리듬 완성',
+                time: '평일 자습 5~6시간 / 주말·방학 10시간 이상',
+                cycle: '수능 교시별 시간(80분/100분/70분/30분) 실전 루틴',
+                methods: [
+                    {
+                        title: '1. 수능 시간표와 100% 동일한 생체 리듬 동기화',
+                        desc: '오전 8시 40분 국어, 10시 30분 수학, 오후 1시 10분 영어, 2시 55분 탐구 순서대로 뇌가 최상의 집중력을 발휘하도록 매일 같은 시간에 해당 과목을 공부하세요.',
+                        tag: '생체 리듬 최적화'
+                    },
+                    {
+                        title: '2. 평가원(6월·9월·수능) 기출 3단계 해부 & EBS 연계 체화',
+                        desc: '평가원 기출문제는 선지 하나하나의 출제 의도와 함정 패턴을 완벽히 분석하세요. EBS 수능특강·수능완성은 국어 문학 작품과 영어 소재, 탐구 자료를 중심으로 연계 포인트를 압축 정리합니다.',
+                        tag: '평가원·EBS 정복'
+                    },
+                    {
+                        title: '3. 실전 모의고사 타임어택 & 나만의 "위기 대처 매뉴얼"',
+                        desc: '실전 모의고사를 풀면서 "3분 이상 안 풀리는 문제는 과감히 별표 치고 넘어가기", "OMR 마킹 시간 5분 확보하기" 등 시험장에서 당황하지 않을 나만의 운영 매뉴얼을 훈련하세요.',
+                        tag: '실전 시험 운영'
+                    }
+                ],
+                schedule: [
+                    { label: '수학 기출·실모 풀이 및 오답 행동강령', percent: 35, color: 'bg-indigo-700' },
+                    { label: '국어·영어 실전 시간 배분 및 EBS 연계', percent: 35, color: 'bg-purple-700' },
+                    { label: '탐구 과목 타임어택(30분) 및 약점 보완', percent: 30, color: 'bg-violet-600' }
+                ],
+                warning: '잠을 5시간 이하로 줄이며 무리하면 집중력과 기억 인출 속도가 급격히 떨어집니다. 최소 6시간~6시간 30분의 규칙적인 수면과 가벼운 산책으로 멘탈과 체력을 지키세요.'
+            },
+            univ: {
+                emoji: '🎓',
+                bannerGradient: 'bg-gradient-to-r from-purple-600 to-fuchsia-600',
+                title: '전공 학점·공인어학·자격증을 전략적으로 돌파하는 대학·취준 학습법',
+                subtitle: '대학생과 취업준비생은 정해진 시간표가 없기 때문에 스스로 목표와 마감 기한을 설계하는 프로젝트형 학습 능력이 성패를 가릅니다.',
+                goal: '전공 학점 관리 & 공인어학·국가자격증·NCS 단기 합격',
+                time: '평일 공강+저녁 3~4시간 / 시험·취준기 6~8시간',
+                cycle: '파인만 기법 + 뽀모도로 50/10 집중 루틴',
+                methods: [
+                    {
+                        title: '1. 파인만 학습법(Feynman Technique)으로 전공·직무 개념 마스터',
+                        desc: '전공 서적이나 직무 지식을 읽은 뒤, 비전공자 친구에게 설명하듯 쉬운 말로 백지에 정리해 보세요. 설명이 막히는 부분이 바로 시험 서술형이나 면접에서 무너지는 약점입니다.',
+                        tag: '깊이 있는 이해'
+                    },
+                    {
+                        title: '2. 자격증·어학 시험 "기출 역산 80/20 학습법"',
+                        desc: '토익, 한국사, 컴활, 기사 자격증은 두꺼운 기본서를 1페이지부터 정독하지 마세요. 최근 5개년 기출문제를 먼저 분석해 출제 비중이 높은 상위 20% 핵심 개념부터 집중 공략하세요.',
+                        tag: '단기 합격 전략'
+                    },
+                    {
+                        title: '3. 스터디 그룹 활용 및 아웃풋(Output) 중심 학습',
+                        desc: '혼자 의지가 약해질 때는 목표가 같은 스터디원과 매일 공부 인증(기상·플래너)을 하거나, 서로 퀴즈를 내주고 설명하는 피어 티칭(Peer Teaching)을 활용해 보세요.',
+                        tag: '동기부여·아웃풋'
+                    }
+                ],
+                schedule: [
+                    { label: '전공 심화 학습 및 파인만 요약 정리', percent: 40, color: 'bg-purple-600' },
+                    { label: '공인어학·자격증 기출문제 풀이', percent: 35, color: 'bg-fuchsia-600' },
+                    { label: '시사·직무 역량 스크랩 및 간격 복습', percent: 25, color: 'bg-pink-500' }
+                ],
+                warning: '인강을 틀어놓고 스마트폰을 보거나, 밑줄만 그으며 수동적으로 읽는 시간은 진짜 공부 시간이 아닙니다. 반드시 직접 문제를 풀고 백지에 인출하세요.'
+            },
+            worker: {
+                emoji: '🚀',
+                bannerGradient: 'bg-gradient-to-r from-fuchsia-600 to-rose-600',
+                title: '바쁜 일상 속 자투리 시간과 간격 반복으로 승부하는 직장인 공부법',
+                subtitle: '직장인과 성인 학습자는 절대적인 시간이 부족합니다. 완벽주의를 버리고 출퇴근 자투리 시간과 주말 핵심 시간을 결합한 초고효율 시스템이 필요합니다.',
+                goal: '직무 전문성 강화 · 승진/이직 자격증 · 외국어 실전 회화 완성',
+                time: '평일 자투리+아침/저녁 1~2시간 / 주말 3~4시간',
+                cycle: '출퇴근 20분 마이크로 러닝 + 간격 반복',
+                methods: [
+                    {
+                        title: '1. 출퇴근·점심시간 "마이크로 러닝(Micro-Learning)" 시스템화',
+                        desc: '퇴근 후 지친 몸으로 책상에 2시간 앉기는 어렵습니다. 출근길 20분 영단어·오디오 강의, 점심시간 15분 기출 10문제 풀이를 스마트폰 앱이나 플래시카드로 루틴화하세요.',
+                        tag: '자투리 시간 극대화'
+                    },
+                    {
+                        title: '2. 에빙하우스 간격 반복(Spaced Repetition) 복습 주기',
+                        desc: '한 번에 오래 공부하는 것보다 [당일 → 1일 후 → 3일 후 → 7일 후 → 14일 후] 주기로 짧게 여러 번 반복 노출할 때 바쁜 성인의 뇌에서도 장기 기억으로 전환됩니다.',
+                        tag: '기억 효율 극대화'
+                    },
+                    {
+                        title: '3. 업무와 직결되는 "프로젝트 기반 아웃풋 학습"',
+                        desc: '단순히 책을 읽고 끝내지 말고, 배운 내용을 블로그 글쓰기, 사내 발표 자료, 업무 자동화 템플릿 등 실제 결과물(Output)로 만들어야 실무 역량이 폭발적으로 성장합니다.',
+                        tag: '실무 적용 아웃풋'
+                    }
+                ],
+                schedule: [
+                    { label: '자격증·어학 핵심 기출 및 실전 적용', percent: 45, color: 'bg-fuchsia-600' },
+                    { label: '출퇴근 마이크로 러닝 및 플래시카드', percent: 30, color: 'bg-rose-600' },
+                    { label: '학습 내용 블로그·노트 아웃풋 정리', percent: 25, color: 'bg-purple-500' }
+                ],
+                warning: '처음부터 "매일 밤 3시간씩 공부하겠다"는 무리한 계획을 세우면 3일 만에 지쳐 포기하게 됩니다. 하루 30분이라도 절대 빠지지 않는 현실적인 목표부터 시작하세요.'
+            }
+        };
+
+        // ==========================================
+        // 3. 학년·수준별 실전 문제 은행 데이터베이스
+        // ==========================================
+        const QUIZ_BANK = {
+            kinder: [
+                {
+                    subject: '국어 (낱말과 소리)',
+                    difficulty: '★☆☆',
+                    question: '다음 중 하늘을 날아다니며 "짹짹" 우는 동물은 무엇일까요?',
+                    options: ['① 강아지', '② 참새', '③ 거북이', '④ 금붕어'],
+                    answer: 1,
+                    explanation: '날개가 있어 하늘을 날고 "짹짹" 우는 동물은 ②번 "참새"입니다.'
+                },
+                {
+                    subject: '수학 (수 세기)',
+                    difficulty: '★☆☆',
+                    question: '접시에 딸기가 3개 있습니다. 엄마가 딸기 2개를 더 놓아주셨다면 딸기는 모두 몇 개가 될까요?',
+                    options: ['① 4개', '② 5개', '③ 6개', '④ 7개'],
+                    answer: 1,
+                    explanation: '3개에서 2개를 더하면 하나, 둘, 셋, 넷, 다섯! 모두 ②번 "5개"가 됩니다.'
+                },
+                {
+                    subject: '자연 상식 (계절)',
+                    difficulty: '★☆☆',
+                    question: '하얀 눈이 내리고 썰매를 타며 눈사람을 만들 수 있는 계절은 언제일까요?',
+                    options: ['① 봄', '② 여름', '③ 가을', '④ 겨울'],
+                    answer: 3,
+                    explanation: '날씨가 춥고 하얀 눈이 내리는 계절은 ④번 "겨울"입니다.'
+                },
+                {
+                    subject: '국어 (반대말 놀이)',
+                    difficulty: '★☆☆',
+                    question: '"크다"의 반대말로 알맞은 것은 무엇일까요?',
+                    options: ['① 높다', '② 길다', '③ 작다', '④ 많다'],
+                    answer: 2,
+                    explanation: '"크다"의 반대말은 ③번 "작다"입니다.'
+                },
+                {
+                    subject: '영어 (기초 동물)',
+                    difficulty: '★☆☆',
+                    question: '영어로 "Dog(도그)"라고 부르는 동물은 무엇일까요?',
+                    options: ['① 고양이', '② 강아지', '③ 토끼', '④ 사자'],
+                    answer: 1,
+                    explanation: 'Dog(도그)는 영어로 ②번 "강아지"를 뜻합니다. 고양이는 Cat(캣)이에요!'
+                }
+            ],
+
+            elem_1_2: [
+                {
+                    subject: '국어 (맞춤법)',
+                    difficulty: '★☆☆',
+                    question: '다음 중 맞춤법이 올바르게 쓰인 낱말은 무엇일까요?',
+                    options: ['① 깍두기', '② 깍뚜기', '③ 깎두기', '④ 깎뚜기'],
+                    answer: 0,
+                    explanation: '정답은 ①번 "깍두기"입니다. 소리는 [깍뚜기]로 나지만 적을 때는 "깍두기"로 적습니다.'
+                },
+                {
+                    subject: '수학 (덧셈과 뺄셈)',
+                    difficulty: '★☆☆',
+                    question: '연필이 15자루 있었습니다. 친구에게 6자루를 주고 4자루를 새로 샀다면 연필은 모두 몇 자루일까요?',
+                    options: ['① 11자루', '② 12자루', '③ 13자루', '④ 14자루'],
+                    answer: 2,
+                    explanation: '15 - 6 = 9자루가 남고, 여기에 4자루를 더하면 9 + 4 = 13자루가 됩니다.'
+                },
+                {
+                    subject: '수학 (곱셈구구)',
+                    difficulty: '★★☆',
+                    question: '사탕이 한 봉지에 7개씩 들어 있습니다. 4봉지에 들어 있는 사탕은 모두 몇 개일까요?',
+                    options: ['① 21개', '② 24개', '③ 28개', '④ 32개'],
+                    answer: 2,
+                    explanation: '7개씩 4묶음이므로 곱셈식으로 나타내면 7 × 4 = 28개입니다.'
+                },
+                {
+                    subject: '국어 (속담)',
+                    difficulty: '★★☆',
+                    question: '"가는 말이 고와야 (   ) 말이 곱다." 빈칸에 들어갈 알맞은 말은 무엇일까요?',
+                    options: ['① 오는', '② 먹는', '③ 자는', '④ 뛰는'],
+                    answer: 0,
+                    explanation: '"가는 말이 고와야 오는 말이 곱다"는 내가 남에게 좋게 말해야 남도 나에게 좋게 말한다는 뜻입니다.'
+                },
+                {
+                    subject: '수학 (시계 보기)',
+                    difficulty: '★★☆',
+                    question: '시계의 짧은바늘이 3과 4 사이에 있고, 긴바늘이 6을 가리키고 있습니다. 지금 몇 시 몇 분일까요?',
+                    options: ['① 3시 6분', '② 3시 30분', '③ 4시 30분', '④ 6시 15분'],
+                    answer: 1,
+                    explanation: '짧은바늘이 3과 4 사이에 있으므로 3시이고, 긴바늘이 6을 가리키면 30분이므로 "3시 30분"입니다.'
+                }
+            ],
+
+            elem_3_4: [
+                {
+                    subject: '수학 (분수와 소수)',
+                    difficulty: '★★☆',
+                    question: '다음 중 크기가 가장 큰 수는 어느 것일까요?',
+                    options: ['① 0.6', '② 3/4', '③ 0.7', '④ 1/2'],
+                    answer: 1,
+                    explanation: '3/4은 소수로 0.75이고, 1/2은 0.5입니다. 따라서 0.75 > 0.7 > 0.6 > 0.5 순이므로 ②번 3/4이 가장 큽니다.'
+                },
+                {
+                    subject: '사회 (우리 고장과 공공기관)',
+                    difficulty: '★★☆',
+                    question: '다음 중 주민들의 안전을 지키고 범죄를 예방하며 교통질서를 유지하는 공공기관은 어디일까요?',
+                    options: ['① 소방서', '② 경찰서', '③ 우체국', '④ 보건소'],
+                    answer: 1,
+                    explanation: '범죄를 예방하고 주민의 안전과 질서를 지키는 공공기관은 ②번 "경찰서"입니다. (불을 끄고 인명을 구조하는 곳은 소방서입니다.)'
+                },
+                {
+                    subject: '과학 (물의 상태 변화)',
+                    difficulty: '★★☆',
+                    question: '차가운 음료수가 담긴 컵의 바깥 표면에 물방울이 맺히는 현상은 공기 중의 수증기가 어떻게 변한 것일까요?',
+                    options: ['① 증발', '② 응결', '③ 얼음', '④ 끓음'],
+                    answer: 1,
+                    explanation: '기체 상태인 공기 중의 수증기가 차가운 컵 표면을 만나 액체 상태인 물방울로 변하는 현상을 ②번 "응결"이라고 합니다.'
+                },
+                {
+                    subject: '국어 (사자성어)',
+                    difficulty: '★★☆',
+                    question: '"백 번 듣는 것이 한 번 보는 것만 못하다"는 뜻의 사자성어는 무엇일까요?',
+                    options: ['① 유비무환', '② 백문이 불여일견', '③ 일석이조', '④ 동문서답'],
+                    answer: 1,
+                    explanation: '직접 경험하고 보는 것이 백 번 듣는 것보다 낫다는 뜻의 사자성어는 ②번 "백문이 불여일견"입니다.'
+                },
+                {
+                    subject: '영어 (기초 표현)',
+                    difficulty: '★★☆',
+                    question: '상대방에게 "몇 시니?"라고 시간을 물어볼 때 알맞은 영어 표현은 무엇일까요?',
+                    options: ['① How old are you?', '② What time is it?', '③ Where are you from?', '④ How much is it?'],
+                    answer: 1,
+                    explanation: '시간을 물어보는 영어 표현은 ②번 "What time is it?"입니다.'
+                }
+            ],
+
+            elem_5_6: [
+                {
+                    subject: '수학 (비와 비율)',
+                    difficulty: '★★★',
+                    question: '정가가 20,000원인 가방을 25% 할인하여 판매하고 있습니다. 이 가방의 판매 가격은 얼마일까요?',
+                    options: ['① 14,000원', '② 15,000원', '③ 16,000원', '④ 17,500원'],
+                    answer: 1,
+                    explanation: '20,000원의 25%(1/4)는 5,000원입니다. 20,000 - 5,000 = 15,000원이므로 정답은 ②번입니다.'
+                },
+                {
+                    subject: '사회 (한국사)',
+                    difficulty: '★★☆',
+                    question: '세종대왕이 백성들이 글을 쉽게 읽고 쓸 수 있도록 창제하여 1446년에 반포한 우리 글자의 이름은 무엇일까요?',
+                    options: ['① 이두', '② 훈민정음', '③ 팔만대장경', '④ 직지심체요절'],
+                    answer: 1,
+                    explanation: '세종대왕이 "백성을 가르치는 바른 소리"라는 뜻으로 만든 우리 문자는 ②번 "훈민정음"입니다.'
+                },
+                {
+                    subject: '과학 (태양계와 별)',
+                    difficulty: '★★☆',
+                    question: '태양계 행성 중 아름다운 고리가 가장 뚜렷하며, 목성 다음으로 크기가 큰 행성은 무엇일까요?',
+                    options: ['① 수성', '② 화성', '③ 토성', '④ 금성'],
+                    answer: 2,
+                    explanation: '얼음과 암석 조각으로 이루어진 크고 뚜렷한 고리를 가진 행성은 ③번 "토성"입니다.'
+                },
+                {
+                    subject: '수학 (도형의 넓이)',
+                    difficulty: '★★★',
+                    question: '밑변의 길이가 12cm이고 높이가 7cm인 삼각형의 넓이는 몇 ㎠일까요?',
+                    options: ['① 19㎠', '② 42㎠', '③ 84㎠', '④ 168㎠'],
+                    answer: 1,
+                    explanation: '삼각형의 넓이 = (밑변 × 높이) ÷ 2 이므로 (12 × 7) ÷ 2 = 42㎠입니다.'
+                },
+                {
+                    subject: '영어 (문법 기초)',
+                    difficulty: '★★☆',
+                    question: '다음 빈칸에 들어갈 알맞은 be동사는? "She (   ) a very kind student."',
+                    options: ['① am', '② are', '③ is', '④ were'],
+                    answer: 2,
+                    explanation: '주어가 3인칭 단수(She)이고 현재 시제이므로 be동사 ③번 "is"가 알맞습니다.'
+                }
+            ],
+
+            mid_1: [
+                {
+                    subject: '수학 (정수와 유리수)',
+                    difficulty: '★★☆',
+                    question: '다음 식을 계산한 결과로 옳은 것은? (-3) + (+8) - (-5)',
+                    options: ['① 0', '② 6', '③ 10', '④ 16'],
+                    answer: 2,
+                    explanation: '(-3) + (+8) = +5 이고, - (-5)는 + (+5)와 같으므로 (+5) + (+5) = 10입니다.'
+                },
+                {
+                    subject: '국어 (품사)',
+                    difficulty: '★★☆',
+                    question: '다음 중 체언(명사, 대명사, 수사) 앞에 놓여 그 뜻을 꾸며주는 품사는 무엇일까요?',
+                    options: ['① 부사', '② 관형사', '③ 조사', '④ 감탄사'],
+                    answer: 1,
+                    explanation: '"새 책", "헌 옷"의 "새", "헌"처럼 체언 앞에서 체언을 꾸며주는 품사는 ②번 "관형사"입니다.'
+                },
+                {
+                    subject: '과학 (물질의 상태 변화)',
+                    difficulty: '★★☆',
+                    question: '드라이아이스가 액체 상태를 거치지 않고 고체에서 바로 기체로 변하는 현상을 무엇이라고 할까요?',
+                    options: ['① 융해', '② 기화', '③ 응고', '④ 승화'],
+                    answer: 3,
+                    explanation: '고체가 액체를 거치지 않고 바로 기체로 변하거나, 기체가 바로 고체로 변하는 현상을 ④번 "승화"라고 합니다.'
+                },
+                {
+                    subject: '사회 (세계 지리)',
+                    difficulty: '★★☆',
+                    question: '지구의 본초 자오선(경도 0도)이 지나가는 도시는 어디일까요?',
+                    options: ['① 대한민국 서울', '② 영국 런던(그리니치)', '③ 미국 뉴욕', '④ 프랑스 파리'],
+                    answer: 1,
+                    explanation: '경도 0도의 기준이 되는 본초 자오선은 ②번 영국 런던의 그리니치 천문대를 지납니다.'
+                },
+                {
+                    subject: '영어 (현재진행형)',
+                    difficulty: '★★☆',
+                    question: '다음 문장의 빈칸에 알맞은 말은? "Look! It is (   ) outside now."',
+                    options: ['① rain', '② rains', '③ raining', '④ rained'],
+                    answer: 2,
+                    explanation: '지금 일어나고 있는 동작을 나타내는 현재진행형(be동사 + 동사원형-ing)이므로 ③번 "raining"이 알맞습니다.'
+                }
+            ],
+
+            mid_2_3: [
+                {
+                    subject: '수학 (피타고라스 정리)',
+                    difficulty: '★★★',
+                    question: '직각삼각형에서 직각을 낀 두 변의 길이가 각각 6cm, 8cm일 때 빗변의 길이는 몇 cm일까요?',
+                    options: ['① 9cm', '② 10cm', '③ 12cm', '④ 14cm'],
+                    answer: 1,
+                    explanation: '피타고라스 정리에 의해 6² + 8² = 36 + 64 = 100 = 10² 이므로 빗변의 길이는 ②번 10cm입니다.'
+                },
+                {
+                    subject: '역사 (한국사)',
+                    difficulty: '★★☆',
+                    question: '고려 시대 거란의 3차 침입 때 귀주에서 적을 크게 물리쳐 "귀주 대첩"을 이끈 장군은 누구일까요?',
+                    options: ['① 을지문덕', '② 강감찬', '③ 이순신', '④ 최영'],
+                    answer: 1,
+                    explanation: '1019년 거란의 대군을 귀주에서 크게 물리친 고려의 명장은 ②번 "강감찬" 장군입니다.'
+                },
+                {
+                    subject: '영어 (현재완료 시제)',
+                    difficulty: '★★☆',
+                    question: '다음 문장의 빈칸에 알맞은 형태는? "I have (   ) in Busan since 2020."',
+                    options: ['① live', '② living', '③ lived', '④ lives'],
+                    answer: 2,
+                    explanation: '과거부터 현재까지 계속되는 상태를 나타내는 현재완료 시제(have + 과거분사 p.p.)이므로 ③번 "lived"가 알맞습니다.'
+                },
+                {
+                    subject: '수학 (이차방정식)',
+                    difficulty: '★★★',
+                    question: '이차방정식 x² - 5x + 6 = 0 의 두 근의 합은 얼마일까요?',
+                    options: ['① -5', '② 5', '③ 6', '④ -6'],
+                    answer: 1,
+                    explanation: '(x - 2)(x - 3) = 0 으로 인수분해되므로 두 근은 2와 3입니다. 따라서 두 근의 합은 2 + 3 = 5입니다.'
+                },
+                {
+                    subject: '과학 (화학 반응의 법칙)',
+                    difficulty: '★★★',
+                    question: '화학 반응이 일어날 때 반응 전 물질의 총질량과 반응 후 생성된 물질의 총질량이 항상 같다는 법칙은?',
+                    options: ['① 일정 성분비 법칙', '② 질량 보존 법칙', '③ 기체 반응 법칙', '④ 아보가드로 법칙'],
+                    answer: 1,
+                    explanation: '닫힌 공간에서 화학 변화가 일어나더라도 원자의 종류와 개수가 변하지 않으므로 총질량은 변하지 않는다는 ②번 "질량 보존 법칙"입니다.'
+                }
+            ],
+
+            high_1: [
+                {
+                    subject: '수학 (공통수학 - 다항식)',
+                    difficulty: '★★★',
+                    question: '다항식 P(x) = x³ - 2x + 5 를 일차식 (x - 2)로 나누었을 때의 나머지는 얼마일까요?',
+                    options: ['① 5', '② 7', '③ 9', '④ 13'],
+                    answer: 2,
+                    explanation: '나머지정리에 의해 P(x)를 (x - 2)로 나눈 나머지는 P(2)와 같습니다. P(2) = 2³ - 2(2) + 5 = 8 - 4 + 5 = 9입니다.'
+                },
+                {
+                    subject: '통합사회 (경제)',
+                    difficulty: '★★☆',
+                    question: '어떤 선택을 함으로써 포기하게 되는 여러 대안 중 가장 가치가 큰 대안의 가치를 경제학에서 무엇이라고 부를까요?',
+                    options: ['① 매몰 비용', '② 기회비용', '③ 한계 효용', '④ 비교 우위'],
+                    answer: 1,
+                    explanation: '여러 대안 중 하나를 선택했을 때 포기한 대안들 가운데 가장 가치가 큰 것의 가치를 ②번 "기회비용(Opportunity Cost)"이라고 합니다.'
+                },
+                {
+                    subject: '한국사 (근현대사)',
+                    difficulty: '★★☆',
+                    question: '1919년 3·1 운동의 영향으로 중국 상하이에서 수립되었으며, 대한민국 임시 헌장을 발표한 민족 독립운동의 최고 기관은?',
+                    options: ['① 신민회', '② 대한제국', '③ 대한민국 임시 정부', '④ 조선어 학회'],
+                    answer: 2,
+                    explanation: '3·1 운동 직후 독립운동을 체계적으로 이끌기 위해 1919년 4월 중국 상하이에 수립된 기관은 ③번 "대한민국 임시 정부"입니다.'
+                },
+                {
+                    subject: '영어 (고1 학력평가 어휘)',
+                    difficulty: '★★★',
+                    question: '다음 문장의 빈칸에 들어갈 가장 적절한 연결어는? "Many people believe multitasking increases productivity. (   ), studies show that switching between tasks wastes time."',
+                    options: ['① Therefore', '② For example', '③ However', '④ Similarly'],
+                    answer: 2,
+                    explanation: '앞 문장(생산성을 높인다고 믿는다)과 뒤 문장(실제로는 시간을 낭비한다)이 서로 대조되므로 역접의 연결어 ③번 "However(그러나)"가 가장 적절합니다.'
+                },
+                {
+                    subject: '국어 (음운의 변동)',
+                    difficulty: '★★★',
+                    question: '낱말 "국물"이 [궁물]로 발음되는 현상에 해당하는 음운의 변동은 무엇일까요?',
+                    options: ['① 비음화', '② 유음화', '③ 구개음화', '④ 두음 법칙'],
+                    answer: 0,
+                    explanation: '받침 ㄱ이 뒤의 비음 ㅁ의 영향을 받아 같은 조음 위치의 비음 ㅇ으로 바뀌어 [궁물]로 소리 나는 현상은 ①번 "비음화"입니다.'
+                }
+            ],
+
+            high_2_3: [
+                {
+                    subject: '수학 (수학Ⅰ - 지수와 로그)',
+                    difficulty: '★★★',
+                    question: 'log₂ 8 + log₃ (1/9) 의 값을 계산하면 얼마일까요?',
+                    options: ['① 1', '② 2', '③ 3', '④ 5'],
+                    answer: 0,
+                    explanation: 'log₂ 8 = log₂ 2³ = 3 이고, log₃ (1/9) = log₃ 3⁻² = -2 입니다. 따라서 3 + (-2) = 1입니다.'
+                },
+                {
+                    subject: '국어 (수능 비문학/논리)',
+                    difficulty: '★★★',
+                    question: '다음 추론이 타당하기 위해 전제되어야 할 숨은 조건은? "모든 예술 작품은 창의적이다. 따라서 이 사진은 예술 작품이다."',
+                    options: [
+                        '① 모든 창의적인 것은 예술 작품이다.',
+                        '② 이 사진은 창의적이다.',
+                        '③ 사진은 카메라로 찍은 것이다.',
+                        '④ 창의적이지 않은 사진도 존재한다.'
+                    ],
+                    answer: 0,
+                    explanation: '대전제(예술 작품 → 창의적)로부터 결론(이 사진 → 예술 작품)을 도출하려면, 역인 "모든 창의적인 것은 예술 작품이다"가 전제되어야 합니다.'
+                },
+                {
+                    subject: '수학 (확률과 통계)',
+                    difficulty: '★★★',
+                    question: '서로 다른 5권의 책 중에서 3권을 뽑아 일렬로 책꽂이에 꽂는 경우의 수(₅P₃)는?',
+                    options: ['① 10가지', '② 15가지', '③ 30가지', '④ 60가지'],
+                    answer: 3,
+                    explanation: '순열 ₅P₃ = 5 × 4 × 3 = 60가지입니다.'
+                },
+                {
+                    subject: '영어 (수능 구문/어법)',
+                    difficulty: '★★★',
+                    question: '다음 문장의 빈칸에 어법상 가장 적절한 것은? "Not only (   ) he speak English fluently, but he also writes Korean poetry."',
+                    options: ['① do', '② does', '③ is', '④ has'],
+                    answer: 1,
+                    explanation: '부정어구(Not only)가 문두에 오면 주어와 동사가 도치됩니다. 일반동사 speak의 현재형이고 주어가 3인칭 단수(he)이므로 ②번 "does"가 알맞습니다.'
+                },
+                {
+                    subject: '사회탐구 (생활과 윤리)',
+                    difficulty: '★★★',
+                    question: '서양 윤리 사상가 칸트가 강조한 도덕 법칙의 핵심 개념으로, 어떤 조건이나 목적 없이 그 자체로 무조건 따라야 하는 도덕적 명령을 무엇이라고 할까요?',
+                    options: ['① 가언 명령', '② 정언 명령', '③ 공리주의 원칙', '④ 최대 다수의 최대 행복'],
+                    answer: 1,
+                    explanation: '칸트는 수단이 아닌 목적 그 자체로서 무조건 준수해야 하는 보편적 도덕 명령을 ②번 "정언 명령"이라고 보았습니다.'
+                }
+            ],
+
+            adult: [
+                {
+                    subject: '경제 / 시사 상식',
+                    difficulty: '★★☆',
+                    question: '시중에 통화량이 늘어나 화폐 가치가 하락하고, 전반적인 물가 수준이 지속적으로 상승하는 경제 현상은 무엇일까요?',
+                    options: ['① 디플레이션', '② 인플레이션', '③ 스태그플레이션', '④ 리디노미네이션'],
+                    answer: 1,
+                    explanation: '통화량 팽창 등으로 화폐 가치가 떨어지고 물가가 지속적으로 오르는 현상을 ②번 "인플레이션(Inflation)"이라고 합니다.'
+                },
+                {
+                    subject: '비즈니스 영어 (TOEIC)',
+                    difficulty: '★★☆',
+                    question: '다음 비즈니스 문장의 빈칸에 가장 알맞은 단어는? "Please submit the expense report by Friday (   ) the latest."',
+                    options: ['① in', '② on', '③ at', '④ for'],
+                    answer: 2,
+                    explanation: '"늦어도 ~까지는"이라는 뜻의 비즈니스 관용 표현은 ③번 "at the latest"입니다.'
+                },
+                {
+                    subject: 'IT / 디지털 리터러시',
+                    difficulty: '★★☆',
+                    question: '생성형 AI 모델이 사실이 아닌 정보나 존재하지 않는 내용을 마치 사실인 것처럼 그럴듯하게 만들어내는 현상을 무엇이라고 할까요?',
+                    options: ['① 딥러닝 (Deep Learning)', '② 할루시네이션 (환각 현상)', '③ 파인튜닝 (미세 조정)', '④ 오버피팅 (과적합)'],
+                    answer: 1,
+                    explanation: 'AI가 허위 정보를 사실처럼 생성하는 현상을 ②번 "할루시네이션(Hallucination, 환각 현상)"이라고 합니다.'
+                },
+                {
+                    subject: '논리 / 추리 (NCS)',
+                    difficulty: '★★★',
+                    question: '명제 "프로젝트가 성공하면 모든 팀원이 보너스를 받는다"가 참일 때, 반드시 참이라고 할 수 있는 명제는?',
+                    options: [
+                        '① 모든 팀원이 보너스를 받으면 프로젝트가 성공한 것이다.',
+                        '② 프로젝트가 실패하면 아무도 보너스를 받지 못한다.',
+                        '③ 보너스를 받지 못한 팀원이 한 명이라도 있다면 프로젝트는 성공하지 못한 것이다.',
+                        '④ 일부 팀원만 보너스를 받아도 프로젝트는 성공한 것이다.'
+                    ],
+                    answer: 2,
+                    explanation: '원명제(P → Q)가 참이면 대우명제(~Q → ~P)도 반드시 참입니다. "보너스를 받지 못한 팀원이 한 명이라도 있으면 프로젝트는 성공하지 못한 것"인 ③번이 정답입니다.'
+                },
+                {
+                    subject: '한국어 / 실무 맞춤법',
+                    difficulty: '★★☆',
+                    question: '직장 이메일에서 자주 틀리는 맞춤법입니다. 다음 중 표기가 올바른 문장은 무엇일까요?',
+                    options: [
+                        '① 빠른 시일 내에 회신 부탁드립니다. (결재 완료 - 카드 대금)',
+                        '② 빠른 시일 내에 회신 부탁드립니다. (결제 완료 - 서류 승인)',
+                        '③ 금일 중으로 문서를 결재해 주시기 바랍니다.',
+                        '④ 내일 뵙겠습니다. 감기 빨리 낳으세요.'
+                    ],
+                    answer: 2,
+                    explanation: '안건을 검토하여 승인하는 것은 "결재(決裁)", 대금을 치르는 것은 "결제(決濟)"이며, 병이 회복되는 것은 "나으세요"가 맞으므로 ③번이 올바릅니다.'
+                }
+            ]
+        };
+
+        // ==========================================
+        // 4. 상태 관리 변수
+        // ==========================================
+        let selectedSchoolKey = 'elementary'; // 기본 선택 학교급: 초등학교
+        let currentGradeObj = null; // { id, label, desc, studyKey, quizKey }
+        let currentQuizzes = [];
+        let currentQuizIndex = 0;
+        let userAnswers = [];
+        let isAnswered = false;
+
+        // 페이지 로드 시 기본 학교급(초등학교) 학년 버튼 렌더링
+        window.addEventListener('DOMContentLoaded', () => {
+            selectSchoolLevel('elementary');
+        });
+
+        // ==========================================
+        // 5. UI 유틸리티 & 네비게이션 함수
+        // ==========================================
+        function showToast(msg) {
+            const toast = document.getElementById('toast-message');
+            const toastText = document.getElementById('toast-text');
+            toastText.textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        function updateStepper(step) {
+            const ind1 = document.getElementById('step-ind-1');
+            const ind2 = document.getElementById('step-ind-2');
+            const ind3 = document.getElementById('step-ind-3');
+            const line1 = document.getElementById('step-line-1');
+            const line2 = document.getElementById('step-line-2');
+
+            [ind1, ind2, ind3].forEach((el) => {
+                el.className = 'flex items-center space-x-2 text-slate-400';
+                el.querySelector('span').className = 'w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs';
+            });
+            line1.style.width = '0%';
+            line2.style.width = '0%';
+
+            if (step >= 1) {
+                ind1.className = 'flex items-center space-x-2 text-brand-600 font-bold';
+                ind1.querySelector('span').className = 'w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs';
+            }
+            if (step >= 2) {
+                line1.style.width = '100%';
+                ind2.className = 'flex items-center space-x-2 text-brand-600 font-bold';
+                ind2.querySelector('span').className = 'w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs';
+            }
+            if (step >= 3) {
+                line2.style.width = '100%';
+                ind3.className = 'flex items-center space-x-2 text-brand-600 font-bold';
+                ind3.querySelector('span').className = 'w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs';
+            }
+        }
+
+        function showSection(sectionId) {
+            ['section-step-1', 'section-step-2', 'section-step-3', 'section-step-4'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            const target = document.getElementById(sectionId);
+            target.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetApp() {
+            currentGradeObj = null;
+            document.getElementById('header-badge-container').classList.add('hidden');
+            updateStepper(1);
+            showSection('section-step-1');
+        }
+
+        // ==========================================
+        // 6. STEP 1: 학교급 및 세부 학년 선택 로직
+        // ==========================================
+        function selectSchoolLevel(schoolKey) {
+            selectedSchoolKey = schoolKey;
+            const schoolData = SCHOOL_STRUCTURE[schoolKey];
+
+            // 학교급 카드 활성화 스타일 업데이트
+            const allCards = document.querySelectorAll('.school-card');
+            allCards.forEach(card => {
+                card.classList.remove('border-brand-600', 'bg-brand-50/40', 'ring-2', 'ring-brand-500/20', 'shadow-sm');
+                card.classList.add('border-slate-200', 'bg-white');
+            });
+
+            const activeCard = document.getElementById(`school-btn-${schoolKey}`);
+            if (activeCard) {
+                activeCard.classList.remove('border-slate-200', 'bg-white');
+                activeCard.classList.add('border-brand-600', 'bg-brand-50/40', 'ring-2', 'ring-brand-500/20', 'shadow-sm');
+            }
+
+            // 2단계 타이틀 업데이트
+            document.getElementById('grade-selector-title').textContent = `[${schoolData.label}] 세부 학년 또는 과정을 선택하세요`;
+
+            // 세부 학년 버튼 동적 생성
+            const grid = document.getElementById('grade-buttons-grid');
+            grid.innerHTML = '';
+
+            // 버튼 개수가 1~2개일 때는 그리드 컬럼 조정
+            if (schoolData.grades.length === 1) {
+                grid.className = 'grid grid-cols-1 gap-3';
+            } else if (schoolData.grades.length === 2) {
+                grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3';
+            } else {
+                grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3';
+            }
+
+            schoolData.grades.forEach(grade => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => selectGrade(grade);
+                btn.className = 'group text-left p-4 sm:p-5 rounded-2xl border-2 border-slate-200 hover:border-brand-500 bg-slate-50/50 hover:bg-white shadow-xs hover:shadow-md transition-all flex items-center justify-between gap-3';
+                btn.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="font-extrabold text-slate-900 text-sm sm:text-base group-hover:text-brand-600 transition-colors">
+                            ${grade.label}
+                        </div>
+                        <p class="text-xs text-slate-500 leading-snug">${grade.desc}</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-white group-hover:bg-brand-600 text-slate-400 group-hover:text-white border border-slate-200 group-hover:border-brand-600 flex items-center justify-center shrink-0 transition-all">
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </div>
+                `;
+                grid.appendChild(btn);
+            });
+        }
+
+        // ==========================================
+        // 7. STEP 2: 맞춤 공부법 가이드 렌더링
+        // ==========================================
+        function selectGrade(gradeObj) {
+            currentGradeObj = gradeObj;
+            const guideData = STUDY_GUIDES[gradeObj.studyKey];
+
+            // 헤더 뱃지 업데이트
+            const badgeContainer = document.getElementById('header-badge-container');
+            const badgeText = document.getElementById('header-age-badge');
+            badgeContainer.classList.remove('hidden');
+            badgeText.textContent = `${guideData.emoji} ${gradeObj.label}`;
+
+            // 배너 세팅
+            const banner = document.getElementById('guide-banner');
+            banner.className = `rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden ${guideData.bannerGradient}`;
+            document.getElementById('guide-emoji').textContent = guideData.emoji;
+            document.getElementById('guide-age-range').textContent = `${gradeObj.label} · ${gradeObj.desc}`;
+            document.getElementById('guide-title').textContent = guideData.title;
+            document.getElementById('guide-subtitle').textContent = guideData.subtitle;
+
+            // 핵심 지표 세팅
+            document.getElementById('guide-goal').textContent = guideData.goal;
+            document.getElementById('guide-time').textContent = guideData.time;
+            document.getElementById('guide-cycle').textContent = guideData.cycle;
+
+            // 3대 공부법 카드 렌더링
+            const methodsContainer = document.getElementById('guide-methods-list');
+            methodsContainer.innerHTML = '';
+            guideData.methods.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm hover:border-brand-300 transition space-y-2';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2">
+                        <h4 class="font-extrabold text-slate-900 text-base">${m.title}</h4>
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 shrink-0">${m.tag}</span>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed">${m.desc}</p>
+                `;
+                methodsContainer.appendChild(card);
+            });
+
+            // 시간 배분 막대 그래프 렌더링
+            const scheduleContainer = document.getElementById('guide-schedule-bars');
+            scheduleContainer.innerHTML = '';
+            guideData.schedule.forEach(s => {
+                const item = document.createElement('div');
+                item.className = 'space-y-1.5';
+                item.innerHTML = `
+                    <div class="flex justify-between text-xs font-bold">
+                        <span class="text-slate-700">${s.label}</span>
+                        <span class="text-slate-500">${s.percent}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div class="${s.color} h-full rounded-full" style="width: ${s.percent}%"></div>
+                    </div>
+                `;
+                scheduleContainer.appendChild(item);
+            });
+
+            // 주의사항 세팅
+            document.getElementById('guide-warning').textContent = guideData.warning;
+
+            updateStepper(2);
+            showSection('section-step-2');
+        }
+
+        function backToGuide() {
+            updateStepper(2);
+            showSection('section-step-2');
+        }
+
+        // ==========================================
+        // 8. STEP 3: 수준별 맞춤 퀴즈 진행 및 채점
+        // ==========================================
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function startQuiz() {
+            const pool = QUIZ_BANK[currentGradeObj.quizKey];
+            currentQuizzes = shuffleArray(pool).slice(0, 5);
+            currentQuizIndex = 0;
+            userAnswers = [];
+
+            updateStepper(3);
+            showSection('section-step-3');
+            renderQuestion();
+        }
+
+        function retryQuiz() {
+            startQuiz();
+        }
+
+        function renderQuestion() {
+            isAnswered = false;
+            const q = currentQuizzes[currentQuizIndex];
+            const total = currentQuizzes.length;
+
+            document.getElementById('quiz-progress-text').textContent = `문제 ${currentQuizIndex + 1} / ${total}`;
+            document.getElementById('quiz-progress-bar').style.width = `${((currentQuizIndex + 1) / total) * 100}%`;
+
+            document.getElementById('quiz-subject-badge').textContent = q.subject;
+            document.getElementById('quiz-difficulty-badge').textContent = `난이도: ${q.difficulty}`;
+            document.getElementById('quiz-question').textContent = `Q${currentQuizIndex + 1}. ${q.question}`;
+
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-brand-500 hover:bg-brand-50/40 font-semibold text-sm sm:text-base text-slate-800 transition-all flex items-center justify-between';
+                btn.innerHTML = `<span>${optText}</span><i class="fa-regular fa-circle text-slate-300 text-lg"></i>`;
+                btn.onclick = () => selectAnswer(idx);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('btn-next-question').classList.add('hidden');
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const q = currentQuizzes[currentQuizIndex];
+            const isCorrect = (selectedIndex === q.answer);
+
+            userAnswers.push({
+                subject: q.subject,
+                question: q.question,
+                isCorrect: isCorrect,
+                userChoice: q.options[selectedIndex],
+                correctChoice: q.options[q.answer]
+            });
+
+            const optionButtons = document.getElementById('quiz-options').children;
+            for (let i = 0; i < optionButtons.length; i++) {
+                const btn = optionButtons[i];
+                btn.disabled = true;
+                btn.classList.remove('hover:border-brand-500', 'hover:bg-brand-50/40');
+
+                if (i === q.answer) {
+                    btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 font-bold text-sm sm:text-base text-emerald-900 flex items-center justify-between';
+                    btn.querySelector('i').className = 'fa-solid fa-circle-check text-emerald-600 text-lg';
+                } else if (i === selectedIndex && !isCorrect) {
+                    btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-rose-500 bg-rose-50 font-bold text-sm sm:text-base text-rose-900 flex items-center justify-between';
+                    btn.querySelector('i').className = 'fa-solid fa-circle-xmark text-rose-600 text-lg';
+                } else {
+                    btn.className = 'w-full text-left p-4 rounded-2xl border-2 border-slate-100 bg-slate-50/50 text-sm sm:text-base text-slate-400 flex items-center justify-between';
+                }
+            }
+
+            const feedbackBox = document.getElementById('quiz-feedback');
+            const feedbackTitle = document.getElementById('quiz-feedback-title');
+            const explanationText = document.getElementById('quiz-explanation');
+
+            feedbackBox.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-200', 'bg-rose-50', 'border-rose-200');
+            if (isCorrect) {
+                feedbackBox.classList.add('bg-emerald-50', 'border-emerald-200');
+                feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i><span class="text-emerald-800">정답입니다! 훌륭해요.</span>`;
+            } else {
+                feedbackBox.classList.add('bg-rose-50', 'border-rose-200');
+                feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600"></i><span class="text-rose-800">아쉽네요! 정답은 [${q.options[q.answer]}] 입니다.</span>`;
+            }
+            explanationText.textContent = q.explanation;
+
+            const nextBtn = document.getElementById('btn-next-question');
+            const nextText = document.getElementById('btn-next-text');
+            nextText.textContent = (currentQuizIndex === currentQuizzes.length - 1) ? '최종 결과 리포트 보기' : '다음 문제';
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            if (currentQuizIndex < currentQuizzes.length - 1) {
+                currentQuizIndex++;
+                renderQuestion();
+            } else {
+                showResultReport();
+            }
+        }
+
+        // ==========================================
+        // 9. STEP 4: 최종 결과 리포트 렌더링
+        // ==========================================
+        function showResultReport() {
+            const guideData = STUDY_GUIDES[currentGradeObj.studyKey];
+            const correctCount = userAnswers.filter(a => a.isCorrect).length;
+            const score = Math.round((correctCount / currentQuizzes.length) * 100);
+
+            document.getElementById('result-category-label').textContent = `${guideData.emoji} ${currentGradeObj.label} 실력 진단 리포트`;
+            document.getElementById('result-score').textContent = score;
+
+            const commentEl = document.getElementById('result-comment');
+            if (score === 100) {
+                commentEl.textContent = '완벽합니다! 현재 학년의 핵심 개념을 완벽하게 마스터하셨네요. 다음 학년 과정에도 자신 있게 도전해 보세요!';
+            } else if (score >= 80) {
+                commentEl.textContent = '아주 우수한 성적입니다! 기본기가 탄탄하게 잡혀 있습니다. 아쉽게 틀린 1문제만 오답 노트로 정리해 보세요.';
+            } else if (score >= 60) {
+                commentEl.textContent = '좋습니다! 핵심 개념은 알고 있지만 약간의 보완이 필요합니다. 추천해 드린 공부법대로 백지 복습을 진행해 보세요.';
+            } else {
+                commentEl.textContent = '괜찮습니다! 지금 부족한 부분을 발견한 것이 가장 큰 수확입니다. 위의 추천 공부법 가이드를 천천히 읽고 다시 도전해 보세요!';
+            }
+
+            const summaryList = document.getElementById('result-summary-list');
+            summaryList.innerHTML = '';
+
+            userAnswers.forEach((ans, idx) => {
+                const row = document.createElement('div');
+                row.className = 'bg-white p-3.5 rounded-xl border border-slate-200 flex items-start justify-between gap-3 text-xs sm:text-sm';
+                row.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-extrabold ${ans.isCorrect ? 'text-emerald-600' : 'text-rose-600'}">
+                                ${ans.isCorrect ? 'O (정답)' : 'X (오답)'}
+                            </span>
+                            <span class="text-xs font-semibold text-slate-400">| ${ans.subject}</span>
+                        </div>
+                        <p class="font-semibold text-slate-800 line-clamp-1">Q${idx + 1}. ${ans.question}</p>
+                        ${!ans.isCorrect ? `<p class="text-xs text-slate-500">내 선택: <span class="text-rose-600 line-through">${ans.userChoice}</span> → 정답: <span class="text-emerald-600 font-bold">${ans.correctChoice}</span></p>` : ''}
+                    </div>
+                `;
+                summaryList.appendChild(row);
+            });
+
+            showSection('section-step-4');
+        }
+    </script>
+</body>
+</html>

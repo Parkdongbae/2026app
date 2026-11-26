@@ -1,0 +1,3653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MathViz Studio - 수학 시각화 스튜디오</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans KR & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Math.js for robust expression parsing & derivatives -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.min.js"></script>
+  <!-- Three.js for 3D Geometry Canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      user-select: none;
+      overflow: hidden;
+    }
+    .font-math {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    input[type="range"] {
+      accent-color: #4f46e5;
+    }
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen flex flex-col">
+
+  <!-- Top Navigation Header -->
+  <header class="h-14 bg-white border-b border-slate-200 px-4 flex items-center justify-between shrink-0 z-20 shadow-xs">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-sm">
+        <i class="fa-solid fa-compass-drafting text-lg"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base sm:text-lg tracking-tight text-slate-900 leading-tight">
+          MathViz <span class="text-indigo-600">Studio</span>
+          <span class="hidden md:inline-block text-xs font-medium text-slate-400 ml-1.5">수학 시각화 스튜디오</span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- Mode Switcher (2D vs 3D) -->
+    <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+      <button id="btn-mode-2d" onclick="switchMode('2d')" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-indigo-600 shadow-xs flex items-center gap-1.5">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>2D 기하창</span>
+      </button>
+      <button id="btn-mode-3d" onclick="switchMode('3d')" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+        <i class="fa-solid fa-cube"></i>
+        <span>3D 기하창</span>
+      </button>
+    </div>
+
+    <!-- Right Action Buttons -->
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="window.openGuideModal()" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+        <i class="fa-solid fa-book-open"></i>
+        <span class="hidden sm:inline">기호 & 문법 가이드</span>
+        <span class="sm:hidden">가이드</span>
+      </button>
+      <button type="button" onclick="window.openConceptModal()" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+        <i class="fa-solid fa-graduation-cap"></i>
+        <span class="hidden sm:inline">고등수학 개념 · 예시 (21+)</span>
+        <span class="sm:hidden">개념·예시</span>
+      </button>
+      <button type="button" onclick="toggleQuizDock()" id="btn-toggle-quiz" class="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white border border-violet-600 text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+        <i class="fa-solid fa-brain"></i>
+        <span class="hidden sm:inline">실습 퀴즈</span>
+        <span class="sm:hidden">퀴즈</span>
+      </button>
+      <button type="button" onclick="toggleCompareDrawer()" id="btn-toggle-compare" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 cursor-pointer">
+        <i class="fa-solid fa-scale-balanced"></i>
+        <span class="hidden lg:inline">길이·넓이 비교</span>
+      </button>
+      <button type="button" onclick="resetWorkspace()" title="전체 초기화" class="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+        <i class="fa-solid fa-rotate-right"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace Split View -->
+  <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+    <!-- Left Sidebar: Algebra Panel (대수창) -->
+    <aside id="algebra-sidebar" class="w-full md:w-[390px] lg:w-[420px] h-[48%] md:h-full bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col shrink-0 z-10">
+      <!-- Algebra Header & Quick Input -->
+      <div class="p-3 border-b border-slate-100 bg-slate-50/70">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600">대수창 (Algebra & Expressions)</h2>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="window.openGuideModal()" class="text-[11px] px-2 py-1 rounded-lg bg-amber-100/80 text-amber-800 font-semibold hover:bg-amber-200/80 transition flex items-center gap-1 cursor-pointer">
+              <i class="fa-solid fa-circle-question"></i>
+              <span>기호 & 문법</span>
+            </button>
+            <button type="button" onclick="toggleKeypad()" id="btn-keypad-toggle" class="text-[11px] px-2 py-1 rounded-lg bg-indigo-100 text-indigo-700 font-semibold hover:bg-indigo-200 transition flex items-center gap-1 cursor-pointer">
+              <i class="fa-solid fa-keyboard"></i>
+              <span>키패드</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Expression Input Box -->
+        <form onsubmit="handleAddExpression(event)" class="flex gap-1.5">
+          <div class="relative flex-1">
+            <input
+              id="expr-input"
+              type="text"
+              autocomplete="off"
+              placeholder="예: y = x^2 - 2, P = (2, 3), a = 1, z = sin(x)*cos(y)"
+              class="w-full pl-3 pr-8 py-2 text-sm font-math bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs"
+            />
+            <button type="button" onclick="document.getElementById('expr-input').value=''; document.getElementById('expr-input').focus();" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <button type="submit" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-xs transition shrink-0">
+            입력
+          </button>
+        </form>
+
+        <!-- Expanded Quick Example Chips -->
+        <div class="mt-2 space-y-1">
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-[11px]">
+            <span class="text-slate-400 font-semibold shrink-0">추천식:</span>
+            <button type="button" onclick="quickInsert('y = x^3 - 3*x')" class="px-2 py-0.5 rounded-md bg-slate-200/75 hover:bg-indigo-100 hover:text-indigo-700 font-math transition shrink-0">삼차함수</button>
+            <button type="button" onclick="quickInsert('y = exp(-x^2)')" class="px-2 py-0.5 rounded-md bg-slate-200/75 hover:bg-indigo-100 hover:text-indigo-700 font-math transition shrink-0">정규분포곡선</button>
+            <button type="button" onclick="quickInsert('y = (x^2)^(1/3) + 0.9*sqrt(3.3 - x^2)*sin(12*pi*x)')" class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 hover:bg-rose-200 font-medium transition shrink-0">♥ 하트곡선</button>
+            <button type="button" onclick="quickInsert('(x^2 + y^2 - 1)^3 - x^2*y^3 = 0')" class="px-2 py-0.5 rounded-md bg-pink-100 text-pink-700 hover:bg-pink-200 font-medium transition shrink-0">음함수 하트</button>
+            <button type="button" onclick="quickInsert('x^2/9 + y^2/4 = 1')" class="px-2 py-0.5 rounded-md bg-slate-200/75 hover:bg-indigo-100 hover:text-indigo-700 font-math transition shrink-0">타원</button>
+            <button type="button" onclick="quickInsert('y = x - x^3/6 + x^5/120')" class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 hover:bg-emerald-200 font-medium transition shrink-0">테일러 근사</button>
+            <button type="button" onclick="quickInsert('z = x^2 - y^2')" class="px-2 py-0.5 rounded-md bg-violet-100 text-violet-700 hover:bg-violet-200 font-medium transition shrink-0">3D 안장점</button>
+            <button type="button" onclick="window.openConceptModal()" class="px-2.5 py-0.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 font-semibold transition shrink-0 cursor-pointer">+ 수식 예시 (21)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expression List -->
+      <div id="algebra-list" class="flex-1 overflow-y-auto p-3 space-y-2.5">
+        <!-- Dynamic Algebra Cards Rendered Here -->
+      </div>
+
+      <!-- Virtual Math Symbol Keypad with Interactive Symbol Role Guide -->
+      <div id="math-keypad" class="border-t border-slate-200 bg-slate-50 p-2.5 shrink-0">
+        <!-- Real-time Symbol Role Guideline Banner -->
+        <div id="symbol-guide-bar" class="mb-2 p-2 rounded-xl bg-white border border-indigo-100 shadow-2xs flex items-start gap-2 min-h-[54px] transition-all">
+          <div class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-lightbulb text-xs"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <span id="sg-title" class="text-[11px] font-bold text-indigo-900 truncate">기호 가이드: 버튼에 마우스를 올리거나 눌러보세요</span>
+              <span id="sg-syntax" class="font-math text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 shrink-0">예: y = x^2</span>
+            </div>
+            <p id="sg-desc" class="text-[11px] text-slate-600 leading-snug mt-0.5 line-clamp-2">
+              각 수학 기호의 정확한 역할과 입력 문법, 활용 예시가 여기에 실시간으로 안내됩니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-1.5 px-1">
+          <span class="text-[11px] font-semibold text-slate-500">가상 수학 기호 키패드</span>
+          <div class="flex gap-1 text-[10px]">
+            <button onclick="switchKeypadTab('basic')" id="kp-tab-basic" class="px-2 py-0.5 rounded bg-indigo-600 text-white font-medium">기본 · 거듭제곱</button>
+            <button onclick="switchKeypadTab('func')" id="kp-tab-func" class="px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-medium">초월함수</button>
+            <button onclick="switchKeypadTab('calc')" id="kp-tab-calc" class="px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-medium">미적분 · 도형</button>
+          </div>
+        </div>
+
+        <!-- Tab 1: Basic & Powers -->
+        <div id="kp-panel-basic" class="grid grid-cols-7 gap-1 font-math text-xs">
+          <button type="button" data-sym-key="sq" onmouseenter="showSymbolGuide('sq')" onclick="insertSymbol('^2'); showSymbolGuide('sq')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">x²</button>
+          <button type="button" data-sym-key="pow" onmouseenter="showSymbolGuide('pow')" onclick="insertSymbol('^'); showSymbolGuide('pow')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">^</button>
+          <button type="button" data-sym-key="sqrt" onmouseenter="showSymbolGuide('sqrt')" onclick="insertSymbol('sqrt('); showSymbolGuide('sqrt')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">√</button>
+          <button type="button" data-sym-key="abs" onmouseenter="showSymbolGuide('abs')" onclick="insertSymbol('abs('); showSymbolGuide('abs')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">|x|</button>
+          <button type="button" data-sym-key="pi" onmouseenter="showSymbolGuide('pi')" onclick="insertSymbol('pi'); showSymbolGuide('pi')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">π</button>
+          <button type="button" data-sym-key="e" onmouseenter="showSymbolGuide('e')" onclick="insertSymbol('e'); showSymbolGuide('e')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">e</button>
+          <button type="button" data-sym-key="frac" onmouseenter="showSymbolGuide('frac')" onclick="insertSymbol('/'); showSymbolGuide('frac')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">÷ (/)</button>
+
+          <button type="button" data-sym-key="paren" onmouseenter="showSymbolGuide('paren')" onclick="insertSymbol('('); showSymbolGuide('paren')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">(</button>
+          <button type="button" data-sym-key="paren" onmouseenter="showSymbolGuide('paren')" onclick="insertSymbol(')'); showSymbolGuide('paren')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">)</button>
+          <button type="button" data-sym-key="eq" onmouseenter="showSymbolGuide('eq')" onclick="insertSymbol(' = '); showSymbolGuide('eq')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">=</button>
+          <button type="button" data-sym-key="ineq" onmouseenter="showSymbolGuide('ineq')" onclick="insertSymbol(' <= '); showSymbolGuide('ineq')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">≤</button>
+          <button type="button" data-sym-key="ineq" onmouseenter="showSymbolGuide('ineq')" onclick="insertSymbol(' >= '); showSymbolGuide('ineq')" class="kp-btn py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium shadow-2xs">≥</button>
+          <button type="button" data-sym-key="slider" onmouseenter="showSymbolGuide('slider')" onclick="insertSymbol('a = 1'); showSymbolGuide('slider')" class="kp-btn py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg font-semibold shadow-2xs">a=1</button>
+          <button type="button" data-sym-key="point" onmouseenter="showSymbolGuide('point')" onclick="insertSymbol('P = (2, 3)'); showSymbolGuide('point')" class="kp-btn py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg font-semibold shadow-2xs">(x,y)</button>
+        </div>
+
+        <!-- Tab 2: Transcendental Functions -->
+        <div id="kp-panel-func" class="hidden grid-cols-6 gap-1 font-math text-xs">
+          <button type="button" onmouseenter="showSymbolGuide('sin')" onclick="insertSymbol('sin('); showSymbolGuide('sin')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">sin(x)</button>
+          <button type="button" onmouseenter="showSymbolGuide('cos')" onclick="insertSymbol('cos('); showSymbolGuide('cos')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">cos(x)</button>
+          <button type="button" onmouseenter="showSymbolGuide('tan')" onclick="insertSymbol('tan('); showSymbolGuide('tan')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">tan(x)</button>
+          <button type="button" onmouseenter="showSymbolGuide('asin')" onclick="insertSymbol('asin('); showSymbolGuide('asin')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">sin⁻¹</button>
+          <button type="button" onmouseenter="showSymbolGuide('acos')" onclick="insertSymbol('acos('); showSymbolGuide('acos')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">cos⁻¹</button>
+          <button type="button" onmouseenter="showSymbolGuide('atan')" onclick="insertSymbol('atan('); showSymbolGuide('atan')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">tan⁻¹</button>
+
+          <button type="button" onmouseenter="showSymbolGuide('exp')" onclick="insertSymbol('exp('); showSymbolGuide('exp')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">eˣ exp</button>
+          <button type="button" onmouseenter="showSymbolGuide('ln')" onclick="insertSymbol('log('); showSymbolGuide('ln')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">ln(x)</button>
+          <button type="button" onmouseenter="showSymbolGuide('log10')" onclick="insertSymbol('log10('); showSymbolGuide('log10')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">log₁₀</button>
+          <button type="button" onmouseenter="showSymbolGuide('logbase')" onclick="insertSymbol('log(x, 2)'); showSymbolGuide('logbase')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">logₐ(x)</button>
+          <button type="button" onmouseenter="showSymbolGuide('floor')" onclick="insertSymbol('floor('); showSymbolGuide('floor')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">[x] 가우스</button>
+          <button type="button" onmouseenter="showSymbolGuide('nthroot')" onclick="insertSymbol('nthRoot(x, 3)'); showSymbolGuide('nthroot')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">∛x</button>
+        </div>
+
+        <!-- Tab 3: Calculus & Geometry -->
+        <div id="kp-panel-calc" class="hidden grid-cols-6 gap-1 font-math text-xs">
+          <button type="button" onmouseenter="showSymbolGuide('deriv')" onclick="insertSpecialCalculus('derivative'); showSymbolGuide('deriv')" class="col-span-2 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg font-semibold">d/dx 도함수</button>
+          <button type="button" onmouseenter="showSymbolGuide('integral')" onclick="insertSpecialCalculus('integral'); showSymbolGuide('integral')" class="col-span-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg font-semibold">∫ 정적분 넓이</button>
+          <button type="button" onmouseenter="showSymbolGuide('sigma')" onclick="insertSpecialCalculus('sigma'); showSymbolGuide('sigma')" class="col-span-2 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg font-semibold">∑ 급수 합</button>
+
+          <button type="button" onmouseenter="showSymbolGuide('implicit')" onclick="insertSymbol('x^2 + y^2 = 9'); showSymbolGuide('implicit')" class="col-span-2 py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">음함수 x²+y²=r²</button>
+          <button type="button" onmouseenter="showSymbolGuide('surface3d')" onclick="insertSymbol('z = sin(x)*cos(y)'); showSymbolGuide('surface3d')" class="col-span-2 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 rounded-lg font-medium">3D z=f(x,y)</button>
+          <button type="button" onmouseenter="showSymbolGuide('fact')" onclick="insertSymbol('!'); showSymbolGuide('fact')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">n!</button>
+          <button type="button" onmouseenter="showSymbolGuide('mod')" onclick="insertSymbol(' mod '); showSymbolGuide('mod')" class="py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 rounded-lg font-medium">mod</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Main Area: Geometry Canvas (기하창) -->
+    <main class="flex-1 relative bg-slate-50 overflow-hidden flex flex-col">
+
+      <!-- 2D Geometry Canvas View -->
+      <div id="view-2d" class="w-full h-full relative">
+        <!-- Top Floating Geometry Construction Toolbar -->
+        <div class="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+          <div class="glass-panel border border-slate-200/90 rounded-2xl p-1.5 shadow-md flex items-center gap-1 pointer-events-auto overflow-x-auto max-w-full">
+            <button onclick="setTool2D('select')" id="tool-select" class="tool-2d-btn active px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 bg-indigo-600 text-white shadow-2xs transition shrink-0">
+              <i class="fa-solid fa-arrow-pointer"></i>
+              <span>선택/이동</span>
+            </button>
+            <button onclick="setTool2D('point')" id="tool-point" class="tool-2d-btn px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 text-slate-700 hover:bg-slate-100 transition shrink-0">
+              <i class="fa-solid fa-circle-dot text-rose-500"></i>
+              <span>점 찍기</span>
+            </button>
+            <button onclick="setTool2D('segment')" id="tool-segment" class="tool-2d-btn px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 text-slate-700 hover:bg-slate-100 transition shrink-0">
+              <i class="fa-solid fa-slash text-blue-500"></i>
+              <span>선분 (길이)</span>
+            </button>
+            <button onclick="setTool2D('polygon')" id="tool-polygon" class="tool-2d-btn px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 text-slate-700 hover:bg-slate-100 transition shrink-0">
+              <i class="fa-solid fa-draw-polygon text-emerald-600"></i>
+              <span>다각형 (넓이)</span>
+            </button>
+            <button onclick="setTool2D('circle')" id="tool-circle" class="tool-2d-btn px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 text-slate-700 hover:bg-slate-100 transition shrink-0">
+              <i class="fa-regular fa-circle text-amber-500"></i>
+              <span>원 그리기</span>
+            </button>
+          </div>
+
+          <!-- Canvas View Controls -->
+          <div class="glass-panel border border-slate-200/90 rounded-2xl p-1.5 shadow-md flex items-center gap-1 pointer-events-auto">
+            <button onclick="toggleSnapToGrid()" id="btn-snap" title="격자 스냅 켜기/끄기" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 transition">
+              <i class="fa-solid fa-magnet mr-1"></i>스냅 ON
+            </button>
+            <button onclick="zoom2D(1.2)" title="확대" class="w-8 h-8 rounded-xl hover:bg-slate-100 text-slate-700 flex items-center justify-center">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <button onclick="zoom2D(0.8)" title="축소" class="w-8 h-8 rounded-xl hover:bg-slate-100 text-slate-700 flex items-center justify-center">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <button onclick="resetView2D()" title="원점 중심으로 보기" class="px-2.5 h-8 rounded-xl hover:bg-slate-100 text-slate-700 text-xs font-semibold">
+              원점 복귀
+            </button>
+          </div>
+        </div>
+
+        <!-- Tool Hint Banner -->
+        <div id="tool-hint-banner" class="hidden absolute top-16 left-1/2 -translate-x-1/2 z-10 bg-slate-900/85 text-white text-xs px-4 py-1.5 rounded-full shadow-lg pointer-events-none">
+          안내 메시지
+        </div>
+
+        <!-- 2D HTML5 Canvas -->
+        <canvas id="canvas-2d" class="w-full h-full block cursor-crosshair"></canvas>
+
+        <!-- Bottom Left Coordinate Status -->
+        <div class="absolute bottom-3 left-3 glass-panel border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-math text-slate-600 shadow-xs pointer-events-none flex items-center gap-3">
+          <span id="cursor-coords">x: 0.00, y: 0.00</span>
+          <span class="text-slate-300">|</span>
+          <span id="zoom-level">배율: 100%</span>
+        </div>
+
+        <!-- Active Concept Overlay Info Card (Bottom Right of 2D Canvas) -->
+        <div id="concept-overlay-card" class="hidden absolute bottom-3 right-3 max-w-sm glass-panel border border-indigo-200 rounded-2xl p-3.5 shadow-lg z-10">
+          <div class="flex items-start justify-between gap-2 mb-1.5">
+            <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-bold">고등수학 시각화 분석</span>
+            <button onclick="document.getElementById('concept-overlay-card').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-xs">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <h4 id="concept-overlay-title" class="font-bold text-sm text-slate-900 mb-1"></h4>
+          <div id="concept-overlay-body" class="text-xs text-slate-600 space-y-1 leading-relaxed"></div>
+        </div>
+      </div>
+
+      <!-- 3D Geometry Canvas View -->
+      <div id="view-3d" class="hidden w-full h-full relative bg-slate-900">
+        <!-- 3D Top Toolbar: Solids Generator & Controls -->
+        <div class="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+          <div class="bg-slate-800/90 backdrop-blur border border-slate-700 rounded-2xl p-1.5 shadow-lg flex items-center gap-1.5 pointer-events-auto overflow-x-auto">
+            <span class="text-[11px] font-bold text-slate-300 px-2 shrink-0">입체도형 추가:</span>
+            <button onclick="add3DSolid('sphere')" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition flex items-center gap-1 shrink-0">
+              <i class="fa-solid fa-globe"></i> 구
+            </button>
+            <button onclick="add3DSolid('box')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center gap-1 shrink-0">
+              <i class="fa-solid fa-cube"></i> 직육면체
+            </button>
+            <button onclick="add3DSolid('cylinder')" class="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition flex items-center gap-1 shrink-0">
+              <i class="fa-solid fa-database"></i> 원기둥
+            </button>
+            <button onclick="add3DSolid('cone')" class="px-2.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition flex items-center gap-1 shrink-0">
+              <i class="fa-solid fa-caret-up"></i> 원뿔
+            </button>
+            <button onclick="add3DSolid('pyramid')" class="px-2.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition flex items-center gap-1 shrink-0">
+              <i class="fa-solid fa-shapes"></i> 사각뿔
+            </button>
+          </div>
+
+          <div class="bg-slate-800/90 backdrop-blur border border-slate-700 rounded-2xl p-1.5 shadow-lg flex items-center gap-1.5 pointer-events-auto">
+            <button onclick="toggle3DWireframe()" id="btn-3d-wireframe" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold transition">
+              와이어프레임: OFF
+            </button>
+            <button onclick="resetCamera3D()" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold transition">
+              시점 초기화
+            </button>
+          </div>
+        </div>
+
+        <!-- 3D Three.js Container -->
+        <div id="container-3d" class="w-full h-full"></div>
+
+        <!-- 3D Legend & Help -->
+        <div class="absolute bottom-3 left-3 bg-slate-800/85 backdrop-blur border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 pointer-events-none flex flex-col gap-1">
+          <div class="flex items-center gap-3 font-math">
+            <span class="text-rose-400 font-bold">X축 (빨강)</span>
+            <span class="text-emerald-400 font-bold">Y축 (초록)</span>
+            <span class="text-sky-400 font-bold">Z축 (파랑/높이)</span>
+          </div>
+          <div class="text-[11px] text-slate-400">마우스 드래그: 회전 | 휠: 확대/축소 | 우클릭 드래그: 이동</div>
+        </div>
+      </div>
+
+      <!-- Length, Area & Volume Comparison Drawer (Slide-over Panel) -->
+      <div id="compare-drawer" class="hidden absolute top-0 right-0 bottom-0 w-full sm:w-96 bg-white border-l border-slate-200 shadow-2xl z-30 flex flex-col">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-emerald-50/70">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-scale-balanced text-emerald-600"></i>
+            <h3 class="font-bold text-sm text-slate-900">도형 길이 · 넓이 · 부피 비교 분석</h3>
+          </div>
+          <button onclick="toggleCompareDrawer()" class="w-7 h-7 rounded-lg hover:bg-slate-200/70 flex items-center justify-center text-slate-500">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="p-4 flex-1 overflow-y-auto space-y-4">
+          <p class="text-xs text-slate-600 leading-relaxed">
+            기하창에서 작도한 <strong>선분, 다각형, 원</strong> 또는 <strong>3D 입체도형</strong> 중 2개 이상을 선택하여 길이·넓이·부피의 비율과 차이를 비교해보세요.
+          </p>
+
+          <!-- Metric Selector Tabs -->
+          <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+            <button type="button" onclick="setCompareMetric('length')" id="cmp-tab-length" class="py-1.5 rounded-lg bg-white text-emerald-700 shadow-2xs">길이 · 둘레</button>
+            <button type="button" onclick="setCompareMetric('area')" id="cmp-tab-area" class="py-1.5 rounded-lg text-slate-600">넓이 · 겉넓이</button>
+            <button type="button" onclick="setCompareMetric('volume')" id="cmp-tab-volume" class="py-1.5 rounded-lg text-slate-600">부피 (3D)</button>
+          </div>
+
+          <!-- Shape Selection Checkboxes -->
+          <div>
+            <div class="text-[11px] font-bold text-slate-500 mb-1.5">비교할 도형 선택:</div>
+            <div id="compare-shape-list" class="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Visual Comparison Bars & Ratio Result -->
+          <div id="compare-result-box" class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-3">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Calculator-Assisted Quiz Dock (계산기 실습형 퀴즈 패널) -->
+      <div id="quiz-dock" class="hidden absolute bottom-3 right-3 sm:top-16 sm:bottom-auto sm:right-3 w-[calc(100%-1.5rem)] sm:w-[410px] max-h-[82vh] bg-white/95 backdrop-blur-md border border-violet-200 rounded-3xl shadow-2xl z-30 flex flex-col overflow-hidden">
+        <!-- Quiz Header -->
+        <div class="px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center">
+              <i class="fa-solid fa-brain text-sm"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-xs sm:text-sm leading-tight">계산기 실습형 수학 퀴즈</h3>
+              <p class="text-[10px] text-violet-100">그래프·슬라이더·도형 작도로 직접 해결하세요</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-right font-math text-[10px] bg-white/15 px-2 py-1 rounded-lg">
+              <span id="quiz-score-badge">0/0</span> · <span id="quiz-streak-badge">🔥0</span>
+            </div>
+            <button type="button" onclick="toggleQuizDock(false)" class="w-7 h-7 rounded-lg bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition cursor-pointer">
+              <i class="fa-solid fa-xmark text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Difficulty Filter Tabs -->
+        <div class="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center gap-1 text-[11px] font-bold shrink-0">
+          <button type="button" onclick="setQuizDifficulty('all')" id="qdiff-all" class="flex-1 py-1.5 rounded-xl bg-violet-600 text-white transition cursor-pointer">전체 (12)</button>
+          <button type="button" onclick="setQuizDifficulty('easy')" id="qdiff-easy" class="flex-1 py-1.5 rounded-xl text-slate-600 hover:bg-slate-200/70 transition cursor-pointer">쉬움</button>
+          <button type="button" onclick="setQuizDifficulty('medium')" id="qdiff-medium" class="flex-1 py-1.5 rounded-xl text-slate-600 hover:bg-slate-200/70 transition cursor-pointer">보통</button>
+          <button type="button" onclick="setQuizDifficulty('hard')" id="qdiff-hard" class="flex-1 py-1.5 rounded-xl text-slate-600 hover:bg-slate-200/70 transition cursor-pointer">어려움</button>
+        </div>
+
+        <!-- Quiz Body -->
+        <div id="quiz-body" class="p-4 overflow-y-auto space-y-3 flex-1 text-xs">
+          <!-- Populated dynamically by JS -->
+        </div>
+
+        <!-- Quiz Footer Navigation -->
+        <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0 text-xs">
+          <button type="button" onclick="prevQuizQuestion()" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold transition cursor-pointer">
+            <i class="fa-solid fa-chevron-left mr-1"></i>이전 문제
+          </button>
+          <span id="quiz-progress-text" class="font-math font-bold text-slate-500">1 / 12</span>
+          <button type="button" onclick="nextQuizQuestion()" class="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold transition cursor-pointer">
+            다음 문제<i class="fa-solid fa-chevron-right ml-1"></i>
+          </button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- High School Math Concepts & Rich Presets Modal (고등수학 개념 학습 및 21+ 수식 라이브러리) -->
+  <div id="concepts-modal" onclick="if(event.target === this) window.closeModals()" style="display: none;" class="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs items-center justify-center p-2 sm:p-5 transition-opacity duration-200 opacity-0">
+    <div onclick="event.stopPropagation()" class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-indigo-600 to-violet-600 text-white shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+            <i class="fa-solid fa-graduation-cap text-xl"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-base sm:text-lg">고등수학 개념 · 수식 시각화 라이브러리 (21종 프리셋)</h2>
+            <p class="text-xs text-indigo-100">단원별 핵심 개념과 탐구 포인트를 확인하고 클릭 한 번으로 기하창에 즉시 적용하세요.</p>
+          </div>
+        </div>
+        <button type="button" onclick="window.closeModals()" aria-label="모달 닫기" class="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div id="concept-category-tabs" class="px-4 py-2.5 bg-white border-b border-slate-200 flex items-center gap-1.5 overflow-x-auto shrink-0 text-xs font-semibold">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Modal Body: Concept Cards Grid -->
+      <div id="concepts-grid" class="p-4 sm:p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 bg-slate-50 flex-1">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Complete Math Symbol & Syntax Guide Modal (기호 & 문법 가이드 전체보기) -->
+  <div id="syntax-guide-modal" onclick="if(event.target === this) window.closeModals()" style="display: none;" class="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs items-center justify-center p-2 sm:p-5 transition-opacity duration-200 opacity-0">
+    <div onclick="event.stopPropagation()" class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-500 text-white shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+            <i class="fa-solid fa-book-open text-xl"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-base sm:text-lg">수학 기호 역할 & 대수창 입력 문법 완벽 가이드</h2>
+            <p class="text-xs text-amber-50">각 기호의 수학적 역할을 확인하고 예시 버튼을 눌러 대수창에 바로 입력해보세요.</p>
+          </div>
+        </div>
+        <button type="button" onclick="window.closeModals()" aria-label="모달 닫기" class="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div id="syntax-guide-body" class="p-5 overflow-y-auto space-y-5 bg-slate-50 flex-1">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[10000] bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-full shadow-xl opacity-0 pointer-events-none transition-opacity duration-300">
+    알림 메시지
+  </div>
+
+<script>
+/**
+ * ============================================================================
+ * MathViz Studio - Core State & Architecture
+ * ============================================================================
+ */
+const COLORS = ['#4f46e5', '#e11d48', '#059669', '#d97706', '#7c3aed', '#0284c7', '#db2777'];
+
+const state = {
+  mode: '2d', // '2d' | '3d'
+  tool2D: 'select', // 'select' | 'point' | 'segment' | 'polygon' | 'circle'
+  snapToGrid: true,
+  expressions: [], // Algebra items: functions, points, sliders, implicit, 3d surfaces, integrals, derivatives
+  shapes2D: [],    // Interactive geometric shapes: points, segments, polygons, circles
+  solids3D: [],    // 3D geometric solids: sphere, box, cylinder, cone, pyramid
+  variables: {},   // Global variable map for sliders (e.g., { a: 1, b: -2 })
+  nextColorIdx: 0,
+  // 2D Viewport transform
+  view2D: {
+    offsetX: 0,
+    offsetY: 0,
+    scale: 45, // pixels per unit
+    isDragging: false,
+    dragStartX: 0,
+    dragStartY: 0,
+    draggedPointId: null,
+    tempPoints: [], // For multi-click drawing (segment, polygon, circle)
+    mouseWorld: { x: 0, y: 0 }
+  },
+  // Comparison state
+  compareMetric: 'length', // 'length' | 'area' | 'volume'
+  selectedCompareIds: [],
+  // Active High School Concept Overlay
+  activeConcept: null,
+  // 3D Wireframe toggle
+  wireframe3D: false
+};
+
+function getNextColor() {
+  const c = COLORS[state.nextColorIdx % COLORS.length];
+  state.nextColorIdx++;
+  return c;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('opacity-0');
+  setTimeout(() => t.classList.add('opacity-0'), 2600);
+}
+
+/**
+ * ============================================================================
+ * 1. ALGEBRA PARSER & EXPRESSION ENGINE (대수창 엔진)
+ * ============================================================================
+ */
+function parseAndAddExpression(rawInput, options = {}) {
+  const input = rawInput.trim();
+  if (!input) return;
+
+  const id = 'expr_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  const color = options.color || getNextColor();
+
+  try {
+    // 1. Check for Variable / Slider assignment: e.g., "a = 2" or "k = -1.5"
+    const varMatch = input.match(/^([a-zA-Z])\s*=\s*([-+]?\d*\.?\d+)$/);
+    if (varMatch && !['x', 'y', 'z'].includes(varMatch[1])) {
+      const varName = varMatch[1];
+      const val = parseFloat(varMatch[2]);
+      // Update existing slider if variable already exists
+      const existing = state.expressions.find(e => e.type === 'slider' && e.name === varName);
+      if (existing) {
+        existing.value = val;
+        state.variables[varName] = val;
+        renderAlgebraList();
+        renderAll();
+        return;
+      }
+      state.variables[varName] = val;
+      state.expressions.push({
+        id,
+        type: 'slider',
+        raw: input,
+        name: varName,
+        value: val,
+        min: options.min ?? -10,
+        max: options.max ?? 10,
+        step: options.step ?? 0.1,
+        color,
+        visible: true
+      });
+      renderAlgebraList();
+      renderAll();
+      return;
+    }
+
+    // 2. Check for Point definition: e.g., "P = (2, 3)" or "(2, 3)"
+    const ptMatch = input.match(/^(?:([A-Za-z0-9_]+)\s*=\s*)?\(\s*([^,]+)\s*,\s*([^)]+)\s*\)$/);
+    if (ptMatch) {
+      const label = ptMatch[1] || `P${state.shapes2D.filter(s => s.type === 'point').length + 1}`;
+      const xExpr = ptMatch[2];
+      const yExpr = ptMatch[3];
+      const xVal = math.evaluate(xExpr, state.variables);
+      const yVal = math.evaluate(yExpr, state.variables);
+
+      const ptId = 'pt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+      state.shapes2D.push({
+        id: ptId,
+        type: 'point',
+        label,
+        x: xVal,
+        y: yVal,
+        xExpr,
+        yExpr,
+        color,
+        visible: true,
+        fromAlgebra: true
+      });
+
+      state.expressions.push({
+        id,
+        type: 'point',
+        raw: input,
+        label,
+        ptId,
+        xExpr,
+        yExpr,
+        color,
+        visible: true
+      });
+      renderAlgebraList();
+      renderAll();
+      return;
+    }
+
+    // 3. Check for 3D Surface: e.g., "z = sin(x)*cos(y)" or "z = x^2 + y^2"
+    if (/^z\s*=/.test(input)) {
+      const rhs = input.replace(/^z\s*=/, '').trim();
+      const compiled = math.compile(rhs);
+      // Test evaluation
+      compiled.evaluate({ x: 1, y: 1, ...state.variables });
+
+      state.expressions.push({
+        id,
+        type: 'surface3d',
+        raw: input,
+        rhs,
+        compiled,
+        color,
+        visible: true
+      });
+      if (state.mode !== '3d') {
+        switchMode('3d');
+        showToast('3D 곡면식이 입력되어 3D 기하창으로 전환되었습니다.');
+      }
+      renderAlgebraList();
+      update3DScene();
+      return;
+    }
+
+    // 3.5 Check for Inequality in x and y: e.g., "y <= x^2" or "x^2 + y^2 <= 9"
+    const ineqMatch = input.match(/^(.+?)(<=|>=|<|>)(.+)$/);
+    if (ineqMatch) {
+      const lhs = ineqMatch[1].trim();
+      const op = ineqMatch[2];
+      const rhs = ineqMatch[3].trim();
+      const diffExpr = `(${lhs}) - (${rhs})`;
+      const compiled = math.compile(diffExpr);
+      compiled.evaluate({ x: 1, y: 1, ...state.variables });
+
+      state.expressions.push({
+        id,
+        type: 'inequality2d',
+        raw: input,
+        op,
+        diffExpr,
+        compiled,
+        color,
+        visible: true
+      });
+      renderAlgebraList();
+      renderAll();
+      return;
+    }
+
+    // 4. Check for Definite Integral syntax: e.g., "integral(x^2, 0, 2)"
+    const intMatch = input.match(/^integral\(\s*(.+?)\s*,\s*([^,]+)\s*,\s*([^)]+)\s*\)$/i);
+    if (intMatch) {
+      const fnStr = intMatch[1];
+      const aStr = intMatch[2];
+      const bStr = intMatch[3];
+      const compiled = math.compile(fnStr);
+      state.expressions.push({
+        id,
+        type: 'integral',
+        raw: input,
+        fnStr,
+        aStr,
+        bStr,
+        compiled,
+        color,
+        visible: true
+      });
+      renderAlgebraList();
+      renderAll();
+      return;
+    }
+
+    // 5. Check for Implicit Equation in x and y: e.g., "x^2 + y^2 = 9" (where y is not isolated on LHS)
+    if (input.includes('=')) {
+      const parts = input.split('=');
+      const lhs = parts[0].trim();
+      const rhs = parts[1].trim();
+      const isExplicitY = /^y$/.test(lhs) || /^[a-zA-Z]\(x\)$/.test(lhs);
+
+      if (!isExplicitY && (lhs.includes('y') || rhs.includes('y'))) {
+        const diffExpr = `(${lhs}) - (${rhs})`;
+        const compiled = math.compile(diffExpr);
+        compiled.evaluate({ x: 1, y: 1, ...state.variables });
+
+        state.expressions.push({
+          id,
+          type: 'implicit2d',
+          raw: input,
+          diffExpr,
+          compiled,
+          color,
+          visible: true
+        });
+        renderAlgebraList();
+        renderAll();
+        return;
+      }
+    }
+
+    // 6. Standard Explicit Function: "y = ..." or "f(x) = ..." or bare expression "x^2 - 2"
+    let fnName = 'f';
+    let rhs = input;
+    const fnMatch = input.match(/^([a-zA-Z])\s*\(\s*x\s*\)\s*=\s*(.+)$/);
+    const yMatch = input.match(/^y\s*=\s*(.+)$/);
+
+    if (fnMatch) {
+      fnName = fnMatch[1];
+      rhs = fnMatch[2];
+    } else if (yMatch) {
+      rhs = yMatch[1];
+    }
+
+    const compiled = math.compile(rhs);
+    // Test evaluation
+    compiled.evaluate({ x: 1, ...state.variables });
+
+    // Compute symbolic derivative if possible
+    let derivativeStr = '';
+    let derivativeCompiled = null;
+    try {
+      const derivNode = math.derivative(rhs, 'x');
+      derivativeStr = derivNode.toString();
+      derivativeCompiled = derivNode.compile();
+    } catch (e) {
+      derivativeStr = '';
+    }
+
+    state.expressions.push({
+      id,
+      type: 'function2d',
+      raw: input,
+      fnName,
+      rhs,
+      compiled,
+      derivativeStr,
+      derivativeCompiled,
+      showDerivative: options.showDerivative || false,
+      tangentAt: options.tangentAt ?? null, // e.g., 'a' or number
+      color,
+      visible: true
+    });
+
+    renderAlgebraList();
+    renderAll();
+  } catch (err) {
+    showToast('수식 구문 오류입니다. 올바른 수학 기호로 다시 입력해주세요.');
+    console.error(err);
+  }
+}
+
+function handleAddExpression(e) {
+  e.preventDefault();
+  const inputEl = document.getElementById('expr-input');
+  parseAndAddExpression(inputEl.value);
+  inputEl.value = '';
+}
+
+function quickInsert(expr) {
+  parseAndAddExpression(expr);
+}
+
+function insertSymbol(sym) {
+  const input = document.getElementById('expr-input');
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+  const text = input.value;
+  input.value = text.slice(0, start) + sym + text.slice(end);
+  input.focus();
+  input.selectionStart = input.selectionEnd = start + sym.length;
+}
+
+function insertSpecialCalculus(kind) {
+  const input = document.getElementById('expr-input');
+  if (kind === 'derivative') {
+    // Differentiate the last 2D function if available
+    const lastFn = [...state.expressions].reverse().find(e => e.type === 'function2d');
+    if (lastFn && lastFn.derivativeStr) {
+      parseAndAddExpression(`y = ${lastFn.derivativeStr}`);
+      showToast(`도함수 y = ${lastFn.derivativeStr} 그래프가 추가되었습니다.`);
+    } else {
+      input.value = 'y = x^3 - 3*x';
+      input.focus();
+      showToast('미분할 함수를 먼저 입력한 뒤 d/dx 버튼을 눌러보세요.');
+    }
+  } else if (kind === 'integral') {
+    input.value = 'integral(x^2, 0, 2)';
+    input.focus();
+    showToast('integral(함수, 시작값, 끝값) 형식으로 정적분 넓이를 시각화합니다.');
+  } else if (kind === 'sigma') {
+    // Evaluate finite series sum
+    try {
+      let sum = 0;
+      for (let k = 1; k <= 10; k++) sum += k;
+      showToast('급수 예시: ∑(k=1부터 10까지) k = ' + sum);
+      input.value = 'y = x*(x+1)/2';
+      input.focus();
+    } catch (e) {}
+  }
+}
+
+function toggleKeypad() {
+  const kp = document.getElementById('math-keypad');
+  kp.classList.toggle('hidden');
+}
+
+function switchKeypadTab(tab) {
+  const panels = ['basic', 'func', 'calc'];
+  panels.forEach(p => {
+    const panelEl = document.getElementById(`kp-panel-${p}`);
+    const btnEl = document.getElementById(`kp-tab-${p}`);
+    if (p === tab) {
+      panelEl.classList.remove('hidden');
+      panelEl.classList.add('grid');
+      btnEl.className = 'px-2 py-0.5 rounded bg-indigo-600 text-white font-medium';
+    } else {
+      panelEl.classList.add('hidden');
+      panelEl.classList.remove('grid');
+      btnEl.className = 'px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-medium';
+    }
+  });
+}
+
+/**
+ * ============================================================================
+ * SYMBOL ROLE GUIDELINE & FULL SYNTAX GUIDEBOOK (기호 역할 가이드 시스템)
+ * ============================================================================
+ */
+const SYMBOL_GUIDE_DB = {
+  sq: {
+    title: '제곱 기호 (x²)',
+    syntax: 'y = x^2 - 4',
+    desc: '밑을 2번 곱하는 거듭제곱 연산입니다. 이차함수(포물선)나 원의 방정식(x^2 + y^2 = r^2)을 만들 때 사용합니다.'
+  },
+  pow: {
+    title: '거듭제곱 지수 (^)',
+    syntax: 'y = x^3,  y = 2^x',
+    desc: 'a^b 형태로 밑(a)의 지수(b) 제곱을 나타냅니다. 다항함수(x^3), 지수함수(2^x), 분수지수(x^(1/3)) 모두 가능합니다.'
+  },
+  sqrt: {
+    title: '제곱근 루트 (√)',
+    syntax: 'y = sqrt(x + 2)',
+    desc: '양의 제곱근(√)을 계산합니다. 무리함수 그래프나 반원 방정식 y = sqrt(9 - x^2)을 그릴 때 핵심적으로 쓰입니다.'
+  },
+  abs: {
+    title: '절댓값 기호 (|x|)',
+    syntax: 'y = abs(x - 2)',
+    desc: '수직선 위에서 원점으로부터의 거리(항상 0 이상)를 반환합니다. V자 모양의 꺾인 그래프나 절댓값 함수 분석에 사용됩니다.'
+  },
+  pi: {
+    title: '원주율 상수 (π ≈ 3.14159)',
+    syntax: 'y = sin(pi * x)',
+    desc: '원의 둘레와 지름의 비율인 무리수 π입니다. 삼각함수의 주기 설정이나 호도법(라디안) 각도를 입력할 때 사용합니다.'
+  },
+  e: {
+    title: '자연상수 (e ≈ 2.71828)',
+    syntax: 'y = e^x,  y = exp(-x^2)',
+    desc: '미분해도 자기 자신이 되는 자연로그의 밑 e입니다. 지수적 성장/감소 모델이나 정규분포 곡선을 그릴 때 필수적입니다.'
+  },
+  frac: {
+    title: '나눗셈 · 유리식 (/)',
+    syntax: 'y = 1 / (x - 1)',
+    desc: '분자/분모 형태의 분수 및 유리함수를 만듭니다. 분모가 0이 되는 지점에서 점근선이 자동 시각화됩니다.'
+  },
+  paren: {
+    title: '연산 우선순위 괄호 ( )',
+    syntax: 'y = (x - 1)^2 / 2',
+    desc: '수식의 계산 순서를 명확히 묶어줍니다. 모든 함수(sin, log, sqrt 등)의 인수는 반드시 괄호 안에 넣어야 합니다.'
+  },
+  eq: {
+    title: '등호 · 방정식 정의 (=)',
+    syntax: 'x^2 + y^2 = 9',
+    desc: '좌변과 우변이 같음을 나타냅니다. y=f(x) 꼴뿐 아니라 x와 y가 섞인 음함수 방정식(원, 타원, 쌍곡선)도 인식합니다.'
+  },
+  ineq: {
+    title: '부등호 · 부등식의 영역 (≤, ≥)',
+    syntax: 'y <= -x^2 + 4',
+    desc: '부등식을 만족하는 좌표평면 위의 모든 점(영역)을 색칠하여 보여줍니다. 연립부등식 영역 비교에도 유용합니다.'
+  },
+  slider: {
+    title: '동적 매개변수 슬라이더 (a = 값)',
+    syntax: 'a = 2  →  y = a*x^2',
+    desc: 'x, y, z 외의 알파벳(a, b, k 등)에 숫자를 대입하면 슬라이더가 자동 생성되어 계수 변화에 따른 그래프 이동을 실시간 관찰할 수 있습니다.'
+  },
+  point: {
+    title: '좌표점 찍기 P = (x, y)',
+    syntax: 'A = (2, 3) 또는 (a, a^2)',
+    desc: '기하창에 특정 좌표점을 찍습니다. 슬라이더 변수(a)를 좌표에 넣으면 곡선 위를 움직이는 동점을 만들 수 있습니다.'
+  },
+  sin: {
+    title: '사인 함수 sin(x)',
+    syntax: 'y = 2*sin(x)',
+    desc: '단위원에서 각도 x(라디안)에 대응하는 y좌표입니다. 주기 2π를 갖는 대표적인 파동 함수입니다.'
+  },
+  cos: {
+    title: '코사인 함수 cos(x)',
+    syntax: 'y = cos(2*x)',
+    desc: '단위원에서 각도 x(라디안)에 대응하는 x좌표입니다. y축 대칭(우함수) 성질을 가집니다.'
+  },
+  tan: {
+    title: '탄젠트 함수 tan(x)',
+    syntax: 'y = tan(x)',
+    desc: '직각삼각형의 밑변에 대한 높이의 비(sin x / cos x)로, 직선의 기울기를 의미하며 주기 π마다 점근선을 가집니다.'
+  },
+  asin: {
+    title: '역사인 함수 asin(x)',
+    syntax: 'y = asin(x)',
+    desc: '사인 함수의 역함수(arcsin)입니다. 정의역 [-1, 1]에서 치역 [-π/2, π/2]의 각도를 반환합니다.'
+  },
+  acos: {
+    title: '역코사인 함수 acos(x)',
+    syntax: 'y = acos(x)',
+    desc: '코사인 함수의 역함수(arccos)입니다. 정의역 [-1, 1]에서 치역 [0, π]의 각도를 반환합니다.'
+  },
+  atan: {
+    title: '역탄젠트 함수 atan(x)',
+    syntax: 'y = atan(x)',
+    desc: '탄젠트 함수의 역함수(arctan)입니다. 실수 전체에서 정의되며 ±π/2를 점근선으로 갖는 S자 곡선입니다.'
+  },
+  exp: {
+    title: '자연지수함수 exp(x)',
+    syntax: 'y = exp(x)',
+    desc: 'e^x와 동일한 자연지수함수입니다. 급격히 증가하는 지수 곡선을 표현할 때 사용합니다.'
+  },
+  ln: {
+    title: '자연로그 ln(x) → log(x)',
+    syntax: 'y = log(x)',
+    desc: '밑이 e인 자연로그 ln(x)입니다. (주의: 본 계산기에서 log(x)는 자연로그를 의미하며 x > 0에서 정의됩니다.)'
+  },
+  log10: {
+    title: '상용로그 log₁₀(x)',
+    syntax: 'y = log10(x)',
+    desc: '밑이 10인 상용로그입니다. 자릿수나 데시벨, 지진 규모 등 10의 거듭제곱 스케일을 시각화할 때 사용합니다.'
+  },
+  logbase: {
+    title: '밑이 a인 로그 log(x, a)',
+    syntax: 'y = log(x, 2)',
+    desc: 'log(진수, 밑) 형식으로 입력합니다. 예: log(x, 2)는 밑이 2인 로그함수 log₂(x)를 나타냅니다.'
+  },
+  floor: {
+    title: '가우스 함수 [x] → floor(x)',
+    syntax: 'y = floor(x)',
+    desc: 'x보다 크지 않은 최대의 정수를 반환하는 계단 모양의 불연속 함수입니다. 극한과 연속성 단원의 단골 예제입니다.'
+  },
+  nthroot: {
+    title: 'n제곱근 nthRoot(x, n)',
+    syntax: 'y = nthRoot(x, 3)',
+    desc: '음수 영역까지 실수로 정의되는 홀수 제곱근(세제곱근 등)을 정확히 그릴 때 사용합니다.'
+  },
+  deriv: {
+    title: '도함수 & 순간변화율 (d/dx)',
+    syntax: "함수 입력 후 f'(x) 클릭",
+    desc: '함수를 미분한 도함수 그래프를 점선으로 겹쳐 그리고, 각 점에서의 접선 기울기 변화를 분석합니다.'
+  },
+  integral: {
+    title: '정적분과 넓이 integral(f, a, b)',
+    syntax: 'integral(x^2, 0, 2)',
+    desc: '구간 [a, b]에서 함수 f(x)와 x축 사이의 정적분 값을 계산하고 기하창에 해당 넓이를 색칠합니다.'
+  },
+  sigma: {
+    title: '수열의 합 · 급수 (∑)',
+    syntax: 'y = x*(x+1)/2',
+    desc: '자연수의 거듭제곱의 합 공식이나 테일러 급수의 부분합을 다항식으로 근사하여 수렴 과정을 시각화합니다.'
+  },
+  implicit: {
+    title: '음함수 방정식 F(x, y) = 0',
+    syntax: 'x^2/9 + y^2/4 = 1',
+    desc: 'y에 관해 정리되지 않은 원, 타원, 쌍곡선, 하트 곡선 등 복잡한 평면 도형의 방정식을 등고선 알고리즘으로 그립니다.'
+  },
+  surface3d: {
+    title: '3차원 공간곡면 z = f(x, y)',
+    syntax: 'z = sin(x)*cos(y)',
+    desc: 'z = 형태로 입력하면 자동으로 3D 기하창으로 전환되어 높이에 따라 색상이 변하는 입체 곡면을 생성합니다.'
+  },
+  fact: {
+    title: '계승 · 팩토리얼 (n!)',
+    syntax: 'y = x^3 / 3!',
+    desc: '1부터 n까지의 자연수의 곱(n!)을 계산합니다. 테일러 급수 전개식이나 순열·조합 계산에 유용합니다.'
+  },
+  mod: {
+    title: '나머지 연산 (mod)',
+    syntax: 'y = x mod 3',
+    desc: 'x를 나눈 나머지를 구하는 주기적 톱니파 함수입니다. 정수론의 합동식 개념을 시각화할 때 사용합니다.'
+  }
+};
+
+function showSymbolGuide(key) {
+  const info = SYMBOL_GUIDE_DB[key];
+  if (!info) return;
+  document.getElementById('sg-title').textContent = info.title;
+  document.getElementById('sg-syntax').textContent = info.syntax;
+  document.getElementById('sg-desc').textContent = info.desc;
+}
+
+const FULL_SYNTAX_SECTIONS = [
+  {
+    category: '1. 기본 식과 좌표 · 동적 슬라이더',
+    badgeColor: 'bg-indigo-100 text-indigo-700',
+    items: [
+      { role: '양함수 그래프', syntax: 'y = 2*x + 1  또는  f(x) = x^2 - 3', desc: '가장 기본적인 함수 그래프를 그립니다. 입력 후 카드 하단의 f\'(x) 버튼을 누르면 도함수도 함께 표시됩니다.' },
+      { role: '동적 슬라이더 변수', syntax: 'a = 1.5', desc: 'x, y, z 외의 문자에 숫자를 할당하면 값 조절 슬라이더가 생성되어 다른 수식의 계수를 실시간으로 바꿀 수 있습니다.' },
+      { role: '좌표점 찍기', syntax: 'P = (2, 3)  또는  A = (a, a^2)', desc: '기하창에 점을 찍습니다. 슬라이더 변수를 포함하면 곡선 위를 따라 움직이는 동점이 됩니다.' }
+    ]
+  },
+  {
+    category: '2. 수학 기호 및 초월함수 표기법',
+    badgeColor: 'bg-emerald-100 text-emerald-700',
+    items: [
+      { role: '거듭제곱 · 제곱근', syntax: 'x^2,  x^3,  sqrt(x),  nthRoot(x, 3)', desc: '^ 기호로 지수를 표현하며, 제곱근은 sqrt(), 세제곱근 이상은 nthRoot(x, n)를 사용합니다.' },
+      { role: '삼각함수 (라디안)', syntax: 'sin(x),  cos(x),  tan(x),  asin(x)', desc: '모든 삼각함수는 호도법(라디안) 기준이며, 원주율은 pi로 입력합니다. (예: sin(pi*x))' },
+      { role: '지수 · 로그함수', syntax: 'e^x,  exp(x),  log(x),  log10(x),  log(x, 2)', desc: 'log(x)는 자연로그(ln x), log10(x)는 상용로그, log(x, a)는 밑이 a인 로그입니다.' },
+      { role: '절댓값 · 가우스 기호', syntax: 'abs(x),  floor(x),  ceil(x)', desc: 'abs(x)는 절댓값 |x|, floor(x)는 x를 넘지 않는 최대 정수 [x]를 나타냅니다.' }
+    ]
+  },
+  {
+    category: '3. 방정식 · 부등식 영역 · 미적분 · 3D 곡면',
+    badgeColor: 'bg-violet-100 text-violet-700',
+    items: [
+      { role: '음함수 (이차곡선)', syntax: 'x^2 + y^2 = 16,  x^2/9 - y^2/4 = 1', desc: '원, 타원, 쌍곡선 등 x와 y가 함께 있는 방정식을 등고선 기법으로 정확히 그려줍니다.' },
+      { role: '부등식의 영역', syntax: 'y <= -x^2 + 4  또는  x^2 + y^2 <= 9', desc: '부등호(<=, >=, <, >)를 사용하면 조건을 만족하는 영역을 반투명 색상으로 채워줍니다.' },
+      { role: '정적분 넓이 시각화', syntax: 'integral(x^2, 0, 2)', desc: 'integral(함수식, 하한, 상한) 형태로 입력하면 정적분 수치 값과 함께 곡선 아래 넓이를 색칠합니다.' },
+      { role: '3차원 공간곡면', syntax: 'z = sin(x)*cos(y)  또는  z = x^2 + y^2', desc: 'z = 로 시작하는 식을 입력하면 자동으로 3D 기하창이 열리며 입체 곡면을 생성합니다.' }
+    ]
+  }
+];
+
+function openSyntaxGuideModal() {
+  window.closeModals();
+  const modal = document.getElementById('syntax-guide-modal');
+  const body = document.getElementById('syntax-guide-body');
+  if (!modal || !body) return;
+
+  body.innerHTML = FULL_SYNTAX_SECTIONS.map(sec => `
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs space-y-3">
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${sec.badgeColor}">${sec.category}</span>
+      </div>
+      <div class="divide-y divide-slate-100">
+        ${sec.items.map(it => {
+          const sampleExpr = it.syntax.split('또는')[0].split(',')[0].trim();
+          return `
+            <div class="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div class="space-y-0.5">
+                <div class="font-bold text-xs sm:text-sm text-slate-900">${it.role}</div>
+                <div class="font-math text-xs text-indigo-600 font-semibold">${it.syntax}</div>
+                <p class="text-xs text-slate-500 leading-relaxed">${it.desc}</p>
+              </div>
+              <button type="button" onclick="applySampleFromGuide('${sampleExpr.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 text-xs font-semibold transition shrink-0 self-start sm:self-center cursor-pointer">
+                예시 대입
+              </button>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+}
+
+function closeSyntaxGuideModal() {
+  const modal = document.getElementById('syntax-guide-modal');
+  if (!modal) return;
+  modal.style.opacity = '0';
+  modal.style.display = 'none';
+}
+
+function applySampleFromGuide(expr) {
+  window.closeModals();
+  const input = document.getElementById('expr-input');
+  if (input) {
+    input.value = expr;
+    input.focus();
+  }
+  showToast(`입력창에 '${expr}' 예시가 들어갔습니다. Enter 또는 입력 버튼을 눌러보세요!`);
+}
+
+function deleteExpression(id) {
+  const idx = state.expressions.findIndex(e => e.id === id);
+  if (idx !== -1) {
+    const item = state.expressions[idx];
+    if (item.type === 'slider') {
+      delete state.variables[item.name];
+    } else if (item.type === 'point') {
+      state.shapes2D = state.shapes2D.filter(s => s.id !== item.ptId);
+    }
+    state.expressions.splice(idx, 1);
+    renderAlgebraList();
+    renderAll();
+  }
+}
+
+function toggleExpressionVisibility(id) {
+  const item = state.expressions.find(e => e.id === id);
+  if (item) {
+    item.visible = !item.visible;
+    if (item.type === 'point') {
+      const pt = state.shapes2D.find(s => s.id === item.ptId);
+      if (pt) pt.visible = item.visible;
+    }
+    renderAlgebraList();
+    renderAll();
+  }
+}
+
+function updateSliderValue(id, val) {
+  const item = state.expressions.find(e => e.id === id);
+  if (item && item.type === 'slider') {
+    item.value = parseFloat(val);
+    state.variables[item.name] = item.value;
+    // Update dynamic algebra points
+    state.shapes2D.forEach(s => {
+      if (s.type === 'point' && s.fromAlgebra) {
+        try {
+          s.x = math.evaluate(s.xExpr, state.variables);
+          s.y = math.evaluate(s.yExpr, state.variables);
+        } catch (e) {}
+      }
+    });
+    const labelEl = document.getElementById(`slider-val-${id}`);
+    if (labelEl) labelEl.textContent = item.value.toFixed(2);
+    updateConceptOverlayLive();
+    renderAll();
+  }
+}
+
+function toggleDerivativePlot(id) {
+  const item = state.expressions.find(e => e.id === id);
+  if (item && item.type === 'function2d') {
+    item.showDerivative = !item.showDerivative;
+    renderAlgebraList();
+    render2D();
+  }
+}
+
+function renderAlgebraList() {
+  const list = document.getElementById('algebra-list');
+  if (state.expressions.length === 0 && state.shapes2D.length === 0 && state.solids3D.length === 0) {
+    list.innerHTML = `
+      <div class="text-center py-8 px-4 text-slate-400">
+        <i class="fa-solid fa-function text-2xl mb-2 text-slate-300"></i>
+        <p class="text-xs leading-relaxed">위 입력창에 함수, 점, 슬라이더 변수(<span class="font-math text-slate-500">a = 1</span>) 또는 3D 곡면(<span class="font-math text-slate-500">z = x^2 - y^2</span>)을 입력해보세요.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+
+  // 1. Expressions & Sliders
+  state.expressions.forEach(item => {
+    if (item.type === 'slider') {
+      html += `
+        <div class="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100 transition">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full" style="background:${item.color}"></span>
+              <span class="font-math text-sm font-bold text-indigo-900">${item.name} = <span id="slider-val-${item.id}">${item.value.toFixed(2)}</span></span>
+            </div>
+            <button onclick="deleteExpression('${item.id}')" class="text-slate-400 hover:text-rose-500 text-xs p-1">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+          <div class="flex items-center gap-2 text-[11px] text-slate-500 font-math">
+            <span>${item.min}</span>
+            <input type="range" min="${item.min}" max="${item.max}" step="${item.step}" value="${item.value}"
+              oninput="updateSliderValue('${item.id}', this.value)"
+              class="flex-1 h-1.5 bg-indigo-200 rounded-lg cursor-pointer" />
+            <span>${item.max}</span>
+          </div>
+        </div>
+      `;
+    } else if (item.type === 'function2d') {
+      // Calculate key properties (y-intercept, derivative)
+      let yIntercept = '';
+      try {
+        const y0 = item.compiled.evaluate({ x: 0, ...state.variables });
+        if (typeof y0 === 'number' && isFinite(y0)) {
+          yIntercept = `y절편: (0, ${y0.toFixed(2)})`;
+        }
+      } catch (e) {}
+
+      html += `
+        <div class="p-3 rounded-2xl bg-white border border-slate-200 hover:border-indigo-300 shadow-2xs transition">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 overflow-hidden">
+              <button onclick="toggleExpressionVisibility('${item.id}')" class="w-4 h-4 rounded-full shrink-0 border-2 flex items-center justify-center transition"
+                style="border-color:${item.color}; background:${item.visible ? item.color : 'transparent'}">
+              </button>
+              <span class="font-math text-sm font-semibold text-slate-800 truncate">${item.raw}</span>
+            </div>
+            <button onclick="deleteExpression('${item.id}')" class="text-slate-400 hover:text-rose-500 text-xs p-1 shrink-0">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+          <div class="mt-2 pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-500">
+            <span>${yIntercept}</span>
+            ${item.derivativeStr ? `
+              <button onclick="toggleDerivativePlot('${item.id}')" class="px-2 py-0.5 rounded-md font-math transition ${item.showDerivative ? 'bg-rose-100 text-rose-700 font-semibold' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}">
+                f'(x) = ${item.derivativeStr}
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    } else if (item.type === 'integral') {
+      const areaVal = computeNumericalIntegral(item.compiled, item.aStr, item.bStr);
+      html += `
+        <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <button onclick="toggleExpressionVisibility('${item.id}')" class="w-4 h-4 rounded-full shrink-0 border-2"
+                style="border-color:${item.color}; background:${item.visible ? item.color : 'transparent'}"></button>
+              <span class="font-math text-xs font-bold text-emerald-900">∫<sub>${item.aStr}</sub><sup>${item.bStr}</sup> (${item.fnStr}) dx</span>
+            </div>
+            <button onclick="deleteExpression('${item.id}')" class="text-slate-400 hover:text-rose-500 text-xs p-1">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+          <div class="mt-1.5 text-xs font-semibold text-emerald-700 font-math">
+            정적분 값 (넓이): ≈ ${areaVal.toFixed(4)}
+          </div>
+        </div>
+      `;
+    } else {
+      // Point, Implicit, Inequality, 3D Surface
+      const badge = item.type === 'surface3d' ? '3D 곡면'
+        : item.type === 'implicit2d' ? '음함수/도형'
+        : item.type === 'inequality2d' ? '부등식 영역'
+        : '좌표점';
+      html += `
+        <div class="p-3 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5 overflow-hidden">
+            <button onclick="toggleExpressionVisibility('${item.id}')" class="w-4 h-4 rounded-full shrink-0 border-2"
+              style="border-color:${item.color}; background:${item.visible ? item.color : 'transparent'}"></button>
+            <div class="overflow-hidden">
+              <div class="font-math text-sm font-semibold text-slate-800 truncate">${item.raw}</div>
+              <span class="text-[10px] px-1.5 py-0.2 bg-slate-100 text-slate-500 rounded font-medium">${badge}</span>
+            </div>
+          </div>
+          <button onclick="deleteExpression('${item.id}')" class="text-slate-400 hover:text-rose-500 text-xs p-1">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `;
+    }
+  });
+
+  // 2. Constructed 2D Geometric Shapes (Segments, Polygons, Circles)
+  const constructedShapes = state.shapes2D.filter(s => !s.fromAlgebra && s.type !== 'point');
+  if (constructedShapes.length > 0) {
+    html += `<div class="pt-2 pb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">작도된 2D 도형 (${constructedShapes.length})</div>`;
+    constructedShapes.forEach(s => {
+      const metrics = getShape2DMetrics(s);
+      html += `
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-sm shrink-0" style="background:${s.color}"></span>
+            <div>
+              <div class="font-bold text-slate-800">${s.label}</div>
+              <div class="text-[11px] text-slate-500 font-math">${metrics.summary}</div>
+            </div>
+          </div>
+          <button onclick="deleteShape2D('${s.id}')" class="text-slate-400 hover:text-rose-500 p-1">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `;
+    });
+  }
+
+  // 3. 3D Solids List
+  if (state.solids3D.length > 0) {
+    html += `<div class="pt-2 pb-1 text-[11px] font-bold text-violet-500 uppercase tracking-wider">3D 입체도형 (${state.solids3D.length})</div>`;
+    state.solids3D.forEach(solid => {
+      const m = getSolid3DMetrics(solid);
+      html += `
+        <div class="p-2.5 rounded-xl bg-violet-50/50 border border-violet-200 text-xs space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-violet-950 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full" style="background:${solid.color}"></span>
+              ${solid.label}
+            </span>
+            <button onclick="deleteSolid3D('${solid.id}')" class="text-slate-400 hover:text-rose-500">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+          <div class="font-math text-[11px] text-slate-600">
+            겉넓이: <strong>${m.surfaceArea.toFixed(2)}</strong> | 부피: <strong>${m.volume.toFixed(2)}</strong>
+          </div>
+          <div class="flex items-center gap-2 text-[11px] text-slate-500">
+            <span>크기(r/w):</span>
+            <input type="range" min="0.5" max="5" step="0.1" value="${solid.size}"
+              oninput="updateSolid3DSize('${solid.id}', this.value)" class="flex-1 h-1" />
+            <span class="font-math w-7 text-right">${solid.size}</span>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  list.innerHTML = html;
+  refreshCompareList();
+}
+
+function computeNumericalIntegral(compiled, aStr, bStr) {
+  try {
+    const a = math.evaluate(aStr, state.variables);
+    const b = math.evaluate(bStr, state.variables);
+    const n = 200;
+    const h = (b - a) / n;
+    let sum = 0;
+    for (let i = 0; i < n; i++) {
+      const xMid = a + (i + 0.5) * h;
+      const y = compiled.evaluate({ x: xMid, ...state.variables });
+      if (typeof y === 'number' && isFinite(y)) sum += y * h;
+    }
+    return sum;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * ============================================================================
+ * 2. 2D GEOMETRY & GRAPHING CANVAS ENGINE (2D 기하창 엔진)
+ * ============================================================================
+ */
+const canvas2D = document.getElementById('canvas-2d');
+const ctx = canvas2D.getContext('2d');
+
+function resizeCanvas2D() {
+  const parent = canvas2D.parentElement;
+  if (!parent) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = parent.getBoundingClientRect();
+  canvas2D.width = rect.width * dpr;
+  canvas2D.height = rect.height * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  render2D();
+}
+
+function worldToScreen(wx, wy) {
+  const rect = canvas2D.getBoundingClientRect();
+  const cx = rect.width / 2 + state.view2D.offsetX;
+  const cy = rect.height / 2 + state.view2D.offsetY;
+  return {
+    x: cx + wx * state.view2D.scale,
+    y: cy - wy * state.view2D.scale
+  };
+}
+
+function screenToWorld(sx, sy) {
+  const rect = canvas2D.getBoundingClientRect();
+  const cx = rect.width / 2 + state.view2D.offsetX;
+  const cy = rect.height / 2 + state.view2D.offsetY;
+  return {
+    x: (sx - cx) / state.view2D.scale,
+    y: (cy - sy) / state.view2D.scale
+  };
+}
+
+function snapCoord(val) {
+  if (!state.snapToGrid) return val;
+  const step = state.view2D.scale > 80 ? 0.25 : state.view2D.scale > 30 ? 0.5 : 1;
+  return Math.round(val / step) * step;
+}
+
+function toggleSnapToGrid() {
+  state.snapToGrid = !state.snapToGrid;
+  const btn = document.getElementById('btn-snap');
+  if (state.snapToGrid) {
+    btn.className = 'px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 transition';
+    btn.innerHTML = '<i class="fa-solid fa-magnet mr-1"></i>스냅 ON';
+  } else {
+    btn.className = 'px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 transition';
+    btn.innerHTML = '<i class="fa-solid fa-magnet mr-1"></i>스냅 OFF';
+  }
+}
+
+function zoom2D(factor) {
+  state.view2D.scale = Math.max(8, Math.min(300, state.view2D.scale * factor));
+  document.getElementById('zoom-level').textContent = `배율: ${Math.round((state.view2D.scale / 45) * 100)}%`;
+  render2D();
+}
+
+function resetView2D() {
+  state.view2D.offsetX = 0;
+  state.view2D.offsetY = 0;
+  state.view2D.scale = 45;
+  document.getElementById('zoom-level').textContent = '배율: 100%';
+  render2D();
+}
+
+function setTool2D(tool) {
+  state.tool2D = tool;
+  state.view2D.tempPoints = [];
+  document.querySelectorAll('.tool-2d-btn').forEach(btn => {
+    btn.className = 'tool-2d-btn px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 text-slate-700 hover:bg-slate-100 transition shrink-0';
+  });
+  const activeBtn = document.getElementById(`tool-${tool}`);
+  if (activeBtn) {
+    activeBtn.className = 'tool-2d-btn active px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 bg-indigo-600 text-white shadow-2xs transition shrink-0';
+  }
+
+  const hint = document.getElementById('tool-hint-banner');
+  const hints = {
+    select: '',
+    point: '기하창의 원하는 위치를 클릭하여 점을 찍으세요.',
+    segment: '시작점과 끝점을 차례로 클릭하여 선분을 그립니다.',
+    polygon: '꼭짓점을 차례로 클릭하고, 첫 번째 점을 다시 클릭하면 다각형이 완성됩니다.',
+    circle: '원의 중심을 클릭한 후, 원 위의 한 점을 클릭하여 원을 만듭니다.'
+  };
+  if (hints[tool]) {
+    hint.textContent = hints[tool];
+    hint.classList.remove('hidden');
+  } else {
+    hint.classList.add('hidden');
+  }
+  render2D();
+}
+
+function getShape2DMetrics(shape) {
+  if (shape.type === 'segment') {
+    const dx = shape.p2.x - shape.p1.x;
+    const dy = shape.p2.y - shape.p1.y;
+    const len = Math.hypot(dx, dy);
+    return {
+      length: len,
+      area: 0,
+      summary: `길이: ${len.toFixed(2)}`
+    };
+  } else if (shape.type === 'polygon') {
+    const pts = shape.points;
+    let perimeter = 0;
+    let area2 = 0;
+    for (let i = 0; i < pts.length; i++) {
+      const p1 = pts[i];
+      const p2 = pts[(i + 1) % pts.length];
+      perimeter += Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      area2 += (p1.x * p2.y - p2.x * p1.y);
+    }
+    const area = Math.abs(area2) / 2;
+    return {
+      length: perimeter,
+      area,
+      summary: `넓이: ${area.toFixed(2)} | 둘레: ${perimeter.toFixed(2)}`
+    };
+  } else if (shape.type === 'circle') {
+    const r = Math.hypot(shape.edge.x - shape.center.x, shape.edge.y - shape.center.y);
+    const circumference = 2 * Math.PI * r;
+    const area = Math.PI * r * r;
+    return {
+      radius: r,
+      length: circumference,
+      area,
+      summary: `반지름: ${r.toFixed(2)} | 넓이: ${area.toFixed(2)}`
+    };
+  }
+  return { length: 0, area: 0, summary: '' };
+}
+
+function deleteShape2D(id) {
+  state.shapes2D = state.shapes2D.filter(s => s.id !== id);
+  state.selectedCompareIds = state.selectedCompareIds.filter(cid => cid !== id);
+  renderAlgebraList();
+  render2D();
+}
+
+function render2D() {
+  if (state.mode !== '2d') return;
+  const rect = canvas2D.getBoundingClientRect();
+  const w = rect.width;
+  const h = rect.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+
+  const scale = state.view2D.scale;
+  const cx = w / 2 + state.view2D.offsetX;
+  const cy = h / 2 + state.view2D.offsetY;
+
+  // Determine grid spacing dynamically
+  let gridStep = 1;
+  if (scale < 18) gridStep = 5;
+  else if (scale < 30) gridStep = 2;
+  else if (scale > 110) gridStep = 0.5;
+
+  const startX = Math.floor((-cx) / (scale * gridStep)) * gridStep;
+  const endX = Math.ceil((w - cx) / (scale * gridStep)) * gridStep;
+  const startY = Math.floor((cy - h) / (scale * gridStep)) * gridStep;
+  const endY = Math.ceil(cy / (scale * gridStep)) * gridStep;
+
+  // Minor & Major Grid Lines
+  ctx.lineWidth = 1;
+  for (let gx = startX; gx <= endX; gx = +(gx + gridStep).toFixed(4)) {
+    const sx = cx + gx * scale;
+    ctx.strokeStyle = Math.abs(gx) < 1e-6 ? '#475569' : '#f1f5f9';
+    ctx.beginPath();
+    ctx.moveTo(sx, 0);
+    ctx.lineTo(sx, h);
+    ctx.stroke();
+
+    // X-axis numeric labels
+    if (Math.abs(gx) > 1e-6) {
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      const labelY = Math.min(Math.max(cy + 15, 16), h - 6);
+      ctx.fillText(Number(gx.toFixed(2)), sx, labelY);
+    }
+  }
+
+  for (let gy = startY; gy <= endY; gy = +(gy + gridStep).toFixed(4)) {
+    const sy = cy - gy * scale;
+    ctx.strokeStyle = Math.abs(gy) < 1e-6 ? '#475569' : '#f1f5f9';
+    ctx.beginPath();
+    ctx.moveTo(0, sy);
+    ctx.lineTo(w, sy);
+    ctx.stroke();
+
+    // Y-axis numeric labels
+    if (Math.abs(gy) > 1e-6) {
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.textAlign = 'right';
+      const labelX = Math.min(Math.max(cx - 6, 28), w - 6);
+      ctx.fillText(Number(gy.toFixed(2)), labelX, sy + 4);
+    }
+  }
+
+  // Main Axes (X and Y)
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(0, cy);
+  ctx.lineTo(w, cy);
+  ctx.moveTo(cx, 0);
+  ctx.lineTo(cx, h);
+  ctx.stroke();
+
+  // Origin 'O' label
+  ctx.fillStyle = '#334155';
+  ctx.font = 'bold 11px "JetBrains Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('0', cx - 6, cy + 14);
+
+  // 1. Render Definite Integrals (Shaded Area under curve)
+  state.expressions.forEach(item => {
+    if (!item.visible || item.type !== 'integral') return;
+    try {
+      const a = math.evaluate(item.aStr, state.variables);
+      const b = math.evaluate(item.bStr, state.variables);
+      const steps = 120;
+      const dx = (b - a) / steps;
+
+      ctx.save();
+      ctx.fillStyle = item.color + '33'; // 20% opacity
+      ctx.strokeStyle = item.color;
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      const pStart = worldToScreen(a, 0);
+      ctx.moveTo(pStart.x, pStart.y);
+
+      for (let i = 0; i <= steps; i++) {
+        const wx = a + i * dx;
+        const wy = item.compiled.evaluate({ x: wx, ...state.variables });
+        const sp = worldToScreen(wx, wy);
+        ctx.lineTo(sp.x, sp.y);
+      }
+
+      const pEnd = worldToScreen(b, 0);
+      ctx.lineTo(pEnd.x, pEnd.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    } catch (e) {}
+  });
+  // 2. Render Implicit Curves & Inequality Regions
+  state.expressions.forEach(item => {
+    if (!item.visible) return;
+    if (item.type === 'implicit2d') renderImplicit2D(item, w, h);
+    if (item.type === 'inequality2d') renderInequality2D(item, w, h);
+  });
+
+  // 3. Render Explicit Functions y = f(x) & Derivatives
+  state.expressions.forEach(item => {
+    if (!item.visible || item.type !== 'function2d') return;
+    plotFunction2D(item.compiled, item.color, 2.6, false, w);
+
+    if (item.showDerivative && item.derivativeCompiled) {
+      plotFunction2D(item.derivativeCompiled, '#e11d48', 2, true, w);
+    }
+
+    // Tangent Line Visualization if tangentAt is set (used by Derivative Concept)
+    if (item.tangentAt !== null && item.derivativeCompiled) {
+      try {
+        const x0 = typeof item.tangentAt === 'string' ? (state.variables[item.tangentAt] ?? 1) : item.tangentAt;
+        const y0 = item.compiled.evaluate({ x: x0, ...state.variables });
+        const slope = item.derivativeCompiled.evaluate({ x: x0, ...state.variables });
+        if (isFinite(y0) && isFinite(slope)) {
+          // Draw tangent line across visible x range
+          const wxLeft = screenToWorld(0, 0).x;
+          const wxRight = screenToWorld(w, 0).x;
+          const p1 = worldToScreen(wxLeft, y0 + slope * (wxLeft - x0));
+          const p2 = worldToScreen(wxRight, y0 + slope * (wxRight - x0));
+
+          ctx.save();
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 2.2;
+          ctx.setLineDash([6, 4]);
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+          ctx.restore();
+
+          // Draw tangent point
+          const ptScreen = worldToScreen(x0, y0);
+          ctx.fillStyle = '#f59e0b';
+          ctx.beginPath();
+          ctx.arc(ptScreen.x, ptScreen.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.fillStyle = '#b45309';
+          ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
+          ctx.fillText(`접점 (${x0.toFixed(1)}, ${y0.toFixed(2)}) | 기울기 m = ${slope.toFixed(2)}`, ptScreen.x + 10, ptScreen.y - 10);
+        }
+      } catch (e) {}
+    }
+  });
+
+  // 4. Render Constructed 2D Geometric Shapes (Polygons, Circles, Segments)
+  state.shapes2D.forEach(shape => {
+    if (shape.visible === false) return;
+    if (shape.type === 'polygon') {
+      const pts = shape.points.map(p => worldToScreen(p.x, p.y));
+      if (pts.length < 3) return;
+      ctx.save();
+      ctx.fillStyle = shape.color + '28';
+      ctx.strokeStyle = shape.color;
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Vertices & Area label at centroid
+      let sumX = 0, sumY = 0;
+      pts.forEach(p => {
+        sumX += p.x;
+        sumY += p.y;
+        ctx.fillStyle = shape.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      const metrics = getShape2DMetrics(shape);
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${shape.label} (넓이: ${metrics.area.toFixed(2)})`, sumX / pts.length, sumY / pts.length);
+      ctx.restore();
+    } else if (shape.type === 'circle') {
+      const c = worldToScreen(shape.center.x, shape.center.y);
+      const e = worldToScreen(shape.edge.x, shape.edge.y);
+      const rPx = Math.hypot(e.x - c.x, e.y - c.y);
+      const metrics = getShape2DMetrics(shape);
+
+      ctx.save();
+      ctx.fillStyle = shape.color + '20';
+      ctx.strokeStyle = shape.color;
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, rPx, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Radius dashed line
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(c.x, c.y);
+      ctx.lineTo(e.x, e.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Center & edge points
+      ctx.fillStyle = shape.color;
+      ctx.beginPath(); ctx.arc(c.x, c.y, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.x, e.y, 4.5, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 11px "Noto Sans KR", sans-serif';
+      ctx.fillText(`${shape.label} (r=${metrics.radius.toFixed(2)}, S=${metrics.area.toFixed(2)})`, c.x, c.y - rPx - 8);
+      ctx.restore();
+    } else if (shape.type === 'segment') {
+      const p1 = worldToScreen(shape.p1.x, shape.p1.y);
+      const p2 = worldToScreen(shape.p2.x, shape.p2.y);
+      const metrics = getShape2DMetrics(shape);
+
+      ctx.save();
+      ctx.strokeStyle = shape.color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+
+      [p1, p2].forEach(p => {
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = shape.color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      });
+
+      ctx.fillStyle = shape.color;
+      ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${shape.label}: ${metrics.length.toFixed(2)}`, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2 - 8);
+      ctx.restore();
+    }
+  });
+
+  // 5. Render Standalone Points
+  state.shapes2D.forEach(shape => {
+    if (shape.visible === false || shape.type !== 'point') return;
+    const sp = worldToScreen(shape.x, shape.y);
+    ctx.save();
+    ctx.fillStyle = shape.color;
+    ctx.beginPath();
+    ctx.arc(sp.x, sp.y, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 12px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${shape.label}(${Number(shape.x.toFixed(2))}, ${Number(shape.y.toFixed(2))})`, sp.x + 9, sp.y - 7);
+    ctx.restore();
+  });
+
+  // 6. Render In-Progress Drawing Preview
+  if (state.view2D.tempPoints.length > 0) {
+    const temp = state.view2D.tempPoints;
+    const cursor = worldToScreen(state.view2D.mouseWorld.x, state.view2D.mouseWorld.y);
+    ctx.save();
+    ctx.strokeStyle = '#4f46e5';
+    ctx.fillStyle = '#4f46e5';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+
+    if (state.tool2D === 'segment') {
+      const p1 = worldToScreen(temp[0].x, temp[0].y);
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(cursor.x, cursor.y);
+      ctx.stroke();
+    } else if (state.tool2D === 'polygon') {
+      ctx.beginPath();
+      const first = worldToScreen(temp[0].x, temp[0].y);
+      ctx.moveTo(first.x, first.y);
+      for (let i = 1; i < temp.length; i++) {
+        const pt = worldToScreen(temp[i].x, temp[i].y);
+        ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.lineTo(cursor.x, cursor.y);
+      ctx.stroke();
+      temp.forEach(p => {
+        const sp = worldToScreen(p.x, p.y);
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    } else if (state.tool2D === 'circle') {
+      const c = worldToScreen(temp[0].x, temp[0].y);
+      const rPx = Math.hypot(cursor.x - c.x, cursor.y - c.y);
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, rPx, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function plotFunction2D(compiled, color, lineWidth, isDashed, canvasWidth) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  if (isDashed) ctx.setLineDash([6, 4]);
+
+  ctx.beginPath();
+  let drawing = false;
+  const stepPx = 2;
+  for (let sx = 0; sx <= canvasWidth; sx += stepPx) {
+    const wx = screenToWorld(sx, 0).x;
+    try {
+      const wy = compiled.evaluate({ x: wx, ...state.variables });
+      if (typeof wy === 'number' && isFinite(wy) && Math.abs(wy) < 5000) {
+        const sy = worldToScreen(wx, wy).y;
+        if (!drawing) {
+          ctx.moveTo(sx, sy);
+          drawing = true;
+        } else {
+          ctx.lineTo(sx, sy);
+        }
+      } else {
+        drawing = false;
+      }
+    } catch (e) {
+      drawing = false;
+    }
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function renderImplicit2D(item, w, h) {
+  const cell = 8;
+  const cols = Math.ceil(w / cell);
+  const rows = Math.ceil(h / cell);
+  const grid = Array.from({ length: rows + 1 }, () => new Float64Array(cols + 1));
+
+  for (let r = 0; r <= rows; r++) {
+    const sy = r * cell;
+    for (let c = 0; c <= cols; c++) {
+      const sx = c * cell;
+      const world = screenToWorld(sx, sy);
+      try {
+        const val = item.compiled.evaluate({ x: world.x, y: world.y, ...state.variables });
+        grid[r][c] = (typeof val === 'number' && isFinite(val)) ? val : NaN;
+      } catch (e) {
+        grid[r][c] = NaN;
+      }
+    }
+  }
+
+  ctx.save();
+  ctx.strokeStyle = item.color;
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+
+  const interp = (v1, v2, p1, p2) => {
+    if (Math.abs(v2 - v1) < 1e-9) return (p1 + p2) * 0.5;
+    return p1 + (-v1 / (v2 - v1)) * (p2 - p1);
+  };
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const v0 = grid[r][c];
+      const v1 = grid[r][c + 1];
+      const v2 = grid[r + 1][c + 1];
+      const v3 = grid[r + 1][c];
+      if (isNaN(v0) || isNaN(v1) || isNaN(v2) || isNaN(v3)) continue;
+
+      const x0 = c * cell, y0 = r * cell;
+      const x1 = x0 + cell, y1 = y0 + cell;
+      const pts = [];
+
+      if ((v0 <= 0 && v1 > 0) || (v0 > 0 && v1 <= 0)) pts.push({ x: interp(v0, v1, x0, x1), y: y0 });
+      if ((v1 <= 0 && v2 > 0) || (v1 > 0 && v2 <= 0)) pts.push({ x: x1, y: interp(v1, v2, y0, y1) });
+      if ((v3 <= 0 && v2 > 0) || (v3 > 0 && v2 <= 0)) pts.push({ x: interp(v3, v2, x0, x1), y: y1 });
+      if ((v0 <= 0 && v3 > 0) || (v0 > 0 && v3 <= 0)) pts.push({ x: x0, y: interp(v0, v3, y0, y1) });
+
+      if (pts.length >= 2) {
+        ctx.moveTo(pts[0].x, pts[0].y);
+        ctx.lineTo(pts[1].x, pts[1].y);
+        if (pts.length === 4) {
+          ctx.moveTo(pts[2].x, pts[2].y);
+          ctx.lineTo(pts[3].x, pts[3].y);
+        }
+      }
+    }
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function renderInequality2D(item, w, h) {
+  const step = 10;
+  ctx.save();
+  ctx.fillStyle = item.color + '26';
+  for (let py = 0; py < h; py += step) {
+    for (let px = 0; px < w; px += step) {
+      const world = screenToWorld(px + step / 2, py + step / 2);
+      try {
+        const diff = item.compiled.evaluate({ x: world.x, y: world.y, ...state.variables });
+        let ok = false;
+        if (item.op === '<=') ok = diff <= 0;
+        else if (item.op === '<') ok = diff < 0;
+        else if (item.op === '>=') ok = diff >= 0;
+        else if (item.op === '>') ok = diff > 0;
+        if (ok) ctx.fillRect(px, py, step, step);
+      } catch (e) {}
+    }
+  }
+  ctx.restore();
+  // Also draw boundary curve
+  renderImplicit2D(item, w, h);
+}
+
+// 2D Canvas Mouse & Touch Event Handlers
+canvas2D.addEventListener('mousedown', e => {
+  const rect = canvas2D.getBoundingClientRect();
+  const sx = e.clientX - rect.left;
+  const sy = e.clientY - rect.top;
+  const rawWorld = screenToWorld(sx, sy);
+  const wx = snapCoord(rawWorld.x);
+  const wy = snapCoord(rawWorld.y);
+
+  if (state.tool2D === 'select') {
+    // Check if clicking near an existing draggable point
+    const hitPt = state.shapes2D.find(s => {
+      if (s.type === 'point' && !s.fromAlgebra) {
+        const sp = worldToScreen(s.x, s.y);
+        return Math.hypot(sp.x - sx, sp.y - sy) < 14;
+      }
+      return false;
+    });
+    if (hitPt) {
+      state.view2D.draggedPointId = hitPt.id;
+      return;
+    }
+
+    // Check if clicking a vertex of a polygon, segment, or circle
+    for (const s of state.shapes2D) {
+      if (s.type === 'segment') {
+        for (const key of ['p1', 'p2']) {
+          const sp = worldToScreen(s[key].x, s[key].y);
+          if (Math.hypot(sp.x - sx, sp.y - sy) < 12) {
+            state.view2D.draggedPointId = { shapeId: s.id, key };
+            return;
+          }
+        }
+      } else if (s.type === 'polygon') {
+        for (let i = 0; i < s.points.length; i++) {
+          const sp = worldToScreen(s.points[i].x, s.points[i].y);
+          if (Math.hypot(sp.x - sx, sp.y - sy) < 12) {
+            state.view2D.draggedPointId = { shapeId: s.id, idx: i };
+            return;
+          }
+        }
+      } else if (s.type === 'circle') {
+        for (const key of ['center', 'edge']) {
+          const sp = worldToScreen(s[key].x, s[key].y);
+          if (Math.hypot(sp.x - sx, sp.y - sy) < 12) {
+            state.view2D.draggedPointId = { shapeId: s.id, key };
+            return;
+          }
+        }
+      }
+    }
+
+    state.view2D.isDragging = true;
+    state.view2D.dragStartX = e.clientX - state.view2D.offsetX;
+    state.view2D.dragStartY = e.clientY - state.view2D.offsetY;
+  } else if (state.tool2D === 'point') {
+    const count = state.shapes2D.filter(s => s.type === 'point').length + 1;
+    state.shapes2D.push({
+      id: 'pt_' + Date.now(),
+      type: 'point',
+      label: `P${count}`,
+      x: wx,
+      y: wy,
+      color: getNextColor(),
+      visible: true
+    });
+    renderAlgebraList();
+    render2D();
+  } else if (state.tool2D === 'segment') {
+    state.view2D.tempPoints.push({ x: wx, y: wy });
+    if (state.view2D.tempPoints.length === 2) {
+      const count = state.shapes2D.filter(s => s.type === 'segment').length + 1;
+      state.shapes2D.push({
+        id: 'seg_' + Date.now(),
+        type: 'segment',
+        label: `선분 ${count}`,
+        p1: state.view2D.tempPoints[0],
+        p2: state.view2D.tempPoints[1],
+        color: getNextColor()
+      });
+      state.view2D.tempPoints = [];
+      renderAlgebraList();
+      render2D();
+    }
+  } else if (state.tool2D === 'polygon') {
+    const temp = state.view2D.tempPoints;
+    if (temp.length >= 3) {
+      const firstSp = worldToScreen(temp[0].x, temp[0].y);
+      if (Math.hypot(firstSp.x - sx, firstSp.y - sy) < 16) {
+        const count = state.shapes2D.filter(s => s.type === 'polygon').length + 1;
+        state.shapes2D.push({
+          id: 'poly_' + Date.now(),
+          type: 'polygon',
+          label: `다각형 ${count}`,
+          points: [...temp],
+          color: getNextColor()
+        });
+        state.view2D.tempPoints = [];
+        renderAlgebraList();
+        render2D();
+        return;
+      }
+    }
+    temp.push({ x: wx, y: wy });
+    render2D();
+  } else if (state.tool2D === 'circle') {
+    state.view2D.tempPoints.push({ x: wx, y: wy });
+    if (state.view2D.tempPoints.length === 2) {
+      const count = state.shapes2D.filter(s => s.type === 'circle').length + 1;
+      state.shapes2D.push({
+        id: 'cir_' + Date.now(),
+        type: 'circle',
+        label: `원 ${count}`,
+        center: state.view2D.tempPoints[0],
+        edge: state.view2D.tempPoints[1],
+        color: getNextColor()
+      });
+      state.view2D.tempPoints = [];
+      renderAlgebraList();
+      render2D();
+    }
+  }
+});
+
+canvas2D.addEventListener('mousemove', e => {
+  const rect = canvas2D.getBoundingClientRect();
+  const sx = e.clientX - rect.left;
+  const sy = e.clientY - rect.top;
+  const rawWorld = screenToWorld(sx, sy);
+  const wx = snapCoord(rawWorld.x);
+  const wy = snapCoord(rawWorld.y);
+
+  state.view2D.mouseWorld = { x: wx, y: wy };
+  document.getElementById('cursor-coords').textContent = `x: ${rawWorld.x.toFixed(2)}, y: ${rawWorld.y.toFixed(2)}`;
+
+  if (state.view2D.draggedPointId) {
+    const drag = state.view2D.draggedPointId;
+    if (typeof drag === 'string') {
+      const pt = state.shapes2D.find(s => s.id === drag);
+      if (pt) {
+        pt.x = wx;
+        pt.y = wy;
+      }
+    } else if (drag.shapeId) {
+      const shape = state.shapes2D.find(s => s.id === drag.shapeId);
+      if (shape) {
+        if (drag.key) shape[drag.key] = { x: wx, y: wy };
+        if (typeof drag.idx === 'number') shape.points[drag.idx] = { x: wx, y: wy };
+        renderAlgebraList();
+      }
+    }
+    render2D();
+    return;
+  }
+
+  if (state.view2D.isDragging) {
+    state.view2D.offsetX = e.clientX - state.view2D.dragStartX;
+    state.view2D.offsetY = e.clientY - state.view2D.dragStartY;
+    render2D();
+    return;
+  }
+
+  if (state.view2D.tempPoints.length > 0) {
+    render2D();
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  state.view2D.isDragging = false;
+  state.view2D.draggedPointId = null;
+});
+
+canvas2D.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.12 : 0.89;
+  zoom2D(factor);
+}, { passive: false });
+
+/**
+ * ============================================================================
+ * 3. 3D GEOMETRY & SURFACE ENGINE (Three.js 3D 기하창)
+ * ============================================================================
+ */
+let scene3D, camera3D, renderer3D, controls3D, group3D;
+
+function init3D() {
+  const container = document.getElementById('container-3d');
+  scene3D = new THREE.Scene();
+  scene3D.background = new THREE.Color(0x0f172a);
+
+  camera3D = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+  camera3D.position.set(10, 9, 12);
+  camera3D.up.set(0, 0, 1); // Z-up mathematical convention!
+
+  renderer3D = new THREE.WebGLRenderer({ antialias: true });
+  renderer3D.setSize(container.clientWidth, container.clientHeight);
+  renderer3D.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer3D.domElement);
+
+  controls3D = new THREE.OrbitControls(camera3D, renderer3D.domElement);
+  controls3D.enableDamping = true;
+  controls3D.dampingFactor = 0.08;
+
+  // Lights
+  const ambient = new THREE.AmbientLight(0xffffff, 0.65);
+  scene3D.add(ambient);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+  dirLight.position.set(10, 15, 20);
+  scene3D.add(dirLight);
+
+  // XY Plane Grid (rotated so it lies on XY with Z as height)
+  const gridHelper = new THREE.GridHelper(16, 16, 0x334155, 0x1e293b);
+  gridHelper.rotation.x = Math.PI / 2;
+  scene3D.add(gridHelper);
+
+  // Custom X (Red), Y (Green), Z (Blue) Axes
+  const axesHelper = new THREE.AxesHelper(8);
+  scene3D.add(axesHelper);
+
+  group3D = new THREE.Group();
+  scene3D.add(group3D);
+
+  function animate3D() {
+    requestAnimationFrame(animate3D);
+    if (state.mode === '3d') {
+      controls3D.update();
+      renderer3D.render(scene3D, camera3D);
+    }
+  }
+  animate3D();
+}
+
+function resize3D() {
+  const container = document.getElementById('container-3d');
+  if (!renderer3D || !container || container.clientWidth === 0) return;
+  camera3D.aspect = container.clientWidth / container.clientHeight;
+  camera3D.updateProjectionMatrix();
+  renderer3D.setSize(container.clientWidth, container.clientHeight);
+}
+
+function resetCamera3D() {
+  if (!camera3D || !controls3D) return;
+  camera3D.position.set(10, 9, 12);
+  controls3D.target.set(0, 0, 0);
+  controls3D.update();
+}
+
+function toggle3DWireframe() {
+  state.wireframe3D = !state.wireframe3D;
+  document.getElementById('btn-3d-wireframe').textContent = `와이어프레임: ${state.wireframe3D ? 'ON' : 'OFF'}`;
+  update3DScene();
+}
+
+function add3DSolid(kind) {
+  const names = {
+    sphere: '구 (Sphere)',
+    box: '정육면체 (Cube)',
+    cylinder: '원기둥 (Cylinder)',
+    cone: '원뿔 (Cone)',
+    pyramid: '사각뿔 (Pyramid)'
+  };
+  const count = state.solids3D.filter(s => s.kind === kind).length + 1;
+  const offset = (state.solids3D.length % 4) * 2.5 - 3;
+
+  state.solids3D.push({
+    id: 'solid_' + Date.now(),
+    kind,
+    label: `${names[kind]} #${count}`,
+    size: 2,
+    height: 3,
+    posX: offset,
+    posY: 0,
+    color: getNextColor()
+  });
+
+  renderAlgebraList();
+  update3DScene();
+  showToast(`${names[kind]} 입체도형이 3D 기하창에 추가되었습니다.`);
+}
+
+function updateSolid3DSize(id, val) {
+  const solid = state.solids3D.find(s => s.id === id);
+  if (solid) {
+    solid.size = parseFloat(val);
+    solid.height = solid.size * 1.5;
+    renderAlgebraList();
+    update3DScene();
+  }
+}
+
+function deleteSolid3D(id) {
+  state.solids3D = state.solids3D.filter(s => s.id !== id);
+  state.selectedCompareIds = state.selectedCompareIds.filter(cid => cid !== id);
+  renderAlgebraList();
+  update3DScene();
+}
+
+function getSolid3DMetrics(solid) {
+  const r = solid.size;
+  const h = solid.height;
+  if (solid.kind === 'sphere') {
+    return {
+      surfaceArea: 4 * Math.PI * r * r,
+      volume: (4 / 3) * Math.PI * Math.pow(r, 3)
+    };
+  } else if (solid.kind === 'box') {
+    return {
+      surfaceArea: 6 * r * r,
+      volume: Math.pow(r, 3)
+    };
+  } else if (solid.kind === 'cylinder') {
+    return {
+      surfaceArea: 2 * Math.PI * r * (r + h),
+      volume: Math.PI * r * r * h
+    };
+  } else if (solid.kind === 'cone') {
+    const l = Math.hypot(r, h);
+    return {
+      surfaceArea: Math.PI * r * (r + l),
+      volume: (1 / 3) * Math.PI * r * r * h
+    };
+  } else if (solid.kind === 'pyramid') {
+    const slant = Math.hypot(r / 2, h);
+    return {
+      surfaceArea: r * r + 2 * r * slant,
+      volume: (1 / 3) * r * r * h
+    };
+  }
+  return { surfaceArea: 0, volume: 0 };
+}
+
+function update3DScene() {
+  if (!group3D) return;
+  // Clear existing meshes
+  while (group3D.children.length > 0) {
+    group3D.remove(group3D.children[0]);
+  }
+
+  // 1. Render 3D Surfaces z = f(x, y)
+  state.expressions.forEach(item => {
+    if (!item.visible || item.type !== 'surface3d') return;
+    const range = 5;
+    const segs = 48;
+    const geom = new THREE.PlaneGeometry(range * 2, range * 2, segs, segs);
+    const posAttr = geom.attributes.position;
+    const colors = [];
+
+    for (let i = 0; i < posAttr.count; i++) {
+      const x = posAttr.getX(i);
+      const y = posAttr.getY(i);
+      let z = 0;
+      try {
+        const val = item.compiled.evaluate({ x, y, ...state.variables });
+        z = (typeof val === 'number' && isFinite(val)) ? Math.max(-8, Math.min(8, val)) : 0;
+      } catch (e) {}
+      posAttr.setZ(i, z);
+
+      // Height-based gradient color
+      const t = (z + 4) / 8;
+      const color = new THREE.Color().setHSL(0.65 - Math.max(0, Math.min(1, t)) * 0.55, 0.85, 0.55);
+      colors.push(color.r, color.g, color.b);
+    }
+    geom.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geom.computeVertexNormals();
+
+    const mat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      side: THREE.DoubleSide,
+      wireframe: state.wireframe3D,
+      roughness: 0.4,
+      metalness: 0.1
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    group3D.add(mesh);
+  });
+
+  // 2. Render 3D Solids
+  state.solids3D.forEach(solid => {
+    let geom;
+    const r = solid.size;
+    const h = solid.height;
+
+    if (solid.kind === 'sphere') {
+      geom = new THREE.SphereGeometry(r, 32, 24);
+    } else if (solid.kind === 'box') {
+      geom = new THREE.BoxGeometry(r, r, r);
+    } else if (solid.kind === 'cylinder') {
+      geom = new THREE.CylinderGeometry(r, r, h, 32);
+      geom.rotateX(Math.PI / 2);
+    } else if (solid.kind === 'cone') {
+      geom = new THREE.ConeGeometry(r, h, 32);
+      geom.rotateX(Math.PI / 2);
+    } else if (solid.kind === 'pyramid') {
+      geom = new THREE.ConeGeometry(r * 0.7, h, 4);
+      geom.rotateX(Math.PI / 2);
+    }
+
+    const mat = new THREE.MeshStandardMaterial({
+      color: solid.color,
+      transparent: true,
+      opacity: 0.82,
+      wireframe: state.wireframe3D,
+      roughness: 0.3
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set(solid.posX, solid.posY, solid.kind === 'sphere' ? r : h / 2);
+    group3D.add(mesh);
+  });
+}
+
+function switchMode(mode) {
+  state.mode = mode;
+  const view2D = document.getElementById('view-2d');
+  const view3D = document.getElementById('view-3d');
+  const btn2D = document.getElementById('btn-mode-2d');
+  const btn3D = document.getElementById('btn-mode-3d');
+
+  if (mode === '2d') {
+    view2D.classList.remove('hidden');
+    view3D.classList.add('hidden');
+    btn2D.className = 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-indigo-600 shadow-xs flex items-center gap-1.5';
+    btn3D.className = 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5';
+    resizeCanvas2D();
+  } else {
+    view3D.classList.remove('hidden');
+    view2D.classList.add('hidden');
+    btn3D.className = 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-indigo-600 shadow-xs flex items-center gap-1.5';
+    btn2D.className = 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5';
+    resize3D();
+    update3DScene();
+  }
+}
+
+function renderAll() {
+  if (state.mode === '2d') render2D();
+  else update3DScene();
+  updateQuizLiveStatus();
+}
+
+/**
+ * ============================================================================
+ * 4. LENGTH, AREA & VOLUME COMPARISON TOOL (길이 · 넓이 · 부피 비교)
+ * ============================================================================
+ */
+function toggleCompareDrawer() {
+  const drawer = document.getElementById('compare-drawer');
+  drawer.classList.toggle('hidden');
+  if (!drawer.classList.contains('hidden')) {
+    refreshCompareList();
+  }
+}
+
+function setCompareMetric(metric) {
+  state.compareMetric = metric;
+  ['length', 'area', 'volume'].forEach(m => {
+    const btn = document.getElementById(`cmp-tab-${m}`);
+    btn.className = m === metric
+      ? 'py-1.5 rounded-lg bg-white text-emerald-700 shadow-2xs'
+      : 'py-1.5 rounded-lg text-slate-600';
+  });
+  refreshCompareList();
+}
+
+function toggleCompareShapeSelection(id) {
+  if (state.selectedCompareIds.includes(id)) {
+    state.selectedCompareIds = state.selectedCompareIds.filter(cid => cid !== id);
+  } else {
+    state.selectedCompareIds.push(id);
+  }
+  refreshCompareList();
+}
+
+function refreshCompareList() {
+  const listEl = document.getElementById('compare-shape-list');
+  const resEl = document.getElementById('compare-result-box');
+  if (!listEl || !resEl) return;
+
+  // Gather eligible items depending on metric
+  let items = [];
+  if (state.compareMetric === 'length') {
+    state.shapes2D.forEach(s => {
+      if (['segment', 'polygon', 'circle'].includes(s.type)) {
+        const m = getShape2DMetrics(s);
+        items.push({ id: s.id, label: s.label, color: s.color, value: m.length, unit: '단위 길이' });
+      }
+    });
+  } else if (state.compareMetric === 'area') {
+    state.shapes2D.forEach(s => {
+      if (['polygon', 'circle'].includes(s.type)) {
+        const m = getShape2DMetrics(s);
+        items.push({ id: s.id, label: s.label, color: s.color, value: m.area, unit: '제곱단위' });
+      }
+    });
+    state.solids3D.forEach(solid => {
+      const m = getSolid3DMetrics(solid);
+      items.push({ id: solid.id, label: `${solid.label} (겉넓이)`, color: solid.color, value: m.surfaceArea, unit: '제곱단위' });
+    });
+  } else if (state.compareMetric === 'volume') {
+    state.solids3D.forEach(solid => {
+      const m = getSolid3DMetrics(solid);
+      items.push({ id: solid.id, label: solid.label, color: solid.color, value: m.volume, unit: '세제곱단위' });
+    });
+  }
+
+  if (items.length === 0) {
+    listEl.innerHTML = `<div class="text-xs text-slate-400 p-3 bg-slate-50 rounded-xl text-center">비교할 수 있는 도형이 없습니다. 기하창에서 도형을 먼저 그려보세요!</div>`;
+    resEl.innerHTML = `<div class="text-xs text-slate-400 text-center py-4">도형을 2개 이상 생성한 뒤 선택해주세요.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = items.map(it => {
+    const checked = state.selectedCompareIds.includes(it.id);
+    return `
+      <label class="flex items-center justify-between p-2 rounded-xl border ${checked ? 'border-emerald-400 bg-emerald-50/50' : 'border-slate-200 bg-white'} cursor-pointer text-xs">
+        <div class="flex items-center gap-2">
+          <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleCompareShapeSelection('${it.id}')" class="rounded text-emerald-600" />
+          <span class="w-2.5 h-2.5 rounded-full" style="background:${it.color}"></span>
+          <span class="font-semibold text-slate-800">${it.label}</span>
+        </div>
+        <span class="font-math text-slate-600">${it.value.toFixed(2)}</span>
+      </label>
+    `;
+  }).join('');
+
+  const selected = items.filter(it => state.selectedCompareIds.includes(it.id));
+  if (selected.length < 2) {
+    resEl.innerHTML = `<div class="text-xs text-slate-400 text-center py-4">위 목록에서 도형을 <strong>2개 이상</strong> 체크하면 비교 그래프가 나타납니다.</div>`;
+    return;
+  }
+
+  const maxVal = Math.max(...selected.map(s => s.value), 0.0001);
+  const base = selected[0];
+  const target = selected[1];
+  const diff = Math.abs(target.value - base.value);
+  const ratio = base.value > 0 ? (target.value / base.value) : 0;
+
+  resEl.innerHTML = `
+    <div class="space-y-2.5">
+      <div class="text-xs font-bold text-slate-800">시각적 크기 비교 막대</div>
+      ${selected.map(s => `
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="font-semibold text-slate-700">${s.label}</span>
+            <span class="font-math font-bold text-slate-900">${s.value.toFixed(2)}</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-300" style="width:${(s.value / maxVal) * 100}%; background:${s.color}"></div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="pt-3 border-t border-slate-200 space-y-1 text-xs">
+      <div class="flex justify-between">
+        <span class="text-slate-500">두 도형의 차이 (|${target.label} - ${base.label}|):</span>
+        <span class="font-math font-bold text-emerald-700">${diff.toFixed(2)}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">비율 (${base.label} : ${target.label}):</span>
+        <span class="font-math font-bold text-indigo-700">1 : ${ratio.toFixed(2)}</span>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * ============================================================================
+ * 5. HIGH SCHOOL MATH CONCEPTS & 21+ PRESETS LIBRARY (고등수학 개념 & 수식 라이브러리)
+ * ============================================================================
+ */
+let selectedConceptCategory = 'all';
+
+const CONCEPT_CATEGORIES = [
+  { id: 'all', label: '전체보기 (21)' },
+  { id: 'poly', label: '① 다항·유리·무리함수' },
+  { id: 'explog', label: '② 지수·로그함수' },
+  { id: 'trig', label: '③ 삼각함수' },
+  { id: 'diff', label: '④ 미분과 접선' },
+  { id: 'integ', label: '⑤ 정적분과 넓이' },
+  { id: 'geom', label: '⑥ 도형의 방정식·기하' },
+  { id: 'space3d', label: '⑦ 3D 공간도형·곡면' }
+];
+
+const HIGH_SCHOOL_CONCEPTS = [
+  // ① 다항·유리·무리함수
+  {
+    id: 'quadratic',
+    cat: 'poly',
+    grade: '고1 수학 (상)',
+    title: '이차함수와 판별식 (D = b² - 4ac)',
+    formula: 'y = ax² + bx + c',
+    desc: '포물선의 볼록성, 꼭짓점 좌표, 판별식 D의 부호에 따른 x축 교점(실근) 개수를 실시간 분석합니다.',
+    tip: '슬라이더 a, b, c를 조절해 D > 0, D = 0, D < 0일 때 x축과의 교점 변화를 관찰하세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('a = 1', { min: -3, max: 3, step: 0.1 });
+      parseAndAddExpression('b = -2', { min: -6, max: 6, step: 0.2 });
+      parseAndAddExpression('c = -3', { min: -6, max: 6, step: 0.2 });
+      parseAndAddExpression('y = a*x^2 + b*x + c', { color: '#4f46e5' });
+      state.activeConcept = 'quadratic'; updateConceptOverlayLive();
+    }
+  },
+  {
+    id: 'rational_fn',
+    cat: 'poly',
+    grade: '고1 수학 (하)',
+    title: '유리함수와 점근선의 교점',
+    formula: 'y = k / (x - p) + q',
+    desc: '분모가 0이 되는 수직 점근선 x = p와 수평 점근선 y = q를 기준으로 쌍곡선이 대칭을 이루는 성질을 탐구합니다.',
+    tip: 'p와 q 슬라이더를 움직여 점근선의 교점 (p, q)가 평행이동하는 모습을 확인하세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('k = 2', { min: -5, max: 5, step: 0.2 });
+      parseAndAddExpression('p = 1', { min: -4, max: 4, step: 0.2 });
+      parseAndAddExpression('q = 2', { min: -4, max: 4, step: 0.2 });
+      parseAndAddExpression('y = k / (x - p) + q', { color: '#0284c7' });
+      parseAndAddExpression('P = (p, q)', { color: '#e11d48' });
+    }
+  },
+  {
+    id: 'irrational_fn',
+    cat: 'poly',
+    grade: '고1 수학 (하)',
+    title: '무리함수와 역함수(이차함수)의 대칭',
+    formula: 'y = sqrt(x - a) + b  vs  y = x',
+    desc: '무리함수와 그 역함수인 이차함수(x ≥ b)가 직선 y = x에 대하여 선대칭임을 확인합니다.',
+    tip: '직선 y = x를 기준으로 두 곡선이 거울처럼 대칭되는 모습을 관찰하세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('y = sqrt(x + 2)', { color: '#4f46e5' });
+      parseAndAddExpression('y = x^2 - 2', { color: '#059669' });
+      parseAndAddExpression('y = x', { color: '#94a3b8' });
+    }
+  },
+
+  // ② 지수·로그함수
+  {
+    id: 'exp_log_inv',
+    cat: 'explog',
+    grade: '고2 수학 I',
+    title: '지수함수와 로그함수의 역함수 관계',
+    formula: 'y = aˣ  ↔  y = logₐ(x)',
+    desc: '밑 a의 크기에 따른 지수함수와 로그함수의 증가·감소 및 직선 y = x 대칭성을 비교합니다.',
+    tip: 'a > 1일 때와 0 < a < 1일 때 그래프의 개형이 어떻게 뒤집히는지 슬라이더 a로 확인하세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('a = 2', { min: 0.2, max: 4, step: 0.1 });
+      parseAndAddExpression('y = a^x', { color: '#4f46e5' });
+      parseAndAddExpression('y = log(x, a)', { color: '#e11d48' });
+      parseAndAddExpression('y = x', { color: '#94a3b8' });
+    }
+  },
+  {
+    id: 'gaussian_bell',
+    cat: 'explog',
+    grade: '확률과 통계',
+    title: '정규분포 곡선 (가우스 함수)',
+    formula: 'y = (1/σ√2π)·exp(-(x-m)²/2σ²)',
+    desc: '평균(m)과 표준편차(σ)에 따라 종 모양 정규분포 곡선의 대칭축과 뾰족한 정도가 변하는 원리를 탐구합니다.',
+    tip: '표준편차 s가 작아질수록 평균 m 주변으로 자료가 밀집해 곡선이 높아집니다.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('m = 0', { min: -4, max: 4, step: 0.2 });
+      parseAndAddExpression('s = 1', { min: 0.4, max: 3, step: 0.1 });
+      parseAndAddExpression('y = (1/(s*sqrt(2*pi))) * exp(-((x - m)^2)/(2*s^2))', { color: '#7c3aed' });
+    }
+  },
+  {
+    id: 'logistic_growth',
+    cat: 'explog',
+    grade: '미적분 심화',
+    title: '로지스틱 성장 곡선 (S자 곡선)',
+    formula: 'y = L / (1 + exp(-k(x - x₀)))',
+    desc: '환경 수용력(L) 한계 내에서 개체수나 전염병이 초기에 지수적으로 증가하다 포화되는 모델입니다.',
+    tip: 'L(최대 수용력)과 k(성장률)를 조절하며 변곡점의 위치를 살펴보세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('L = 6', { min: 2, max: 10, step: 0.5 });
+      parseAndAddExpression('k = 1.5', { min: 0.3, max: 4, step: 0.1 });
+      parseAndAddExpression('y = L / (1 + exp(-k*x))', { color: '#059669' });
+    }
+  },
+
+  // ③ 삼각함수
+  {
+    id: 'trigonometry',
+    cat: 'trig',
+    grade: '고2 수학 I',
+    title: '삼각함수의 그래프와 주기 · 진폭',
+    formula: 'y = a·sin(bx + c)',
+    desc: '진폭(|a|), 주기(2π/|b|), 위상 이동이 사인 파형에 미치는 영향을 슬라이더로 직관적으로 확인합니다.',
+    tip: 'b 값을 2로 늘리면 주기가 π로 절반이 되어 파동이 2배 촘촘해집니다.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('a = 2', { min: 0.5, max: 4, step: 0.1 });
+      parseAndAddExpression('b = 1', { min: 0.5, max: 4, step: 0.1 });
+      parseAndAddExpression('c = 0', { min: -3.14, max: 3.14, step: 0.1 });
+      parseAndAddExpression('y = a*sin(b*x + c)', { color: '#059669' });
+      parseAndAddExpression('y = cos(x)', { color: '#94a3b8' });
+      state.activeConcept = 'trigonometry'; updateConceptOverlayLive();
+    }
+  },
+  {
+    id: 'damped_wave',
+    cat: 'trig',
+    grade: '미적분 · 물리 융합',
+    title: '감쇠 진동 파동 (Damped Oscillation)',
+    formula: 'y = exp(-a·x)·cos(b·x)',
+    desc: '시간(x)이 지남에 따라 진폭이 지수적으로 줄어드는 용수철·진자 운동의 수학적 모델입니다.',
+    tip: '감쇠 계수 a를 키우면 진동이 얼마나 빠르게 멈추는지 확인할 수 있습니다.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('a = 0.25', { min: 0.05, max: 1, step: 0.05 });
+      parseAndAddExpression('b = 4', { min: 1, max: 10, step: 0.5 });
+      parseAndAddExpression('y = exp(-a*x)*cos(b*x)', { color: '#4f46e5' });
+      parseAndAddExpression('y = exp(-a*x)', { color: '#e11d48' });
+      parseAndAddExpression('y = -exp(-a*x)', { color: '#e11d48' });
+    }
+  },
+  {
+    id: 'fourier_square',
+    cat: 'trig',
+    grade: '미적분 심화',
+    title: '푸리에 급수 근사 (사각파 합성)',
+    formula: 'y = (4/π)(sin x + sin3x/3 + sin5x/5)',
+    desc: '매끄러운 사인 함수들을 홀수 배수로 더할수록 직각 계단 모양의 사각파로 수렴하는 신비로운 현상입니다.',
+    tip: '기본 사인파와 3개의 고조파를 합친 파형의 차이를 비교해보세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('y = (4/pi)*(sin(x) + sin(3*x)/3 + sin(5*x)/5 + sin(7*x)/7)', { color: '#7c3aed' });
+      parseAndAddExpression('y = (4/pi)*sin(x)', { color: '#cbd5e1' });
+    }
+  },
+
+  // ④ 미분과 접선
+  {
+    id: 'derivative',
+    cat: 'diff',
+    grade: '고2 수학 II',
+    title: '미분계수와 접선의 방정식',
+    formula: "f'(a) = lim (f(a+h) - f(a)) / h",
+    desc: "곡선 y = f(x) 위의 점 x = a를 움직이며 순간변화율(접선의 기울기)과 도함수 f'(x)의 부호 관계를 분석합니다.",
+    tip: "슬라이더 a를 -1이나 1로 맞추면 극댓값·극솟값에서 접선의 기울기가 0이 됩니다.",
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('a = 1', { min: -2.5, max: 2.5, step: 0.1 });
+      parseAndAddExpression('y = x^3 - 3*x', { color: '#4f46e5', showDerivative: true, tangentAt: 'a' });
+      state.activeConcept = 'derivative'; updateConceptOverlayLive();
+    }
+  },
+  {
+    id: 'taylor_sin',
+    cat: 'diff',
+    grade: '미적분 심화',
+    title: '테일러 급수 다항식 근사 (sin x)',
+    formula: 'sin(x) ≈ x - x³/3! + x⁵/5! - x⁷/7!',
+    desc: '미분을 거듭하여 초월함수 sin(x)를 다항함수로 정밀하게 근사하는 원리를 시각적으로 확인합니다.',
+    tip: '원점 근처에서 7차 다항식과 sin(x) 그래프가 완벽히 포개지는 구간을 확인하세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('y = sin(x)', { color: '#0f172a' });
+      parseAndAddExpression('y = x - x^3/6', { color: '#f59e0b' });
+      parseAndAddExpression('y = x - x^3/6 + x^5/120 - x^7/5040', { color: '#e11d48' });
+    }
+  },
+  {
+    id: 'inflection_quartic',
+    cat: 'diff',
+    grade: '미적분',
+    title: '사차함수의 극값과 변곡점 탐구',
+    formula: 'y = x⁴ - 4x² + k',
+    desc: 'W자 모양 사차함수의 극댓값·극솟값 개수와 상수 k에 따른 실근의 개수 변화를 탐구합니다.',
+    tip: 'k 슬라이더를 움직여 y = 0(x축)과 만나는 실근이 0개, 2개, 3개, 4개로 변하는 순간을 찾아보세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('k = 1', { min: -2, max: 6, step: 0.2 });
+      parseAndAddExpression('y = x^4 - 4*x^2 + k', { color: '#4f46e5', showDerivative: true });
+    }
+  },
+
+  // ⑤ 정적분과 넓이
+  {
+    id: 'integral',
+    cat: 'integ',
+    grade: '고2 수학 II',
+    title: '정적분과 곡선 아래의 넓이',
+    formula: 'S = ∫[-1→2] (0.5x² + 1) dx',
+    desc: '구간 [a, b]에서 함수 그래프와 x축 사이의 정적분 값을 색칠된 영역과 수치 적분으로 확인합니다.',
+    tip: '대수창에서 integral(함수, 시작, 끝) 형식으로 원하는 구간의 넓이를 자유롭게 계산할 수 있습니다.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('y = 0.5*x^2 + 1', { color: '#4f46e5' });
+      parseAndAddExpression('integral(0.5*x^2 + 1, -1, 2)', { color: '#059669' });
+      state.activeConcept = 'integral'; updateConceptOverlayLive();
+    }
+  },
+  {
+    id: 'integral_signed',
+    cat: 'integ',
+    grade: '고2 수학 II',
+    title: '정적분의 부호 (+넓이와 -넓이의 상쇄)',
+    formula: '∫[0→2π] sin(x) dx = 0',
+    desc: 'x축 위쪽 영역(+)과 아래쪽 영역(-)의 정적분 값이 서로 상쇄되어 0이 되는 정적분의 성질을 확인합니다.',
+    tip: '[0, π] 구간 넓이(2)와 [0, 2π] 구간 정적분 값(0)을 비교해보세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('y = sin(x)', { color: '#4f46e5' });
+      parseAndAddExpression('integral(sin(x), 0, 3.14159)', { color: '#059669' });
+      parseAndAddExpression('integral(sin(x), 3.14159, 6.28318)', { color: '#e11d48' });
+    }
+  },
+  {
+    id: 'semicircle_pi',
+    cat: 'integ',
+    grade: '미적분',
+    title: '반원의 정적분과 원주율 π 유도',
+    formula: '∫[-2→2] √(4 - x²) dx = 2π',
+    desc: '반지름이 2인 반원 함수를 정적분하여 원의 넓이 공식(πr²/2 = 2π ≈ 6.2832)과 일치함을 검증합니다.',
+    tip: '대수창에 표시된 정적분 근삿값이 2π(6.2832)와 일치하는지 확인해보세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('y = sqrt(4 - x^2)', { color: '#0284c7' });
+      parseAndAddExpression('integral(sqrt(4 - x^2), -2, 2)', { color: '#0284c7' });
+    }
+  },
+
+  // ⑥ 도형의 방정식·기하
+  {
+    id: 'circle_line',
+    cat: 'geom',
+    grade: '고1 수학 (상)',
+    title: '원의 방정식과 직선의 위치 관계',
+    formula: 'x² + y² = 9,  y = x + k',
+    desc: '중심과 직선 사이 거리(d)와 반지름(r)을 비교하여 두 점, 접선(d = r), 만나지 않는 경우를 탐구합니다.',
+    tip: 'k = ±3√2 (≈ ±4.24)일 때 직선이 원에 정확히 접하는 순간을 확인하세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('k = 2', { min: -5, max: 5, step: 0.1 });
+      parseAndAddExpression('x^2 + y^2 = 9', { color: '#4f46e5' });
+      parseAndAddExpression('y = x + k', { color: '#e11d48' });
+      state.activeConcept = 'circle_line'; updateConceptOverlayLive();
+    }
+  },
+  {
+    id: 'conic_sections',
+    cat: 'geom',
+    grade: '기하 (이차곡선)',
+    title: '타원과 쌍곡선의 방정식 비교',
+    formula: 'x²/16 + y²/9 = 1  vs  x²/4 - y²/4 = 1',
+    desc: '두 초점으로부터 거리의 합이 일정한 타원과, 거리의 차가 일정한 쌍곡선의 기하학적 형태를 한 화면에서 비교합니다.',
+    tip: '타원의 장축·단축 길이와 쌍곡선의 점근선 방향을 관찰해보세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('x^2/16 + y^2/9 = 1', { color: '#4f46e5' });
+      parseAndAddExpression('x^2/4 - y^2/4 = 1', { color: '#e11d48' });
+    }
+  },
+  {
+    id: 'inequality_region',
+    cat: 'geom',
+    grade: '고1 수학 심화',
+    title: '부등식의 영역 (원과 포물선 내부)',
+    formula: 'y >= x^2 - 3  &  x^2 + y^2 <= 9',
+    desc: '부등호(<=, >=)를 만족하는 좌표평면 위의 해집합 영역을 색상으로 시각화합니다.',
+    tip: '두 영역이 겹치는 공통 교집합 영역의 경계점을 찾아보세요.',
+    apply: () => {
+      clearAllData(); switchMode('2d');
+      parseAndAddExpression('x^2 + y^2 <= 9', { color: '#0284c7' });
+      parseAndAddExpression('y >= x^2 - 3', { color: '#f59e0b' });
+    }
+  },
+
+  // ⑦ 3D 공간도형·곡면
+  {
+    id: 'surface3d',
+    cat: 'space3d',
+    grade: '기하 / 미적분 심화',
+    title: '3차원 파동 곡면 (극댓값과 극솟값)',
+    formula: 'z = 2·sin(x)·cos(y)',
+    desc: '2변수 함수 z = f(x, y)가 3차원 공간에서 이루는 주기적인 산봉우리(극대)와 골짜기(극소)를 회전하며 관찰합니다.',
+    tip: '마우스로 3D 화면을 드래그하여 다양한 각도에서 높낮이 색상 변화를 살펴보세요.',
+    apply: () => {
+      clearAllData(); switchMode('3d');
+      parseAndAddExpression('z = 2*sin(x)*cos(y)', { color: '#7c3aed' });
+    }
+  },
+  {
+    id: 'saddle_point3d',
+    cat: 'space3d',
+    grade: '대학 미적분학 기초',
+    title: '쌍곡포물면과 안장점 (Saddle Point)',
+    formula: 'z = (x² - y²) / 4',
+    desc: 'x축 방향으로는 아래로 볼록(극소)하고 y축 방향으로는 위로 볼록(극대)한 말안장 모양의 특이 곡면입니다.',
+    tip: '원점 (0, 0, 0)이 한 방향에선 최저점, 다른 방향에선 최고점이 되는 안장점 구조를 확인하세요.',
+    apply: () => {
+      clearAllData(); switchMode('3d');
+      parseAndAddExpression('z = (x^2 - y^2)/4', { color: '#e11d48' });
+    }
+  },
+  {
+    id: 'solids_compare3d',
+    cat: 'space3d',
+    grade: '중·고등 입체기하',
+    title: '원기둥 · 원뿔 · 구의 부피 비 (3 : 1 : 2)',
+    formula: 'V(원기둥) : V(구) : V(원뿔) = 3 : 2 : 1',
+    desc: '밑면의 반지름과 높이가 같은 원기둥, 구, 원뿔을 3D 공간에 나란히 배치하고 부피 비교 패널로 비율을 검증합니다.',
+    tip: '우측 상단 [길이·넓이 비교] → [부피(3D)] 탭에서 세 도형의 부피 비율을 직접 확인해보세요!',
+    apply: () => {
+      clearAllData(); switchMode('3d');
+      state.solids3D.push(
+        { id: 's_cyl', kind: 'cylinder', label: '원기둥 (r=2, h=4)', size: 2, height: 4, posX: -4.5, posY: 0, color: '#4f46e5' },
+        { id: 's_sph', kind: 'sphere', label: '구 (r=2)', size: 2, height: 4, posX: 0, posY: 0, color: '#059669' },
+        { id: 's_cone', kind: 'cone', label: '원뿔 (r=2, h=4)', size: 2, height: 4, posX: 4.5, posY: 0, color: '#e11d48' }
+      );
+      renderAlgebraList();
+      update3DScene();
+    }
+  }
+];
+
+function filterConceptCategory(catId) {
+  selectedConceptCategory = catId;
+  renderConceptsModalContent();
+}
+
+function openConceptsModal() {
+  window.closeModals();
+  selectedConceptCategory = 'all';
+  renderConceptsModalContent();
+  const modal = document.getElementById('concepts-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+}
+
+function renderConceptsModalContent() {
+  const tabsEl = document.getElementById('concept-category-tabs');
+  const grid = document.getElementById('concepts-grid');
+  if (!tabsEl || !grid) return;
+
+  tabsEl.innerHTML = CONCEPT_CATEGORIES.map(cat => `
+    <button type="button" onclick="filterConceptCategory('${cat.id}')" class="px-3 py-1.5 rounded-xl transition shrink-0 cursor-pointer ${
+      selectedConceptCategory === cat.id
+        ? 'bg-indigo-600 text-white shadow-2xs'
+        : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+    }">
+      ${cat.label}
+    </button>
+  `).join('');
+
+  const filtered = selectedConceptCategory === 'all'
+    ? HIGH_SCHOOL_CONCEPTS
+    : HIGH_SCHOOL_CONCEPTS.filter(c => c.cat === selectedConceptCategory);
+
+  grid.innerHTML = filtered.map(c => `
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs hover:border-indigo-400 hover:shadow-md transition flex flex-col justify-between gap-3">
+      <div>
+        <div class="flex items-center justify-between gap-1 mb-1.5">
+          <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold shrink-0">${c.grade}</span>
+          <span class="font-math text-[11px] font-semibold text-slate-500 truncate">${c.formula}</span>
+        </div>
+        <h3 class="font-bold text-sm text-slate-900 mb-1">${c.title}</h3>
+        <p class="text-xs text-slate-600 leading-relaxed mb-2">${c.desc}</p>
+        ${c.tip ? `
+          <div class="p-2 rounded-xl bg-amber-50/80 border border-amber-100 text-[11px] text-amber-900 leading-snug">
+            <i class="fa-solid fa-wand-magic-sparkles text-amber-500 mr-1"></i><strong>탐구 팁:</strong> ${c.tip}
+          </div>
+        ` : ''}
+      </div>
+      <button type="button" onclick="applyConcept('${c.id}')" class="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer">
+        <i class="fa-solid fa-play"></i>
+        <span>기하창에 바로 적용하기</span>
+      </button>
+    </div>
+  `).join('');
+}
+
+function closeConceptsModal() {
+  const modal = document.getElementById('concepts-modal');
+  if (!modal) return;
+  modal.style.opacity = '0';
+  modal.style.display = 'none';
+}
+
+function closeAllModals() {
+  closeConceptsModal();
+  closeSyntaxGuideModal();
+}
+
+// Explicit Global Window Bindings for Guaranteed Modal Access
+window.openConceptModal = openConceptsModal;
+window.openConceptsModal = openConceptsModal;
+window.openGuideModal = openSyntaxGuideModal;
+window.openSyntaxGuideModal = openSyntaxGuideModal;
+window.closeModals = closeAllModals;
+window.closeConceptsModal = closeConceptsModal;
+window.closeSyntaxGuideModal = closeSyntaxGuideModal;
+
+// Close modals cleanly when pressing Escape key
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    window.closeModals();
+  }
+});
+
+function applyConcept(id) {
+  const concept = HIGH_SCHOOL_CONCEPTS.find(c => c.id === id);
+  if (concept) {
+    window.closeModals();
+    concept.apply();
+    showToast(`'${concept.title}' 개념이 적용되었습니다.`);
+  }
+}
+
+function updateConceptOverlayLive() {
+  const card = document.getElementById('concept-overlay-card');
+  const titleEl = document.getElementById('concept-overlay-title');
+  const bodyEl = document.getElementById('concept-overlay-body');
+  if (!state.activeConcept) {
+    card.classList.add('hidden');
+    return;
+  }
+
+  card.classList.remove('hidden');
+  if (state.activeConcept === 'quadratic') {
+    const { a = 1, b = -2, c = -3 } = state.variables;
+    const D = b * b - 4 * a * c;
+    const vx = a !== 0 ? -b / (2 * a) : 0;
+    const vy = a * vx * vx + b * vx + c;
+    const rootsText = D > 0 ? '서로 다른 두 실근 (교점 2개)' : Math.abs(D) < 1e-6 ? '중근 (x축에 접함)' : '서로 다른 두 허근 (교점 없음)';
+    titleEl.textContent = '이차함수 판별식 & 꼭짓점 실시간 분석';
+    bodyEl.innerHTML = `
+      <div>• 판별식 <span class="font-math font-bold text-indigo-700">D = b² - 4ac = ${D.toFixed(2)}</span></div>
+      <div>• 근의 판별: <strong>${rootsText}</strong></div>
+      <div>• 꼭짓점 좌표: <span class="font-math">(${vx.toFixed(2)}, ${vy.toFixed(2)})</span></div>
+    `;
+  } else if (state.activeConcept === 'trigonometry') {
+    const { a = 2, b = 1, c = 0 } = state.variables;
+    const period = Math.abs(b) > 0 ? (2 * Math.PI) / Math.abs(b) : Infinity;
+    titleEl.textContent = '삼각함수 진폭 & 주기 실시간 분석';
+    bodyEl.innerHTML = `
+      <div>• 진폭 (최댓값): <span class="font-math font-bold text-emerald-700">|a| = ${Math.abs(a).toFixed(2)}</span></div>
+      <div>• 주기 (T = 2π/|b|): <span class="font-math font-bold text-indigo-700">${period.toFixed(2)}</span> (≈ ${(2 / Math.abs(b)).toFixed(2)}π)</div>
+      <div>• 위상 이동: <span class="font-math">${(-c / b).toFixed(2)}</span></div>
+    `;
+  } else if (state.activeConcept === 'derivative') {
+    const a = state.variables.a ?? 1;
+    const y0 = Math.pow(a, 3) - 3 * a;
+    const slope = 3 * a * a - 3;
+    titleEl.textContent = '미분계수 & 접선의 방정식 분석';
+    bodyEl.innerHTML = `
+      <div>• 접점 좌표: <span class="font-math">(${a.toFixed(2)}, ${y0.toFixed(2)})</span></div>
+      <div>• 순간변화율 <span class="font-math font-bold text-amber-600">f'(${a.toFixed(1)}) = ${slope.toFixed(2)}</span></div>
+      <div>• 접선: <span class="font-math">y = ${slope.toFixed(2)}(x - ${a.toFixed(1)}) + ${y0.toFixed(2)}</span></div>
+    `;
+  } else if (state.activeConcept === 'integral') {
+    titleEl.textContent = '정적분과 넓이 시각화';
+    bodyEl.innerHTML = `
+      <div>• 구간 <span class="font-math">[-1, 2]</span>에서 곡선 <span class="font-math">y = 0.5x² + 1</span> 아래 넓이</div>
+      <div>• 정적분 값: <span class="font-math font-bold text-emerald-700">∫(-1→2) (0.5x² + 1) dx = 4.5000</span></div>
+    `;
+  } else if (state.activeConcept === 'circle_line') {
+    const k = state.variables.k ?? 2;
+    const r = 3;
+    const d = Math.abs(k) / Math.SQRT2;
+    const rel = d < r - 0.05 ? '서로 다른 두 점에서 만난다 (d < r)' : Math.abs(d - r) <= 0.05 ? '한 점에서 접한다 (d = r)' : '만나지 않는다 (d > r)';
+    titleEl.textContent = '원과 직선의 위치 관계 (d vs r)';
+    bodyEl.innerHTML = `
+      <div>• 중심(0,0)과 직선 사이 거리: <span class="font-math font-bold text-rose-600">d = ${d.toFixed(2)}</span></div>
+      <div>• 원의 반지름: <span class="font-math font-bold text-indigo-700">r = ${r.toFixed(2)}</span></div>
+      <div>• 위치 관계: <strong>${rel}</strong></div>
+    `;
+  }
+}
+
+function clearAllData() {
+  state.expressions = [];
+  state.shapes2D = [];
+  state.solids3D = [];
+  state.variables = {};
+  state.selectedCompareIds = [];
+  state.activeConcept = null;
+  state.nextColorIdx = 0;
+  document.getElementById('concept-overlay-card').classList.add('hidden');
+}
+
+function resetWorkspace() {
+  clearAllData();
+  resetView2D();
+  resetCamera3D();
+  // Load welcoming default examples
+  parseAndAddExpression('y = x^2 - 3');
+  parseAndAddExpression('P = (2, 1)');
+  showToast('작업 공간이 초기화되었습니다.');
+}
+
+/**
+ * ============================================================================
+ * 6. CALCULATOR-ASSISTED INTERACTIVE QUIZ SYSTEM (계산기 실습형 난이도별 퀴즈)
+ * ============================================================================
+ */
+const QUIZ_QUESTIONS = [
+  // ================= 쉬움 (EASY) =================
+  {
+    id: 'q_easy_1',
+    diff: 'easy',
+    diffLabel: '쉬움',
+    type: 'action',
+    unit: '이차함수 · 평행이동',
+    title: '이차함수 꼭짓점 이동시키기',
+    prompt: '대수창의 슬라이더 <code class="font-math bg-slate-100 px-1 rounded">p</code>와 <code class="font-math bg-slate-100 px-1 rounded">q</code>를 조절하여 포물선 <code class="font-math font-bold text-indigo-600">y = (x - p)^2 + q</code>의 꼭짓점을 <strong>(3, -2)</strong>로 이동시키세요.',
+    hint: 'y = (x - p)^2 + q 의 꼭짓점 좌표는 (p, q)입니다. 슬라이더 p = 3, q = -2로 맞추면 목표점 P(3, -2)와 겹칩니다.',
+    explanation: '이차함수 표준형 y = a(x - p)² + q에서 그래프의 꼭짓점은 (p, q)입니다. 따라서 p = 3, q = -2일 때 꼭짓점이 (3, -2)에 위치합니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('2d');
+      parseAndAddExpression('p = 0', { min: -5, max: 5, step: 0.5 });
+      parseAndAddExpression('q = 1', { min: -5, max: 5, step: 0.5 });
+      parseAndAddExpression('y = (x - p)^2 + q', { color: '#4f46e5' });
+      parseAndAddExpression('목표점 = (3, -2)', { color: '#e11d48' });
+    },
+    getLiveStatus: () => {
+      const p = state.variables.p ?? 0;
+      const q = state.variables.q ?? 1;
+      const ok = Math.abs(p - 3) < 0.05 && Math.abs(q - (-2)) < 0.05;
+      return {
+        text: `현재 꼭짓점: (${p.toFixed(1)}, ${q.toFixed(1)})  →  목표: (3.0, -2.0)`,
+        met: ok
+      };
+    },
+    checkAction: () => {
+      const p = state.variables.p ?? 0;
+      const q = state.variables.q ?? 1;
+      return Math.abs(p - 3) < 0.05 && Math.abs(q - (-2)) < 0.05;
+    }
+  },
+  {
+    id: 'q_easy_2',
+    diff: 'easy',
+    diffLabel: '쉬움',
+    type: 'action',
+    unit: '평면기하 · 원 작도',
+    title: '넓이가 약 12.57인 원 작도하기',
+    prompt: '상단 2D 기하창 도구의 <strong>[원 그리기]</strong>를 선택하여 넓이가 약 <strong>12.57</strong> (반지름 <code class="font-math font-bold text-indigo-600">r = 2</code>)인 원을 직접 작도하세요.',
+    hint: '원의 넓이 S = πr² ≈ 12.57 이므로 반지름 r = 2입니다. 원점을 중심으로 찍고 (2, 0)을 클릭해보세요!',
+    explanation: '원의 넓이 공식 S = πr²에 r = 2를 대입하면 S = 4π ≈ 12.566입니다. 기하창에서 두 점 사이의 거리가 2가 되도록 원을 그리면 완성됩니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('2d');
+      setTool2D('circle');
+    },
+    getLiveStatus: () => {
+      const circles = state.shapes2D.filter(s => s.type === 'circle');
+      if (circles.length === 0) {
+        return { text: '아직 작도된 원이 없습니다. [원 그리기] 도구로 원을 그려보세요.', met: false };
+      }
+      const best = circles.reduce((prev, curr) => {
+        const mCurr = getShape2DMetrics(curr);
+        const mPrev = getShape2DMetrics(prev);
+        return Math.abs(mCurr.radius - 2) < Math.abs(mPrev.radius - 2) ? curr : prev;
+      });
+      const m = getShape2DMetrics(best);
+      const ok = Math.abs(m.radius - 2) <= 0.15;
+      return {
+        text: `작도된 ${best.label}: 반지름 r = ${m.radius.toFixed(2)}, 넓이 = ${m.area.toFixed(2)} (목표 r = 2.00)`,
+        met: ok
+      };
+    },
+    checkAction: () => {
+      return state.shapes2D.some(s => s.type === 'circle' && Math.abs(getShape2DMetrics(s).radius - 2) <= 0.15);
+    }
+  },
+  {
+    id: 'q_easy_3',
+    diff: 'easy',
+    diffLabel: '쉬움',
+    type: 'numeric',
+    unit: '삼각함수 · 진폭과 주기',
+    title: '삼각함수의 진폭과 주기 계산',
+    prompt: '함수 <code class="font-math font-bold text-indigo-600">y = a * sin(b * x)</code> (a > 0, b > 0)의 최댓값이 <strong>3</strong>이고 주기가 <strong>π</strong>일 때, <code class="font-math font-bold">a + b</code>의 값을 구하세요. (계산기 세팅 후 슬라이더로 확인 가능)',
+    placeholder: '숫자 입력 (예: 5)',
+    hint: '최댓값은 a = 3이고, 주기 공식 T = 2π / b = π 이므로 b = 2입니다.',
+    explanation: 'y = a·sin(bx) (a>0, b>0)에서 진폭(최댓값)은 a = 3이며, 주기 T = 2π/b = π에서 b = 2입니다. 따라서 a + b = 3 + 2 = 5입니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('2d');
+      parseAndAddExpression('a = 1', { min: 1, max: 5, step: 0.5 });
+      parseAndAddExpression('b = 1', { min: 1, max: 4, step: 0.5 });
+      parseAndAddExpression('y = a * sin(b * x)', { color: '#059669' });
+    },
+    checkNumeric: (val) => Math.abs(val - 5) < 0.05
+  },
+  {
+    id: 'q_easy_4',
+    diff: 'easy',
+    diffLabel: '쉬움',
+    type: 'numeric',
+    unit: '입체기하 · 3D 구의 부피',
+    title: '3D 구(Sphere)의 부피 측정',
+    prompt: '3D 기하창에 세팅된 구(Sphere)의 크기 슬라이더를 반지름 <code class="font-math font-bold text-indigo-600">r = 3</code>으로 조절한 뒤, 대수창에 표시되는 구의 <strong>부피</strong>를 소수점 첫째 자리까지 입력하세요.',
+    placeholder: '예: 113.1',
+    hint: '좌측 대수창의 3D 입체도형 카드에서 크기 슬라이더를 3.0으로 옮기면 부피가 자동 계산됩니다. (V = 4/3 π r³)',
+    explanation: '반지름이 r = 3인 구의 부피는 V = (4/3)π × 3³ = 36π ≈ 113.10입니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('3d');
+      state.solids3D.push({
+        id: 'q_sphere',
+        kind: 'sphere',
+        label: '측정용 구 (Sphere)',
+        size: 1.5,
+        height: 3,
+        posX: 0,
+        posY: 0,
+        color: '#4f46e5'
+      });
+      renderAlgebraList();
+      update3DScene();
+    },
+    checkNumeric: (val) => Math.abs(val - 113.1) <= 0.4
+  },
+
+  // ================= 보통 (MEDIUM) =================
+  {
+    id: 'q_med_1',
+    diff: 'medium',
+    diffLabel: '보통',
+    type: 'action',
+    unit: '이차방정식 · 판별식',
+    title: '포물선과 x축이 접하는 조건 (D = 0)',
+    prompt: '이차함수 <code class="font-math font-bold text-indigo-600">y = x^2 - 4*x + k</code>의 그래프가 x축과 <strong>오직 한 점에서 접하도록</strong> 슬라이더 <code class="font-math font-bold">k</code> 값을 조절하세요.',
+    hint: '이차방정식 x² - 4x + k = 0의 판별식 D/4 = (-2)² - k = 4 - k = 0이 되어야 합니다.',
+    explanation: '그래프가 x축에 접하려면 판별식 D = (-4)² - 4(1)(k) = 16 - 4k = 0이어야 하므로 k = 4입니다. 이때 완전제곱식 y = (x - 2)²이 됩니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('2d');
+      parseAndAddExpression('k = 0', { min: -2, max: 8, step: 0.5 });
+      parseAndAddExpression('y = x^2 - 4*x + k', { color: '#4f46e5' });
+    },
+    getLiveStatus: () => {
+      const k = state.variables.k ?? 0;
+      const D = 16 - 4 * k;
+      const ok = Math.abs(k - 4) < 0.05;
+      return {
+        text: `현재 k = ${k.toFixed(1)}, 판별식 D = ${D.toFixed(1)} → ${D > 0 ? '교점 2개' : D === 0 ? '접함 (교점 1개)!' : '교점 없음'}`,
+        met: ok
+      };
+    },
+    checkAction: () => Math.abs((state.variables.k ?? 0) - 4) < 0.05
+  },
+  {
+    id: 'q_med_2',
+    diff: 'medium',
+    diffLabel: '보통',
+    type: 'numeric',
+    unit: '미분 · 순간변화율',
+    title: '삼차함수의 x = 2에서의 접선의 기울기',
+    prompt: '함수 <code class="font-math font-bold text-indigo-600">f(x) = x^3 - 3*x</code>의 <code class="font-math font-bold">x = 2</code>에서의 미분계수(접선의 기울기) <code class="font-math font-bold">f\'(2)</code>를 구하세요.',
+    placeholder: '숫자 입력',
+    hint: '대수창의 함수 카드에서 [f\'(x)] 버튼을 눌러 도함수 f\'(x) = 3x² - 3을 확인한 뒤 x = 2를 대입해보세요.',
+    explanation: 'f(x) = x³ - 3x를 미분하면 도함수는 f\'(x) = 3x² - 3입니다. x = 2를 대입하면 f\'(2) = 3(4) - 3 = 9가 됩니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('2d');
+      parseAndAddExpression('y = x^3 - 3*x', { color: '#4f46e5', showDerivative: true });
+      parseAndAddExpression('접점 = (2, 2)', { color: '#f59e0b' });
+    },
+    checkNumeric: (val) => Math.abs(val - 9) < 0.05
+  },
+  {
+    id: 'q_med_3',
+    diff: 'medium',
+    diffLabel: '보통',
+    type: 'action',
+    unit: '다각형 · 넓이 작도',
+    title: '넓이가 12인 다각형 직접 작도하기',
+    prompt: '상단 2D 기하창의 <strong>[다각형 (넓이)]</strong> 도구를 사용하여 넓이가 정확히 <strong>12</strong>인 삼각형 또는 사각형을 직접 그리세요.',
+    hint: '예를 들어 꼭짓점을 (0,0) → (4,0) → (4,3) → (0,3) → (0,0) 순서로 클릭하면 가로 4, 세로 3인 넓이 12 직사각형이 완성됩니다.',
+    explanation: '다각형 도구는 신발끈 공식(Shoelace formula)으로 실시간 넓이를 계산합니다. 밑변 4, 높이 3인 직사각형 또는 밑변 6, 높이 4인 삼각형 모두 넓이가 12입니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('2d');
+      setTool2D('polygon');
+    },
+    getLiveStatus: () => {
+      const polys = state.shapes2D.filter(s => s.type === 'polygon');
+      if (polys.length === 0) {
+        return { text: '다각형 도구로 꼭짓점을 찍고 첫 점을 다시 클릭해 닫으세요.', met: false };
+      }
+      const best = polys.reduce((prev, curr) =>
+        Math.abs(getShape2DMetrics(curr).area - 12) < Math.abs(getShape2DMetrics(prev).area - 12) ? curr : prev
+      );
+      const area = getShape2DMetrics(best).area;
+      const ok = Math.abs(area - 12) <= 0.25;
+      return {
+        text: `작도된 ${best.label}의 현재 넓이: ${area.toFixed(2)} (목표 넓이: 12.00)`,
+        met: ok
+      };
+    },
+    checkAction: () => state.shapes2D.some(s => s.type === 'polygon' && Math.abs(getShape2DMetrics(s).area - 12) <= 0.25)
+  },
+  {
+    id: 'q_med_4',
+    diff: 'medium',
+    diffLabel: '보통',
+    type: 'numeric',
+    unit: '정적분 · 곡선 아래 넓이',
+    title: '이차함수 곡선 아래 정적분 넓이',
+    prompt: '정적분 <code class="font-math font-bold text-emerald-700">∫[0 → 3] x^2 dx</code> 의 값을 계산기 정적분 기능으로 구해 입력하세요.',
+    placeholder: '숫자 입력',
+    hint: '대수창에 integral(x^2, 0, 3) 을 입력하거나 [계산기 세팅] 버튼을 누르면 정적분 값이 즉시 계산됩니다.',
+    explanation: 'x²의 부정적분은 (1/3)x³이므로, 0부터 3까지 정적분하면 (1/3)(3³ - 0³) = 27 / 3 = 9입니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('2d');
+      parseAndAddExpression('y = x^2', { color: '#4f46e5' });
+      parseAndAddExpression('integral(x^2, 0, 3)', { color: '#059669' });
+    },
+    checkNumeric: (val) => Math.abs(val - 9) < 0.05
+  },
+
+  // ================= 어려움 (HARD) =================
+  {
+    id: 'q_hard_1',
+    diff: 'hard',
+    diffLabel: '어려움',
+    type: 'action',
+    unit: '도함수의 활용 · 극값',
+    title: '삼차함수의 극솟값이 0이 되도록 조절하기',
+    prompt: '삼차함수 <code class="font-math font-bold text-indigo-600">f(x) = x^3 - 3*x^2 + a</code>의 극솟값이 정확히 <strong>0</strong>(x축에 접함)이 되도록 슬라이더 <code class="font-math font-bold">a</code> 값을 조절하세요.',
+    hint: 'f\'(x) = 3x² - 6x = 3x(x - 2) = 0 이므로 x = 2에서 극솟값 f(2) = 8 - 12 + a = a - 4를 가집니다.',
+    explanation: '도함수 f\'(x) = 3x(x - 2)에서 x = 0일 때 극대, x = 2일 때 극소입니다. 극솟값 f(2) = a - 4 = 0이 되려면 a = 4여야 합니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('2d');
+      parseAndAddExpression('a = 1', { min: -2, max: 7, step: 0.5 });
+      parseAndAddExpression('y = x^3 - 3*x^2 + a', { color: '#4f46e5', showDerivative: true });
+    },
+    getLiveStatus: () => {
+      const a = state.variables.a ?? 1;
+      const localMin = a - 4;
+      const ok = Math.abs(a - 4) < 0.05;
+      return {
+        text: `현재 a = ${a.toFixed(1)}, 극솟값 f(2) = ${localMin.toFixed(1)} (목표 극솟값: 0.0)`,
+        met: ok
+      };
+    },
+    checkAction: () => Math.abs((state.variables.a ?? 1) - 4) < 0.05
+  },
+  {
+    id: 'q_hard_2',
+    diff: 'hard',
+    diffLabel: '어려움',
+    type: 'action',
+    unit: '원의 방정식 · 접선 조건',
+    title: '원 x² + y² = 9 와 직선 y = x + k 의 접선 만들기',
+    prompt: '반지름이 3인 원 <code class="font-math font-bold text-indigo-600">x^2 + y^2 = 9</code>와 직선 <code class="font-math font-bold text-rose-600">y = x + k</code>가 <strong>한 점에서 접하도록</strong> 슬라이더 <code class="font-math font-bold">k</code>를 조절하세요.',
+    hint: '원점 (0,0)과 직선 x - y + k = 0 사이의 거리 d = |k| / √2 가 반지름 r = 3과 같아야 합니다. (|k| = 3√2 ≈ 4.24)',
+    explanation: '중심과 직선 사이의 거리 d = |k|/√2 = 3에서 |k| = 3√2 ≈ ±4.2426일 때 직선이 원에 접합니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('2d');
+      parseAndAddExpression('k = 1', { min: -6, max: 6, step: 0.02 });
+      parseAndAddExpression('x^2 + y^2 = 9', { color: '#4f46e5' });
+      parseAndAddExpression('y = x + k', { color: '#e11d48' });
+    },
+    getLiveStatus: () => {
+      const k = state.variables.k ?? 1;
+      const d = Math.abs(k) / Math.SQRT2;
+      const target = 3 * Math.SQRT2;
+      const ok = Math.abs(Math.abs(k) - target) <= 0.12;
+      return {
+        text: `현재 |k| = ${Math.abs(k).toFixed(2)}, 중심거리 d = ${d.toFixed(2)} (반지름 r = 3.00)`,
+        met: ok
+      };
+    },
+    checkAction: () => {
+      const k = state.variables.k ?? 1;
+      return Math.abs(Math.abs(k) - 3 * Math.SQRT2) <= 0.12;
+    }
+  },
+  {
+    id: 'q_hard_3',
+    diff: 'hard',
+    diffLabel: '어려움',
+    type: 'numeric',
+    unit: '공간도형 · 3D 부피 비교',
+    title: '3D 원기둥과 원뿔의 부피 차이 구하기',
+    prompt: '3D 기하창에 생성된 <strong>반지름 r = 2, 높이 h = 6</strong>인 원기둥과 원뿔의 <strong>부피 차이 (V_원기둥 - V_원뿔)</strong>를 소수점 첫째 자리까지 입력하세요.',
+    placeholder: '예: 50.3',
+    hint: '대수창에서 원기둥 부피(75.40)와 원뿔 부피(25.13)를 확인하거나 [길이·넓이 비교] → [부피(3D)] 탭에서 두 도형을 체크해보세요!',
+    explanation: '원기둥 부피는 πr²h = 24π ≈ 75.40, 원뿔 부피는 (1/3)πr²h = 8π ≈ 25.13이므로 차이는 16π ≈ 50.27(50.3)입니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('3d');
+      state.solids3D.push(
+        { id: 'q_cyl', kind: 'cylinder', label: '원기둥 (r=2, h=6)', size: 2, height: 6, posX: -2.8, posY: 0, color: '#4f46e5' },
+        { id: 'q_cone', kind: 'cone', label: '원뿔 (r=2, h=6)', size: 2, height: 6, posX: 2.8, posY: 0, color: '#e11d48' }
+      );
+      renderAlgebraList();
+      update3DScene();
+    },
+    checkNumeric: (val) => Math.abs(val - 50.27) <= 0.35
+  },
+  {
+    id: 'q_hard_4',
+    diff: 'hard',
+    diffLabel: '어려움',
+    type: 'numeric',
+    unit: '부등식의 영역 · 반원의 넓이',
+    title: '연립부등식 영역의 넓이 구하기',
+    prompt: '두 부등식 <code class="font-math font-bold text-sky-700">x^2 + y^2 <= 16</code> 과 <code class="font-math font-bold text-amber-700">y >= 0</code> 이 동시에 만족하는 공통 영역의 넓이를 소수점 첫째 자리까지 입력하세요.',
+    placeholder: '예: 25.1',
+    hint: 'x² + y² ≤ 16은 반지름이 4인 원의 내부이고, y ≥ 0은 x축 위쪽 영역입니다. 즉 반지름 4인 반원의 넓이입니다.',
+    explanation: '반지름이 r = 4인 원의 넓이 πr² = 16π의 절반인 반원이므로 넓이는 8π ≈ 25.13(25.1)입니다.',
+    setup: () => {
+      clearAllData();
+      switchMode('2d');
+      parseAndAddExpression('x^2 + y^2 <= 16', { color: '#0284c7' });
+      parseAndAddExpression('y >= 0', { color: '#f59e0b' });
+    },
+    checkNumeric: (val) => Math.abs(val - 25.13) <= 0.3
+  }
+];
+
+const quizState = {
+  difficulty: 'all', // 'all' | 'easy' | 'medium' | 'hard'
+  currentIndex: 0,
+  solvedIds: new Set(),
+  attempts: 0,
+  streak: 0,
+  showHint: false,
+  lastResult: null // null | { correct: boolean, message: string }
+};
+
+function getFilteredQuizList() {
+  if (quizState.difficulty === 'all') return QUIZ_QUESTIONS;
+  return QUIZ_QUESTIONS.filter(q => q.diff === quizState.difficulty);
+}
+
+function toggleQuizDock(forceState) {
+  const dock = document.getElementById('quiz-dock');
+  if (!dock) return;
+  const shouldOpen = typeof forceState === 'boolean' ? forceState : dock.classList.contains('hidden');
+  if (shouldOpen) {
+    // Close compare drawer if open so panels don't overlap
+    document.getElementById('compare-drawer')?.classList.add('hidden');
+    dock.classList.remove('hidden');
+    renderQuizCard();
+  } else {
+    dock.classList.add('hidden');
+  }
+}
+
+function setQuizDifficulty(diff) {
+  quizState.difficulty = diff;
+  quizState.currentIndex = 0;
+  quizState.showHint = false;
+  quizState.lastResult = null;
+
+  ['all', 'easy', 'medium', 'hard'].forEach(d => {
+    const btn = document.getElementById(`qdiff-${d}`);
+    if (!btn) return;
+    btn.className = d === diff
+      ? 'flex-1 py-1.5 rounded-xl bg-violet-600 text-white transition cursor-pointer'
+      : 'flex-1 py-1.5 rounded-xl text-slate-600 hover:bg-slate-200/70 transition cursor-pointer';
+  });
+  renderQuizCard();
+}
+
+function setupCurrentQuizInCalculator() {
+  const list = getFilteredQuizList();
+  const q = list[quizState.currentIndex];
+  if (!q || !q.setup) return;
+  q.setup();
+  updateQuizLiveStatus();
+  showToast('문제의 수식과 도형이 계산기에 세팅되었습니다!');
+}
+
+function renderQuizCard() {
+  const body = document.getElementById('quiz-body');
+  const progressText = document.getElementById('quiz-progress-text');
+  const scoreBadge = document.getElementById('quiz-score-badge');
+  const streakBadge = document.getElementById('quiz-streak-badge');
+  if (!body) return;
+
+  const list = getFilteredQuizList();
+  if (quizState.currentIndex >= list.length) quizState.currentIndex = 0;
+  const q = list[quizState.currentIndex];
+
+  progressText.textContent = `${quizState.currentIndex + 1} / ${list.length}`;
+  scoreBadge.textContent = `정답 ${quizState.solvedIds.size}/${QUIZ_QUESTIONS.length}`;
+  streakBadge.textContent = `🔥${quizState.streak}`;
+
+  const diffBadgeStyle = q.diff === 'easy'
+    ? 'bg-emerald-100 text-emerald-700'
+    : q.diff === 'medium'
+      ? 'bg-amber-100 text-amber-800'
+      : 'bg-rose-100 text-rose-700';
+
+  const isSolved = quizState.solvedIds.has(q.id);
+
+  body.innerHTML = `
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-1.5">
+        <span class="px-2 py-0.5 rounded-md font-bold text-[10px] ${diffBadgeStyle}">${q.diffLabel}</span>
+        <span class="text-[11px] font-semibold text-slate-500">${q.unit}</span>
+      </div>
+      ${isSolved ? '<span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold"><i class="fa-solid fa-check mr-1"></i>해결 완료</span>' : ''}
+    </div>
+
+    <div class="space-y-1.5">
+      <h4 class="font-bold text-sm text-slate-900">${q.title}</h4>
+      <p class="text-xs text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-2xl border border-slate-200/80">${q.prompt}</p>
+    </div>
+
+    <!-- Calculator Setup Button -->
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="setupCurrentQuizInCalculator()" class="flex-1 py-2 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>문제 수식 · 환경 계산기에 세팅하기</span>
+      </button>
+      <button type="button" onclick="toggleQuizHint()" class="py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold text-xs transition cursor-pointer">
+        <i class="fa-solid fa-lightbulb mr-1"></i>힌트
+      </button>
+    </div>
+
+    ${quizState.showHint ? `
+      <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
+        <strong>💡 힌트:</strong> ${q.hint}
+      </div>
+    ` : ''}
+
+    ${q.type === 'action' ? `
+      <div class="p-3 rounded-2xl bg-violet-50/70 border border-violet-200 space-y-2.5">
+        <div class="flex items-center gap-1.5 text-[11px] font-bold text-violet-900">
+          <i class="fa-solid fa-satellite-dish text-violet-600"></i>
+          <span>실시간 계산기 상태 감지</span>
+        </div>
+        <div id="quiz-live-status" class="font-math text-[11px] p-2 rounded-xl bg-white border border-violet-100 text-slate-700">
+          계산기를 조작하면 현재 상태가 여기에 표시됩니다.
+        </div>
+        <button type="button" onclick="submitQuizAnswer()" class="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-sm transition cursor-pointer">
+          <i class="fa-solid fa-check-double mr-1"></i>현재 계산기 상태로 채점하기
+        </button>
+      </div>
+    ` : `
+      <form onsubmit="event.preventDefault(); submitQuizAnswer();" class="space-y-2">
+        <label class="block text-[11px] font-bold text-slate-600">계산기로 구한 정답 입력:</label>
+        <div class="flex gap-1.5">
+          <input id="quiz-numeric-input" type="number" step="any" placeholder="${q.placeholder || '정답 숫자 입력'}"
+            class="flex-1 px-3 py-2 rounded-xl border border-slate-300 font-math text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+          <button type="submit" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-sm transition cursor-pointer shrink-0">
+            제출
+          </button>
+        </div>
+      </form>
+    `}
+
+    ${quizState.lastResult ? `
+      <div class="p-3 rounded-2xl border ${quizState.lastResult.correct ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-900'} space-y-1.5">
+        <div class="font-bold text-xs flex items-center gap-1.5">
+          <i class="fa-solid ${quizState.lastResult.correct ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-rose-600'}"></i>
+          <span>${quizState.lastResult.message}</span>
+        </div>
+        ${quizState.lastResult.correct ? `
+          <p class="text-[11px] leading-relaxed text-slate-700 pt-1 border-t border-emerald-200/70">
+            <strong>📘 풀이 해설:</strong> ${q.explanation}
+          </p>
+        ` : ''}
+      </div>
+    ` : ''}
+  `;
+
+  updateQuizLiveStatus();
+}
+
+function updateQuizLiveStatus() {
+  const dock = document.getElementById('quiz-dock');
+  const statusEl = document.getElementById('quiz-live-status');
+  if (!dock || dock.classList.contains('hidden') || !statusEl) return;
+
+  const list = getFilteredQuizList();
+  const q = list[quizState.currentIndex];
+  if (!q || q.type !== 'action' || !q.getLiveStatus) return;
+
+  const info = q.getLiveStatus();
+  statusEl.innerHTML = info.met
+    ? `<span class="text-emerald-700 font-bold"><i class="fa-solid fa-circle-check mr-1"></i>목표 조건 달성! (${info.text})</span>`
+    : `<span>${info.text}</span>`;
+}
+
+function toggleQuizHint() {
+  quizState.showHint = !quizState.showHint;
+  renderQuizCard();
+}
+
+function submitQuizAnswer() {
+  const list = getFilteredQuizList();
+  const q = list[quizState.currentIndex];
+  if (!q) return;
+
+  let isCorrect = false;
+  if (q.type === 'action') {
+    isCorrect = q.checkAction();
+  } else {
+    const inputEl = document.getElementById('quiz-numeric-input');
+    const raw = inputEl ? inputEl.value.trim() : '';
+    if (raw === '') {
+      showToast('정답 숫자를 입력해주세요.');
+      return;
+    }
+    const val = parseFloat(raw);
+    if (isNaN(val)) {
+      showToast('올바른 숫자를 입력해주세요.');
+      return;
+    }
+    isCorrect = q.checkNumeric(val);
+  }
+
+  quizState.attempts++;
+  if (isCorrect) {
+    quizState.solvedIds.add(q.id);
+    quizState.streak++;
+    quizState.lastResult = {
+      correct: true,
+      message: '정답입니다! 계산기를 훌륭하게 활용하셨습니다.'
+    };
+    showToast('🎉 정답입니다!');
+  } else {
+    quizState.streak = 0;
+    quizState.lastResult = {
+      correct: false,
+      message: q.type === 'action'
+        ? '아직 목표 조건과 일치하지 않습니다. 계산기 상태를 조금 더 조절해보세요!'
+        : '오답입니다. 계산기 그래프나 힌트를 참고해 다시 시도해보세요!'
+    };
+  }
+  renderQuizCard();
+}
+
+function nextQuizQuestion() {
+  const list = getFilteredQuizList();
+  quizState.currentIndex = (quizState.currentIndex + 1) % list.length;
+  quizState.showHint = false;
+  quizState.lastResult = null;
+  renderQuizCard();
+}
+
+function prevQuizQuestion() {
+  const list = getFilteredQuizList();
+  quizState.currentIndex = (quizState.currentIndex - 1 + list.length) % list.length;
+  quizState.showHint = false;
+  quizState.lastResult = null;
+  renderQuizCard();
+}
+
+window.toggleQuizDock = toggleQuizDock;
+
+/**
+ * ============================================================================
+ * INITIALIZATION
+ * ============================================================================
+ */
+window.addEventListener('resize', () => {
+  resizeCanvas2D();
+  resize3D();
+});
+
+window.onload = function () {
+  init3D();
+  resizeCanvas2D();
+  // Default starter expressions so user immediately sees algebra -> geometry link
+  parseAndAddExpression('y = x^2 - 3');
+  parseAndAddExpression('P = (2, 1)');
+};
+</script>
+</body>
+</html>

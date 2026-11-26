@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 건강 & 바디 메이킹 코치</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Noto Sans KR & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .clock-font {
+            font-family: 'Inter', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .alarm-active-ring {
+            animation: pulse-ring 1.5s infinite;
+        }
+        .tab-active {
+            border-bottom: 3px solid currentColor;
+            font-weight: 700;
+        }
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- 상단 헤더 & 실시간 시계 바 -->
+    <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- 브랜드 로고 -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center text-slate-900 font-black text-xl shadow-md">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">바디 & 헬스 메이킹 코치</h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">목표별 맞춤 루틴 · 식단 · 자동 스케줄 알람</p>
+                </div>
+            </div>
+
+            <!-- 실시간 시계 및 다음 알람 상태 -->
+            <div class="flex items-center space-x-3 sm:space-x-5 bg-slate-800/90 px-4 py-2 rounded-2xl border border-slate-700">
+                <div class="text-right">
+                    <div class="text-[11px] text-slate-400 font-medium" id="current-date">2026년 11월 26일 (목)</div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-emerald-400 clock-font tracking-wider" id="live-clock">00:00:00</div>
+                </div>
+                <div class="h-8 w-px bg-slate-700"></div>
+                <div class="hidden md:block">
+                    <div class="text-[11px] text-slate-400">다음 예정 알람</div>
+                    <div class="text-sm font-bold text-amber-300 truncate max-w-[170px]" id="next-alarm-display">계산 중...</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="requestNotificationPermission()" id="notif-perm-btn" title="브라우저 푸시 알림 허용" class="p-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="hidden sm:inline" id="notif-perm-text">알림 허용</span>
+                    </button>
+                    <button onclick="triggerTestAlarm()" class="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow flex items-center gap-1.5">
+                        <i class="fa-solid fa-volume-high"></i>
+                        <span>알람 테스트</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨테이너 -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+
+        <!-- STEP 1: 목표 선택 섹션 (3가지 옵션) -->
+        <section>
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">STEP 1 · 목표 설정</span>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 mt-1">원하는 바디 & 건강 목표를 선택하세요</h2>
+                </div>
+                <span class="text-xs text-slate-500 hidden sm:inline">목표를 선택하면 맞춤형 가이드와 가용 시간 알람 스케줄이 자동 생성됩니다.</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6" id="goal-cards-container">
+                <!-- 옵션 1: 체중 감량 -->
+                <button onclick="selectGoal('weight_loss')" id="card-weight_loss" class="goal-card text-left p-5 sm:p-6 rounded-2xl bg-white border-2 border-slate-200 hover:border-rose-400 transition-all shadow-sm hover:shadow-md relative overflow-hidden group">
+                    <div class="flex items-start justify-between">
+                        <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-fire-flame-curved"></i>
+                        </div>
+                        <span class="selected-badge hidden px-3 py-1 rounded-full text-xs font-bold bg-rose-600 text-white">선택됨 ✓</span>
+                    </div>
+                    <h3 class="text-lg font-extrabold text-slate-900">옵션 1. 체중 감량 (다이어트)</h3>
+                    <p class="text-sm text-slate-600 mt-1.5 leading-relaxed">체지방 연소를 극대화하는 칼로리 적자 식단과 유산소·서킷 트레이닝 중심의 감량 프로그램</p>
+                    <div class="mt-4 flex flex-wrap gap-1.5">
+                        <span class="text-xs bg-rose-50 text-rose-700 px-2.5 py-1 rounded-lg font-medium">#체지방감소</span>
+                        <span class="text-xs bg-rose-50 text-rose-700 px-2.5 py-1 rounded-lg font-medium">#유산소서킷</span>
+                        <span class="text-xs bg-rose-50 text-rose-700 px-2.5 py-1 rounded-lg font-medium">#고단백저당질</span>
+                    </div>
+                </button>
+
+                <!-- 옵션 2: 근육 증가 -->
+                <button onclick="selectGoal('muscle_gain')" id="card-muscle_gain" class="goal-card text-left p-5 sm:p-6 rounded-2xl bg-white border-2 border-slate-200 hover:border-blue-500 transition-all shadow-sm hover:shadow-md relative overflow-hidden group">
+                    <div class="flex items-start justify-between">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-dumbbell"></i>
+                        </div>
+                        <span class="selected-badge hidden px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white">선택됨 ✓</span>
+                    </div>
+                    <h3 class="text-lg font-extrabold text-slate-900">옵션 2. 근육 증가 (멋진 몸 만들기)</h3>
+                    <p class="text-sm text-slate-600 mt-1.5 leading-relaxed">점진적 과부하 웨이트 트레이닝과 근성장을 위한 고단백·복합탄수화물 영양 섭취 및 회복 프로그램</p>
+                    <div class="mt-4 flex flex-wrap gap-1.5">
+                        <span class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg font-medium">#근비대웨이트</span>
+                        <span class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg font-medium">#단백질충전</span>
+                        <span class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg font-medium">#탄탄한바디</span>
+                    </div>
+                </button>
+
+                <!-- 옵션 3: 건강한 생활 -->
+                <button onclick="selectGoal('healthy_life')" id="card-healthy_life" class="goal-card text-left p-5 sm:p-6 rounded-2xl bg-white border-2 border-slate-200 hover:border-emerald-500 transition-all shadow-sm hover:shadow-md relative overflow-hidden group">
+                    <div class="flex items-start justify-between">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-seedling"></i>
+                        </div>
+                        <span class="selected-badge hidden px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white">선택됨 ✓</span>
+                    </div>
+                    <h3 class="text-lg font-extrabold text-slate-900">옵션 3. 건강한 라이프스타일</h3>
+                    <p class="text-sm text-slate-600 mt-1.5 leading-relaxed">지치지 않는 체력과 활력을 위한 전신 순환 운동, 균형 잡힌 자연식, 생체리듬 수면 관리 프로그램</p>
+                    <div class="mt-4 flex flex-wrap gap-1.5">
+                        <span class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg font-medium">#면역력강화</span>
+                        <span class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg font-medium">#균형식단</span>
+                        <span class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg font-medium">#활력충전</span>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 2: 안 되는 시간대(제외 구간) 직접 설정 및 가용 시간 조사 -->
+        <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 sm:p-7">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">STEP 2 · 안 되는 시간대 제외 설정</span>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 mt-1">기상·취침 시간과 안 되는 시간대를 직접 지정하세요</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-0.5">수업, 학원, 근무, 회의 등 <b>안 되는 시간대를 추가하거나 삭제</b>하면 해당 시간을 피해 알람 스케줄을 자동으로 짜드립니다.</p>
+                </div>
+                <div id="available-hours-badge" class="px-4 py-2 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs sm:text-sm font-extrabold flex items-center gap-2">
+                    <i class="fa-solid fa-user-clock text-indigo-600"></i>
+                    <span id="available-summary-text">하루 자유 가용 시간 계산 중...</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200/80">
+                <!-- 좌측: 기상·취침 시간 및 메인 운동 선호 시간 -->
+                <div class="lg:col-span-5 flex flex-col justify-between gap-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200">
+                            <label class="block text-xs font-bold text-slate-500 mb-1"><i class="fa-solid fa-sun text-amber-500 mr-1"></i>기상 시간</label>
+                            <input type="time" id="input-wake-time" onchange="handleProfileTimeChange()" class="w-full clock-font text-base font-extrabold text-slate-900 focus:outline-none">
+                        </div>
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200">
+                            <label class="block text-xs font-bold text-slate-500 mb-1"><i class="fa-solid fa-moon text-indigo-500 mr-1"></i>목표 취침 시간</label>
+                            <input type="time" id="input-sleep-time" onchange="handleProfileTimeChange()" class="w-full clock-font text-base font-extrabold text-slate-900 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">메인 운동 선호 시간대</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="setWorkoutPref('morning')" id="pref-morning" class="pref-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-mug-hot"></i> 오전(일과 전) 선호
+                            </button>
+                            <button type="button" onclick="setWorkoutPref('evening')" id="pref-evening" class="pref-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-moon"></i> 오후·저녁 선호
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="regenerateSmartSchedule(true)" class="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-extrabold shadow-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>안 되는 시간 빼고 스케줄 생성하기</span>
+                    </button>
+                </div>
+
+                <!-- 우측: 안 되는 시간대(제외 구간) 추가 및 삭제 리스트 -->
+                <div class="lg:col-span-7 bg-white p-4 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2.5">
+                            <label class="text-xs font-extrabold text-rose-600 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fa-solid fa-ban"></i> 안 되는 시간대 목록 (알람 자동 제외)
+                            </label>
+                            <button type="button" onclick="clearAllBlockedSlots()" class="text-[11px] font-bold text-slate-400 hover:text-rose-600 underline">
+                                전체 지우기
+                            </button>
+                        </div>
+
+                        <!-- 안 되는 시간 추가 폼 -->
+                        <form onsubmit="addBlockedSlot(event)" class="flex flex-wrap sm:flex-nowrap items-center gap-2 mb-3">
+                            <input type="time" id="block-start-input" value="09:00" required class="px-2.5 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm font-bold clock-font text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                            <span class="text-slate-400 font-bold">~</span>
+                            <input type="time" id="block-end-input" value="17:00" required class="px-2.5 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm font-bold clock-font text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                            <input type="text" id="block-label-input" placeholder="사유 (예: 수업, 근무, 학원)" class="flex-grow min-w-[120px] px-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                            <button type="submit" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-extrabold transition shrink-0">
+                                + 제외 추가
+                            </button>
+                        </form>
+
+                        <!-- 등록된 안 되는 시간대 칩/리스트 -->
+                        <div id="blocked-slots-list" class="space-y-2 max-h-[155px] overflow-y-auto pr-1">
+                            <!-- JS로 동적 렌더링 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 24시간 타임라인 시각화 바 (수면 / 활동가능 / 안 되는 시간 한눈에 보기) -->
+            <div class="mt-4">
+                <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1.5">
+                    <span class="font-bold text-slate-700">하루 24시간 배분 미리보기</span>
+                    <div class="flex items-center gap-3">
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-slate-300 inline-block"></span>수면</span>
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-emerald-400 inline-block"></span>알람·운동 가능</span>
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-xs bg-rose-400 inline-block"></span>안 되는 시간(알람 제외)</span>
+                    </div>
+                </div>
+                <div id="timeline-bar" class="w-full h-4 rounded-full bg-slate-200 overflow-hidden flex shadow-inner">
+                    <!-- JS로 비율 렌더링 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 3 & 4: 2단 그리드 (좌측: 목표 맞춤 코칭 가이드 / 우측: 제외시간 반영 스마트 알람 스케줄) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+
+            <!-- 좌측 (7컬럼): 맞춤 운동 방법, 식단 가이드, 생활 습관 지식 백과 -->
+            <section class="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                <!-- 가이드 헤더 -->
+                <div id="guide-header-banner" class="p-6 bg-gradient-to-r from-rose-600 to-orange-500 text-white">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs font-bold uppercase tracking-wider bg-white/20 px-3 py-1 rounded-full">STEP 3 · 목표 맞춤 코칭 가이드</span>
+                        <span id="guide-target-badge" class="text-xs font-bold bg-black/25 px-3 py-1 rounded-full">체중 감량 모드</span>
+                    </div>
+                    <h2 id="guide-main-title" class="text-2xl font-black mt-3">체지방 컷팅을 위한 핵심 전략</h2>
+                    <p id="guide-main-subtitle" class="text-sm text-white/90 mt-1">굶지 않고 건강하게 체지방만 감량하는 과학적 루틴입니다.</p>
+                </div>
+
+                <!-- 3개 카테고리 탭 버튼 (운동 / 식단 / 생활습관) -->
+                <div class="flex border-b border-slate-200 bg-slate-50 px-2 sm:px-6">
+                    <button onclick="switchKnowledgeTab('workout')" id="tab-workout" class="knowledge-tab flex-1 py-4 text-sm sm:text-base font-bold text-rose-600 tab-active flex items-center justify-center gap-2 transition">
+                        <i class="fa-solid fa-person-running"></i>
+                        <span>운동 방법</span>
+                    </button>
+                    <button onclick="switchKnowledgeTab('diet')" id="tab-diet" class="knowledge-tab flex-1 py-4 text-sm sm:text-base font-medium text-slate-500 hover:text-slate-800 flex items-center justify-center gap-2 transition">
+                        <i class="fa-solid fa-utensils"></i>
+                        <span>식단 가이드</span>
+                    </button>
+                    <button onclick="switchKnowledgeTab('lifestyle')" id="tab-lifestyle" class="knowledge-tab flex-1 py-4 text-sm sm:text-base font-medium text-slate-500 hover:text-slate-800 flex items-center justify-center gap-2 transition">
+                        <i class="fa-solid fa-sun"></i>
+                        <span>생활 습관</span>
+                    </button>
+                </div>
+
+                <!-- 탭 콘텐츠 영역 -->
+                <div id="knowledge-content" class="p-6 space-y-6">
+                    <!-- JavaScript로 동적 렌더링됨 -->
+                </div>
+            </section>
+
+            <!-- 우측 (5컬럼): 자동 스케줄 생성기 & 실시간 알람 보드 -->
+            <section class="lg:col-span-5 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden sticky top-24">
+                <div class="p-6 bg-slate-900 text-white">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full">STEP 4 · 가용 시간 전용 알람</span>
+                        <button onclick="regenerateSmartSchedule(true)" class="text-xs text-slate-300 hover:text-white underline flex items-center gap-1">
+                            <i class="fa-solid fa-rotate"></i> 시간표 재계산
+                        </button>
+                    </div>
+                    <h2 class="text-xl font-extrabold mt-2 flex items-center gap-2">
+                        <i class="fa-regular fa-clock text-emerald-400"></i>
+                        <span>내 생활 맞춤 알람 스케줄</span>
+                    </h2>
+                    <p id="schedule-exclusion-note" class="text-xs text-amber-300 mt-1 font-medium">
+                        <i class="fa-solid fa-shield-halved mr-1"></i>학교/직장 시간에는 알람이 울리지 않도록 자동 보호됩니다.
+                    </p>
+
+                    <!-- 오늘의 달성률 프로그레스 바 -->
+                    <div class="mt-4 bg-slate-800 p-3.5 rounded-2xl border border-slate-700">
+                        <div class="flex justify-between items-center text-xs mb-1.5">
+                            <span class="text-slate-300 font-medium">오늘 루틴 실천 달성률</span>
+                            <span class="font-extrabold text-emerald-400" id="progress-text">0% (0/0 완료)</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                            <div id="progress-bar" class="bg-gradient-to-r from-emerald-400 to-cyan-400 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 새 스케줄 항목 추가 폼 -->
+                <div class="p-4 bg-slate-50 border-b border-slate-200">
+                    <form onsubmit="addNewScheduleItem(event)" class="flex flex-wrap sm:flex-nowrap gap-2">
+                        <input type="time" id="new-item-time" required class="px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="new-item-title" placeholder="나만의 일정 추가 (예: 스트레칭)" required class="flex-grow px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold transition shrink-0">
+                            + 추가
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 스케줄 리스트 -->
+                <div id="schedule-list" class="p-4 sm:p-5 space-y-3 max-h-[560px] overflow-y-auto">
+                    <!-- JavaScript로 동적 렌더링됨 -->
+                </div>
+
+                <!-- 안내 문구 -->
+                <div class="px-5 py-3 bg-amber-50 border-t border-amber-100 text-xs text-amber-800 flex items-start gap-2">
+                    <i class="fa-solid fa-circle-info mt-0.5 text-amber-600"></i>
+                    <span>알람 소리가 정상적으로 울리려면 이 브라우저 탭을 열어두시고, 우측 상단의 <b>[알람 테스트]</b> 버튼을 한 번 눌러 오디오 권한을 활성화해 주세요.</span>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 실시간 알람 팝업 모달 (정각 도래 또는 테스트 시 표시) -->
+    <div id="alarm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl border-2 border-indigo-500 transform transition-all">
+            <div class="w-20 h-20 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-4xl mx-auto mb-5 alarm-active-ring">
+                <i class="fa-solid fa-bell"></i>
+            </div>
+            <span id="modal-alarm-time" class="inline-block px-3.5 py-1 rounded-full bg-indigo-600 text-white text-sm font-extrabold clock-font mb-2">08:00</span>
+            <h3 id="modal-alarm-title" class="text-2xl font-black text-slate-900">아침 식사 및 수분 보충 시간!</h3>
+            <p id="modal-alarm-desc" class="text-sm text-slate-600 mt-2 leading-relaxed">지금 예정된 루틴을 실천할 시간입니다. 건강한 습관이 멋진 몸을 만듭니다!</p>
+            
+            <div class="mt-6 flex flex-col sm:flex-row gap-3">
+                <button onclick="completeAndCloseAlarm()" class="flex-1 py-3.5 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i> 실천 완료 및 끄기
+                </button>
+                <button onclick="closeAlarmModal()" class="py-3.5 px-5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 토스트 메시지 알림 -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // =========================================================================
+        // 1. 코칭 지식 데이터베이스 (3가지 목표별 운동, 식단, 생활습관)
+        // =========================================================================
+        const COACH_DATA = {
+            weight_loss: {
+                id: 'weight_loss',
+                name: '체중 감량 (다이어트)',
+                badge: '체중 감량 모드',
+                themeColor: 'rose',
+                gradient: 'from-rose-600 to-orange-500',
+                title: '체지방 컷팅을 위한 과학적 감량 전략',
+                subtitle: '근손실은 최소화하고 체지방 연소 효율을 극대화하는 루틴입니다.',
+                knowledge: {
+                    workout: {
+                        summary: '유산소(지방 연소)와 전신 대근육 서킷 근력 운동(기초대사량 유지)을 병행합니다. 주 4~5회, 총 50~60분 루틴으로 구성됩니다.',
+                        routines: [
+                            {
+                                title: '루틴 A · 아침 공복 유산소 (주 4~5회 · 총 30분)',
+                                rest: '중간 휴식 없이 일정 페이스 유지',
+                                exercises: [
+                                    { name: '관절 풀기 & 제자리 걷기 웜업', sets: '1세트', reps: '5분', note: '발목·무릎·고관절 가동성 확보' },
+                                    { name: '빠르게 걷기(파워워킹) 또는 실내 자전거', sets: '1세트', reps: '20분', note: '최대 심박수 65~75% (숨이 약간 차는 속도)' },
+                                    { name: '종아리·햄스트링 쿨다운 스트레칭', sets: '1세트', reps: '5분', note: '근육 뭉침 방지 및 심박수 안정화' }
+                                ]
+                            },
+                            {
+                                title: '루틴 B · 전신 체지방 연소 서킷 (주 3~4회 · 총 35분)',
+                                rest: '종목 간 휴식 15초 / 1라운드 완료 후 90초 휴식',
+                                exercises: [
+                                    { name: '맨몸 와이드 스쿼트', sets: '4세트', reps: '15회', note: '허벅지가 바닥과 평행할 때까지 앉기' },
+                                    { name: '푸쉬업 (초보자는 무릎 대고 실시)', sets: '4세트', reps: '12회', note: '가슴과 팔 전체 자극' },
+                                    { name: '리버스 런지 (양발 번갈아)', sets: '4세트', reps: '좌우 각 10회', note: '무릎이 발끝을 심하게 넘지 않게 주의' },
+                                    { name: '마운틴 클라이머', sets: '4세트', reps: '30초', note: '복부에 힘을 주고 빠르게 무릎 당기기' },
+                                    { name: '엘보우 플랭크', sets: '4세트', reps: '45초', note: '허리가 꺾이지 않게 코어 단단히 고정' }
+                                ]
+                            },
+                            {
+                                title: '루틴 C · 마무리 고강도 인터벌(HIIT) (운동 후 10분)',
+                                rest: '운동 30초 + 완전 휴식 30초 교대',
+                                exercises: [
+                                    { name: '슬로우 버피테스트 (또는 점핑잭)', sets: '5세트', reps: '30초 수행 / 30초 휴식', note: '운동 후에도 칼로리를 태우는 애프터번 효과' }
+                                ]
+                            }
+                        ],
+                        tip: '서킷 운동 중 호흡을 참지 마세요. 힘을 줄 때(일어날 때/밀 때) 숨을 내쉬어야 혈압 상승을 막고 지방 연소 효율이 높아집니다.'
+                    },
+                    diet: {
+                        summary: '하루 권장 섭취 칼로리에서 약 300~500kcal를 줄이되, 단백질 비중을 높여 포만감을 유지하고 혈당 스파이크를 방지합니다.',
+                        macros: '탄수화물 40% (통곡물/고구마) · 단백질 35% (닭가슴살/생선/두부) · 지방 25% (견과류/아보카도)',
+                        meals: [
+                            { time: '아침', menu: '삶은 계란 2개 + 통밀빵 1장(또는 오트밀 40g) + 방울토마토 10알 + 블랙커피' },
+                            { time: '점심', menu: '현미밥 1/2공기 + 닭가슴살(또는 소고기 우둔살) 150g + 쌈채소/나물 듬뿍' },
+                            { time: '간식', menu: '무가당 그릭요거트 100g + 아몬드 8~10알 (공복감 예방)' },
+                            { time: '저녁', menu: '연어 스테이크(또는 두부부침) 150g + 구운 브로콜리·아스파라거스 샐러드 (탄수화물 최소화)' }
+                        ],
+                        tip: '식사 순서를 [채소(식이섬유) → 단백질 → 탄수화물] 순으로 드시면 혈당 상승이 완만해져 지방 축적을 크게 막을 수 있습니다.'
+                    },
+                    lifestyle: {
+                        summary: '다이어트의 성패는 호르몬(렙틴·그렐린·코르티솔) 관리에 달려 있습니다. 수면 부족과 스트레스는 식욕을 폭발시킵니다.',
+                        habits: [
+                            { title: '하루 물 2L 이상 나누어 마시기', desc: '체지방 분해 과정에는 수분이 필수입니다. 식사 30분 전 물 1컵을 마시면 과식을 예방할 수 있습니다.' },
+                            { title: '최소 12~14시간 야간 공복 유지', desc: '저녁 식사를 취침 4시간 전에 마치고, 다음 날 아침까지 공복을 유지해 인슐린 수치를 안정화하세요.' },
+                            { title: '7시간 이상 숙면 취하기', desc: '수면이 6시간 미만이면 식욕 촉진 호르몬(그렐린)이 15% 이상 증가합니다. 밤 11시 30분 이전 취침을 권장합니다.' },
+                            { title: '일상 활동량(NEAT) 늘리기', desc: '엘리베이터 대신 계단 이용하기, 점심 식사 후 15분 산책하기로 하루 300kcal를 추가로 소모하세요.' }
+                        ],
+                        tip: '체중계 숫자에 매일 일희일비하지 마세요. 수분량에 따라 1~2kg은 쉽게 변하므로 일주일에 1번 아침 공복에 체중과 눈바디를 체크하세요.'
+                    }
+                }
+            },
+
+            muscle_gain: {
+                id: 'muscle_gain',
+                name: '근육 증가 (멋진 몸 만들기)',
+                badge: '근육 증가 모드',
+                themeColor: 'blue',
+                gradient: 'from-blue-700 to-indigo-600',
+                title: '탄탄하고 선명한 근육을 만드는 근비대 전략',
+                subtitle: '점진적 과부하 웨이트와 양질의 영양 공급으로 근육량을 극대화합니다.',
+                knowledge: {
+                    workout: {
+                        summary: '대근육 중심의 상·하체 분할 웨이트 트레이닝을 주 4회(상체 2회 + 하체·코어 2회), 회당 60~70분 수행합니다. 모든 종목은 마지막 2회가 간신히 올라가는 무게로 설정하세요.',
+                        routines: [
+                            {
+                                title: 'Day 1 · 상체 집중 루틴 (가슴 · 등 · 어깨 · 팔)',
+                                rest: '세트 간 휴식 90초 ~ 2분 엄수',
+                                exercises: [
+                                    { name: '벤치프레스 (또는 덤벨 프레스 / 딥스)', sets: '4세트', reps: '8~10회', note: '가슴 근육 전체 볼륨 형성 (내릴 때 2초 버티기)' },
+                                    { name: '랫풀다운 (또는 풀업/턱걸이)', sets: '4세트', reps: '10~12회', note: '넓은 역삼각형 등 라인 만들기' },
+                                    { name: '시티드 케이블 로우 (또는 원암 덤벨 로우)', sets: '4세트', reps: '10~12회', note: '등 중앙부 두께감 강화' },
+                                    { name: '덤벨 숄더 프레스 + 사이드 레터럴 레이즈', sets: '각 3세트', reps: '12회 / 15회', note: '직각 어깨 및 측면 삼각근 입체감' },
+                                    { name: '덤벨 컬(이두) & 케이블 푸쉬다운(삼두)', sets: '각 3세트', reps: '12회', note: '팔꿈치를 몸통에 고정하고 반동 없이 수축' }
+                                ]
+                            },
+                            {
+                                title: 'Day 2 · 하체 & 코어 집중 루틴 (하체 · 둔근 · 복근)',
+                                rest: '세트 간 휴식 2분 (고중량 하체 훈련)',
+                                exercises: [
+                                    { name: '바벨 백 스쿼트 (또는 고블릿 스쿼트)', sets: '4세트', reps: '8~10회', note: '전신 근성장 호르몬 분비의 핵심 종목' },
+                                    { name: '루마니안 데드리프트 (바벨 또는 덤벨)', sets: '4세트', reps: '10회', note: '햄스트링과 기립근·둔근 후면 사슬 강화' },
+                                    { name: '레그 프레스 (또는 워킹 런지)', sets: '3세트', reps: '12회', note: '대퇴사두근(허벅지 앞면) 집중 타격' },
+                                    { name: '레그 컬 (머신 또는 짐볼 컬)', sets: '3세트', reps: '12~15회', note: '허벅지 뒤쪽 탄력 및 무릎 부상 예방' },
+                                    { name: '행잉 레그 레이즈 (또는 크런치)', sets: '4세트', reps: '15회', note: '복직근 수축 집중 (허리 반동 금지)' }
+                                ]
+                            },
+                            {
+                                title: '홈트레이닝 대체 루틴 (헬스장 미이용 시)',
+                                rest: '세트 간 휴식 60~90초',
+                                exercises: [
+                                    { name: '템포 푸쉬업 (3초 내려가고 1초 올라오기)', sets: '5세트', reps: '12~15회', note: '가슴·어깨·삼두 자극 극대화' },
+                                    { name: '불가리안 스플릿 스쿼트 (한 발 의자에 올리기)', sets: '4세트', reps: '좌우 각 10회', note: '맨몸으로도 중량 스쿼트급 하체 자극' },
+                                    { name: '파이크 푸쉬업 + 문틀 철봉 턱걸이(또는 인버티드 로우)', sets: '4세트', reps: '8~12회', note: '어깨와 등 근비대 필수 동작' }
+                                ]
+                            }
+                        ],
+                        tip: '매주 운동 일지를 적으세요. 지난주에 10회 성공한 무게라면 이번 주엔 11~12회에 도전하거나 무게를 1~2.5kg 올리는 "점진적 과부하"가 근육 성장의 유일한 열쇠입니다.'
+                    },
+                    diet: {
+                        summary: '유지 칼로리보다 하루 300~400kcal를 더 섭취(린매스업)하며, 체중 1kg당 1.6~2.0g의 단백질을 3~4끼로 나누어 섭취합니다.',
+                        macros: '탄수화물 50% (백미/현미/고구마/바나나) · 단백질 30% (닭가슴살/소고기/계란/유청단백) · 지방 20% (올리브유/견과류)',
+                        meals: [
+                            { time: '아침', menu: '잡곡밥 1공기 + 계란후라이 3개 + 김치/김 + 우유 또는 두유 1잔' },
+                            { time: '점심', menu: '현미·백미 혼합밥 1공기 + 소고기/돼지안심 180g + 각종 반찬 충분히' },
+                            { time: '운동 전후', menu: '운동 1시간 전: 바나나 1개 / 운동 직후: 단백질 쉐이크 1스쿱 + 포도주스 또는 떡' },
+                            { time: '저녁', menu: '고구마 200g(또는 밥 1공기) + 닭가슴살 200g + 채소 볶음 (올리브유 활용)' }
+                        ],
+                        tip: '탄수화물이 부족하면 우리 몸은 근육의 단백질을 분해해 에너지로 씁니다. 근성장을 원한다면 양질의 탄수화물을 절대 두려워하지 마세요.'
+                    },
+                    lifestyle: {
+                        summary: '근육은 헬스장에서 찢어지고, 식탁과 침대에서 자랍니다. 훈련 강도만큼 회복(휴식과 수면)의 질이 중요합니다.',
+                        habits: [
+                            { title: '깊은 수면 중 성장호르몬 극대화', desc: '잠든 후 첫 3시간 동안 성장호르몬과 테스토스테론이 가장 활발히 분비됩니다. 하루 7.5~8시간 수면을 확보하세요.' },
+                            { title: '운동 부위별 48~72시간 회복 부여', desc: '오늘 가슴 운동을 강하게 했다면 최소 이틀간은 가슴 근육이 완전히 회복되도록 다른 부위(하체, 등)를 훈련하세요.' },
+                            { title: '금주 및 수분 충분 섭취', desc: '알코올은 단백질 합성을 30% 이상 저해하고 근손실을 유발합니다. 운동 중에도 물을 수시로 500ml 이상 마셔주세요.' },
+                            { title: '운동 전 동적 스트레칭 & 운동 후 폼롤러', desc: '관절 가동범위를 넓혀 부상을 예방하고 근막 이완을 통해 다음 날 근육통(DOMS)을 빠르게 회복시킵니다.' }
+                        ],
+                        tip: '운동 일지를 기록해 지난주에 들었던 무게와 횟수를 기억하세요. 기록하는 사람만이 확실하게 몸을 키울 수 있습니다.'
+                    }
+                }
+            },
+
+            healthy_life: {
+                id: 'healthy_life',
+                name: '건강한 라이프스타일',
+                badge: '건강 유지 모드',
+                themeColor: 'emerald',
+                gradient: 'from-emerald-600 to-teal-500',
+                title: '평생 지치지 않는 활력과 면역력 관리 전략',
+                subtitle: '심폐 지구력, 유연성, 균형 잡힌 자연식, 규칙적인 생체리듬을 만듭니다.',
+                knowledge: {
+                    workout: {
+                        summary: '심폐 지구력, 관절 유연성, 코어 안정성을 균형 있게 키우는 전신 기능성 루틴입니다. 주 3~4회, 하루 40~50분 부담 없이 꾸준히 실천하세요.',
+                        routines: [
+                            {
+                                title: '루틴 1 · 심폐 활력 유산소 운동 (주 3~5회 · 30분)',
+                                rest: '편안하게 대화 가능한 중강도 페이스',
+                                exercises: [
+                                    { name: '경쾌한 속보 걷기 / 조깅 / 실내 자전거 / 수영 중 택 1', sets: '1세트', reps: '30분', note: '혈액순환 촉진 및 심혈관·폐활량 강화' }
+                                ]
+                            },
+                            {
+                                title: '루틴 2 · 거북목·허리 예방 코어 & 전신 근력 (주 3회 · 20분)',
+                                rest: '세트 간 휴식 45~60초',
+                                exercises: [
+                                    { name: '맨몸 체어 스쿼트 (의자에 닿을 듯 앉았다 일어나기)', sets: '3세트', reps: '12회', note: '하체 근력 유지 및 무릎 관절 보호' },
+                                    { name: '월 푸쉬업 또는 인클라인 푸쉬업 (책상/벽 짚고)', sets: '3세트', reps: '12회', note: '굽은 어깨 펴기 및 상체 근력 유지' },
+                                    { name: '글루트 브릿지 (누워서 엉덩이 들어올리기)', sets: '3세트', reps: '15회', note: '오래 앉아 약해진 엉덩이·허리 근육 강화' },
+                                    { name: '버드독 (네발기기 자세에서 팔·다리 교차 뻗기)', sets: '3세트', reps: '좌우 각 10회', note: '척추 기립근과 코어 밸런스 향상' },
+                                    { name: '엘보우 플랭크', sets: '3세트', reps: '30~40초', note: '복부 심부 근육 안정화' }
+                                ]
+                            },
+                            {
+                                title: '루틴 3 · 매일 아침·저녁 10분 전신 스트레칭',
+                                rest: '각 동작당 깊은 호흡 5회 유지',
+                                exercises: [
+                                    { name: '흉추 회전 스트레칭 & 고양이-소 자세', sets: '2세트', reps: '각 30초', note: '뻣뻣해진 척추와 등 근육 이완' },
+                                    { name: '고관절 장요근 스트레칭 & 햄스트링 늘리기', sets: '2세트', reps: '좌우 각 30초', note: '골반 틀어짐 예방 및 하체 부종 완화' }
+                                ]
+                            }
+                        ],
+                        tip: '운동 다음 날 일상생활이 힘들 정도로 무리하지 마세요. 개운하게 땀이 나고 몸이 가벼워지는 강도로 주 3회 이상 지속하는 것이 가장 건강합니다.'
+                    },
+                    diet: {
+                        summary: '가공식품과 정제 설탕을 줄이고, 자연 상태에 가까운 다채로운 채소·통곡물·건강한 지방을 섭취하는 지중해식/한식 균형 식단입니다.',
+                        macros: '탄수화물 50% (잡곡/채소/과일) · 단백질 25% (생선/콩/계란/살코기) · 지방 25% (올리브유/들기름/견과류)',
+                        meals: [
+                            { time: '아침', menu: '사과 반 쪽 + 삶은 계란 1~2개 + 통곡물 시리얼(또는 구운 식빵) + 따뜻한 차' },
+                            { time: '점심', menu: '잡곡밥 1공기 + 생선구이(고등어/삼치) + 된장국 + 제철 나물 반찬 3가지' },
+                            { time: '간식', menu: '제철 과일 한 줌(블루베리/키위 등 항산화 과일) + 호두 3알' },
+                            { time: '저녁', menu: '닭가슴살/두부 채소 비빔밥(밥은 적게, 채소는 풍성하게) 또는 버섯 전골' }
+                        ],
+                        tip: '식탁 위에 5가지 색깔(빨강, 노랑, 초록, 보라, 흰색)의 채소와 과일을 올리는 "레인보우 식단"을 실천하면 항산화 영양소를 완벽히 채울 수 있습니다.'
+                    },
+                    lifestyle: {
+                        summary: '일정한 시간에 자고 일어나며 햇빛을 쬐는 규칙적인 생체시계(서카디안 리듬)가 최고의 보약입니다.',
+                        habits: [
+                            { title: '오전 중 15분 이상 햇빛 쬐기', desc: '아침 햇빛은 비타민D 합성을 돕고, 행복 호르몬(세로토닌)을 분비시켜 밤에 숙면 호르몬(멜라토닌)이 잘 나오게 합니다.' },
+                            { title: '50분 앉아있으면 5분 일어나 걷기', desc: '장시간 좌식 생활은 혈관 건강의 적입니다. 1시간마다 일어나 기지개를 켜고 제자리걸음을 해주세요.' },
+                            { title: '규칙적인 식사 및 수면 시간 고정', desc: '평일과 주말의 기상·취침 시간 차이를 1시간 이내로 유지하면 만성 피로가 사라집니다.' },
+                            { title: '하루 5분 마음챙김 호흡 & 명상', desc: '복식호흡(4초 들이마시고 6초 내쉬기)을 통해 자율신경계의 균형을 맞추고 스트레스를 해소하세요.' }
+                        ],
+                        tip: '건강은 거창한 이벤트가 아니라 매일 반복되는 작은 습관의 총합입니다. 오늘 체크리스트의 80%만 달성해도 훌륭합니다!'
+                    }
+                }
+            }
+        };
+
+        // =========================================================================
+        // 2. 애플리케이션 상태 관리 (사용자 지정 제외 시간대 + 가용시간 맞춤 스케줄)
+        // =========================================================================
+        let state = {
+            selectedGoal: 'weight_loss', // 'weight_loss' | 'muscle_gain' | 'healthy_life'
+            activeTab: 'workout',        // 'workout' | 'diet' | 'lifestyle'
+            userProfile: {
+                wakeTime: '07:00',
+                sleepTime: '23:30',
+                workoutPref: 'evening',  // 'morning' | 'evening'
+                blockedSlots: [
+                    { id: 'block-default-1', start: '09:00', end: '17:00', label: '일과 / 수업 / 근무 시간' }
+                ]
+            },
+            schedules: {},               // 목표별 스케줄 배열 저장
+            lastTriggeredMinute: '',     // 동일 분(Minute) 중복 알람 방지
+            activeAlarmItem: null        // 현재 울리고 있는 알람 객체
+        };
+
+        // 시간 문자열("HH:MM") <-> 분(Minutes) 변환 유틸리티
+        function timeToMinutes(hhmm) {
+            if (!hhmm || !hhmm.includes(':')) return 0;
+            const [h, m] = hhmm.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        function minutesToTime(totalMins) {
+            let mins = ((totalMins % 1440) + 1440) % 1440;
+            const h = String(Math.floor(mins / 60)).padStart(2, '0');
+            const m = String(mins % 60).padStart(2, '0');
+            return `${h}:${m}`;
+        }
+
+        // 겹치는 제외 시간대(blockedSlots) 병합 및 정렬
+        function getMergedBlockedIntervals() {
+            const raw = (state.userProfile.blockedSlots || [])
+                .map(s => ({ start: timeToMinutes(s.start), end: timeToMinutes(s.end), label: s.label }))
+                .filter(s => s.end > s.start)
+                .sort((a, b) => a.start - b.start);
+
+            const merged = [];
+            for (const cur of raw) {
+                if (merged.length === 0) {
+                    merged.push({ ...cur });
+                } else {
+                    const last = merged[merged.length - 1];
+                    if (cur.start <= last.end) {
+                        last.end = Math.max(last.end, cur.end);
+                        if (cur.label && !last.label.includes(cur.label)) {
+                            last.label = `${last.label}, ${cur.label}`;
+                        }
+                    } else {
+                        merged.push({ ...cur });
+                    }
+                }
+            }
+            return merged;
+        }
+
+        // 특정 시간이 사용자가 지정한 '안 되는 시간대'에 속하는지 검사
+        function isTimeInBusyZone(hhmm) {
+            const t = timeToMinutes(hhmm);
+            const intervals = getMergedBlockedIntervals();
+            return intervals.some(iv => t >= iv.start && t < iv.end);
+        }
+
+        // 기상~취침 사이에서 '안 되는 시간대'를 뺀 순수 가용 구간(Free Windows) 계산
+        function getFreeTimeWindows() {
+            const wake = timeToMinutes(state.userProfile.wakeTime);
+            let sleep = timeToMinutes(state.userProfile.sleepTime);
+            if (sleep <= wake) sleep += 1440;
+
+            const blocked = getMergedBlockedIntervals();
+            let cursor = wake;
+            const windows = [];
+
+            for (const b of blocked) {
+                const bStart = Math.max(wake, b.start);
+                const bEnd = Math.min(sleep, b.end);
+                if (bStart > cursor) {
+                    windows.push({ start: cursor, end: bStart, duration: bStart - cursor });
+                }
+                if (bEnd > cursor) {
+                    cursor = bEnd;
+                }
+            }
+
+            if (sleep > cursor) {
+                windows.push({ start: cursor, end: sleep, duration: sleep - cursor });
+            }
+            return windows;
+        }
+
+        // 사용자가 지우고 남긴 실제 가용 시간대(Free Windows)에만 알람을 지능적으로 배치
+        function buildSmartScheduleForGoal(goalKey) {
+            const p = state.userProfile;
+            const wake = timeToMinutes(p.wakeTime);
+            let sleep = timeToMinutes(p.sleepTime);
+            if (sleep <= wake) sleep += 1440;
+
+            const schedule = [];
+            const freeWindows = getFreeTimeWindows();
+
+            const goalTexts = {
+                weight_loss: {
+                    morningWorkout: '공복 유산소: 빠르게 걷기/자전거 20분 + 스트레칭 5분',
+                    morningWorkoutDesc: '웜업 5분 → 파워워킹 20분(심박수 65~75%) → 쿨다운 5분으로 체지방을 직접 태웁니다.',
+                    eveningWorkout: '전신 서킷: 스쿼트·푸쉬업·런지·플랭크 (4세트)',
+                    eveningWorkoutDesc: '스쿼트 15회 + 푸쉬업 12회 + 런지 각 10회 + 플랭크 45초 (4세트, 세트 간 휴식 60초) + 버피 30초×5세트',
+                    breakfast: '고단백·저당질 아침 식사 (계란·통곡물)',
+                    breakfastDesc: '근손실을 막고 오전 포만감을 유지하는 클린 식단입니다.',
+                    dinner: '가벼운 클린 저녁 식사 (단백질·채소 위주)',
+                    dinnerDesc: '취침 3시간 전 소화가 잘되는 단백질과 채소 위주로 과식을 방지합니다.'
+                },
+                muscle_gain: {
+                    morningWorkout: '모빌리티 & 코어: 푸쉬업 3세트 + 플랭크·버드독 3세트',
+                    morningWorkoutDesc: '푸쉬업 15회×3세트 + 버드독 각 10회×3세트 + 전신 관절 스트레칭으로 근성장을 깨웁니다.',
+                    eveningWorkout: '메인 웨이트: 스쿼트·프레스·로우·어깨 (종목당 4세트)',
+                    eveningWorkoutDesc: '스쿼트 10회×4세트 + 벤치/푸쉬업 10회×4세트 + 로우/턱걸이 10회×4세트 + 숄더프레스 12회×3세트 (휴식 90초)',
+                    breakfast: '근성장 에너지 아침 식사 (밥·계란·우유)',
+                    breakfastDesc: '밤사이 근손실을 멈추고 탄수화물과 단백질을 충분히 공급합니다.',
+                    dinner: '운동 후 단백질 & 복합탄수화물 저녁 식사',
+                    dinnerDesc: '손상된 근섬유 회복과 합성을 위한 골든타임 영양 공급입니다.'
+                },
+                healthy_life: {
+                    morningWorkout: '상쾌한 아침 10분 전신 스트레칭 & 고양이-소 자세',
+                    morningWorkoutDesc: '흉추 회전 30초×2세트 + 고양이-소 자세 30초×2세트 + 장요근 스트레칭으로 척추와 관절을 깨웁니다.',
+                    eveningWorkout: '유산소 30분 + 코어 근력(스쿼트·브릿지·플랭크 3세트)',
+                    eveningWorkoutDesc: '속보 걷기 30분 후 체어 스쿼트 12회×3세트 + 글루트 브릿지 15회×3세트 + 플랭크 35초×3세트 실시',
+                    breakfast: '균형 잡힌 자연식 아침 식사',
+                    breakfastDesc: '과일, 계란, 통곡물로 위장에 부담 없이 하루 에너지를 채웁니다.',
+                    dinner: '속이 편안한 한식·채소 균형 저녁 식사',
+                    dinnerDesc: '수면의 질을 높이기 위해 자극적인 음식을 피하고 소식합니다.'
+                }
+            };
+            const gt = goalTexts[goalKey];
+
+            // 1) 사용자가 지정한 '안 되는 시간대'를 알람 제외 보호 블록으로 스케줄에 표시
+            (p.blockedSlots || []).forEach((slot, idx) => {
+                if (timeToMinutes(slot.end) > timeToMinutes(slot.start)) {
+                    schedule.push({
+                        id: `${goalKey}-busy-${slot.id || idx}`,
+                        time: slot.start,
+                        endTime: slot.end,
+                        title: `${slot.label || '안 되는 시간'} (${slot.start} ~ ${slot.end})`,
+                        category: '제외시간',
+                        desc: '사용자가 지정한 안 되는 시간대입니다. 이 구간에는 알람이 울리지 않습니다.',
+                        isBusyBlock: true,
+                        enabled: false,
+                        completed: false
+                    });
+                }
+            });
+
+            // 2) 기상 직후 루틴 (제외 시간대와 겹치지 않을 때)
+            if (!isTimeInBusyZone(minutesToTime(wake + 5))) {
+                schedule.push({
+                    id: `${goalKey}-wake`,
+                    time: minutesToTime(wake + 5),
+                    title: '기상 및 미지근한 물 1잔 + 스트레칭',
+                    category: '생활',
+                    desc: '밤사이 부족해진 수분을 채우고 굳어진 몸을 부드럽게 깨웁니다.',
+                    enabled: true,
+                    completed: false
+                });
+            }
+
+            // 3) 가용 시간대(freeWindows) 분석 후 오전/점심/오후·저녁 루틴 자동 배치
+            const morningWin = freeWindows.find(w => w.start < 720 && w.duration >= 25);
+            const middayWin = freeWindows.find(w => w.start >= 690 && w.start <= 840 && w.duration >= 30);
+            const eveningWins = freeWindows.filter(w => w.end > 960 && w.duration >= 30);
+            const mainEveningWin = eveningWins.length > 0
+                ? eveningWins.reduce((best, cur) => (cur.duration > best.duration ? cur : best), eveningWins[0])
+                : null;
+
+            // 오전 가용 시간 배치
+            if (morningWin) {
+                if (p.workoutPref === 'morning' && morningWin.duration >= 60) {
+                    schedule.push({
+                        id: `${goalKey}-m-work`,
+                        time: minutesToTime(morningWin.start + 15),
+                        title: gt.morningWorkout,
+                        category: '운동',
+                        desc: gt.morningWorkoutDesc,
+                        enabled: true,
+                        completed: false
+                    });
+                    schedule.push({
+                        id: `${goalKey}-m-meal`,
+                        time: minutesToTime(morningWin.start + 45),
+                        title: gt.breakfast,
+                        category: '식단',
+                        desc: gt.breakfastDesc,
+                        enabled: true,
+                        completed: false
+                    });
+                } else {
+                    const offset = Math.min(25, Math.floor(morningWin.duration * 0.35));
+                    schedule.push({
+                        id: `${goalKey}-m-meal`,
+                        time: minutesToTime(morningWin.start + offset),
+                        title: gt.breakfast,
+                        category: '식단',
+                        desc: gt.breakfastDesc,
+                        enabled: true,
+                        completed: false
+                    });
+                }
+            }
+
+            // 점심시간이 비어있으면 점심 식사 알람 배치
+            if (middayWin) {
+                schedule.push({
+                    id: `${goalKey}-lunch`,
+                    time: minutesToTime(Math.max(middayWin.start + 10, 740)),
+                    title: '영양 균형 점심 식사 (채소 → 단백질 → 탄수화물 순)',
+                    category: '식단',
+                    desc: '혈당 스파이크를 막고 오후 집중력을 유지하는 균형 식사 시간입니다.',
+                    enabled: true,
+                    completed: false
+                });
+            }
+
+            // 오후·저녁 메인 가용 시간 배치
+            if (mainEveningWin) {
+                const winStart = mainEveningWin.start;
+                const winEnd = mainEveningWin.end;
+
+                if (mainEveningWin.duration >= 120) {
+                    schedule.push({
+                        id: `${goalKey}-snack`,
+                        time: minutesToTime(winStart + 15),
+                        title: '수분 보충 & 건강한 에너지 간식 (바나나/견과류/두유)',
+                        category: '식단',
+                        desc: '공복감을 달래고 운동 수행 능력을 높여주는 가벼운 간식 시간입니다.',
+                        enabled: true,
+                        completed: false
+                    });
+                }
+
+                if (p.workoutPref === 'evening' || !morningWin || morningWin.duration < 60) {
+                    const workTime = winStart + (mainEveningWin.duration >= 140 ? 45 : 15);
+                    if (workTime + 45 <= winEnd - 25) {
+                        schedule.push({
+                            id: `${goalKey}-e-work`,
+                            time: minutesToTime(workTime),
+                            title: gt.eveningWorkout,
+                            category: '운동',
+                            desc: gt.eveningWorkoutDesc,
+                            enabled: true,
+                            completed: false
+                        });
+                        if (workTime + 55 <= winEnd - 15) {
+                            schedule.push({
+                                id: `${goalKey}-e-meal`,
+                                time: minutesToTime(workTime + 55),
+                                title: gt.dinner,
+                                category: '식단',
+                                desc: gt.dinnerDesc,
+                                enabled: true,
+                                completed: false
+                            });
+                        }
+                    } else {
+                        schedule.push({
+                            id: `${goalKey}-e-meal`,
+                            time: minutesToTime(winStart + 15),
+                            title: gt.dinner,
+                            category: '식단',
+                            desc: gt.dinnerDesc,
+                            enabled: true,
+                            completed: false
+                        });
+                    }
+                } else {
+                    schedule.push({
+                        id: `${goalKey}-e-meal`,
+                        time: minutesToTime(winStart + 30),
+                        title: gt.dinner,
+                        category: '식단',
+                        desc: gt.dinnerDesc,
+                        enabled: true,
+                        completed: false
+                    });
+                }
+            }
+
+            // 4) 취침 30분 전 마무리 스트레칭 (제외 시간대와 겹치지 않을 때)
+            const windDown = sleep - 30;
+            if (windDown > wake + 60 && !isTimeInBusyZone(minutesToTime(windDown))) {
+                schedule.push({
+                    id: `${goalKey}-sleep-prep`,
+                    time: minutesToTime(windDown),
+                    title: '하루 마무리 폼롤러·스트레칭 & 숙면 준비',
+                    category: '생활',
+                    desc: '스마트폰을 내려놓고 근육 피로를 풀며 성장·회복 호르몬 분비를 준비합니다.',
+                    enabled: true,
+                    completed: false
+                });
+            }
+
+            return schedule;
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('health_coach_state_v3');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    state.selectedGoal = parsed.selectedGoal || 'weight_loss';
+                    state.activeTab = parsed.activeTab || 'workout';
+                    if (parsed.userProfile) {
+                        state.userProfile = {
+                            wakeTime: parsed.userProfile.wakeTime || '07:00',
+                            sleepTime: parsed.userProfile.sleepTime || '23:30',
+                            workoutPref: parsed.userProfile.workoutPref || 'evening',
+                            blockedSlots: Array.isArray(parsed.userProfile.blockedSlots)
+                                ? parsed.userProfile.blockedSlots
+                                : [{ id: 'block-default-1', start: '09:00', end: '17:00', label: '일과 / 수업 / 근무 시간' }]
+                        };
+                    }
+                    state.schedules = parsed.schedules || {};
+                }
+            } catch (e) {
+                console.error('상태 불러오기 오류:', e);
+            }
+
+            Object.keys(COACH_DATA).forEach(goalKey => {
+                if (!state.schedules[goalKey] || !Array.isArray(state.schedules[goalKey])) {
+                    state.schedules[goalKey] = buildSmartScheduleForGoal(goalKey);
+                }
+            });
+            saveState();
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem('health_coach_state_v3', JSON.stringify({
+                    selectedGoal: state.selectedGoal,
+                    activeTab: state.activeTab,
+                    userProfile: state.userProfile,
+                    schedules: state.schedules
+                }));
+            } catch (e) {
+                console.error('상태 저장 오류:', e);
+            }
+        }
+
+        // =========================================================================
+        // 4-1. STEP 2 안 되는 시간대(제외 구간) 추가·삭제 & 타임라인 렌더링
+        // =========================================================================
+        function addBlockedSlot(e) {
+            e.preventDefault();
+            const startEl = document.getElementById('block-start-input');
+            const endEl = document.getElementById('block-end-input');
+            const labelEl = document.getElementById('block-label-input');
+
+            const start = startEl.value;
+            const end = endEl.value;
+            if (!start || !end) return;
+
+            if (timeToMinutes(end) <= timeToMinutes(start)) {
+                showToast('종료 시간은 시작 시간보다 늦어야 합니다.', 'warning');
+                return;
+            }
+
+            state.userProfile.blockedSlots.push({
+                id: 'block-' + Date.now(),
+                start,
+                end,
+                label: labelEl.value.trim() || '안 되는 시간'
+            });
+
+            labelEl.value = '';
+            saveState();
+            renderProfileSection();
+            showToast(`[${start}~${end}] 안 되는 시간대가 추가되었습니다. 아래 버튼으로 스케줄을 생성해 보세요!`, 'info');
+        }
+
+        function removeBlockedSlot(id) {
+            state.userProfile.blockedSlots = state.userProfile.blockedSlots.filter(s => s.id !== id);
+            saveState();
+            renderProfileSection();
+            showToast('해당 시간대가 제외 목록에서 삭제되었습니다.', 'info');
+        }
+
+        function clearAllBlockedSlots() {
+            state.userProfile.blockedSlots = [];
+            saveState();
+            renderProfileSection();
+            showToast('모든 제외 시간대가 지워졌습니다. 종일 가용 시간으로 스케줄을 만들 수 있습니다.', 'info');
+        }
+
+        function handleProfileTimeChange() {
+            const wakeEl = document.getElementById('input-wake-time');
+            const sleepEl = document.getElementById('input-sleep-time');
+
+            if (wakeEl.value) state.userProfile.wakeTime = wakeEl.value;
+            if (sleepEl.value) state.userProfile.sleepTime = sleepEl.value;
+
+            renderProfileSection();
+            saveState();
+        }
+
+        function setWorkoutPref(pref) {
+            state.userProfile.workoutPref = pref;
+            renderProfileSection();
+            saveState();
+        }
+
+        function regenerateSmartSchedule(showMessage = true) {
+            Object.keys(COACH_DATA).forEach(goalKey => {
+                state.schedules[goalKey] = buildSmartScheduleForGoal(goalKey);
+            });
+            saveState();
+            renderAll();
+            if (showMessage) {
+                showToast('안 되는 시간대를 모두 제외하고 맞춤 알람 스케줄을 생성했습니다!', 'success');
+            }
+        }
+
+        function renderProfileSection() {
+            const p = state.userProfile;
+
+            // 1. 기상·취침 시간 인풋 동기화
+            document.getElementById('input-wake-time').value = p.wakeTime;
+            document.getElementById('input-sleep-time').value = p.sleepTime;
+
+            // 2. 선호 운동 시간 버튼 스타일
+            const morningBtn = document.getElementById('pref-morning');
+            const eveningBtn = document.getElementById('pref-evening');
+            if (p.workoutPref === 'morning') {
+                morningBtn.className = 'pref-btn py-2.5 px-3 rounded-xl border-2 border-indigo-600 bg-indigo-600 text-white text-xs font-bold transition flex items-center justify-center gap-1.5';
+                eveningBtn.className = 'pref-btn py-2.5 px-3 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 text-xs font-bold transition flex items-center justify-center gap-1.5';
+            } else {
+                eveningBtn.className = 'pref-btn py-2.5 px-3 rounded-xl border-2 border-indigo-600 bg-indigo-600 text-white text-xs font-bold transition flex items-center justify-center gap-1.5';
+                morningBtn.className = 'pref-btn py-2.5 px-3 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 text-xs font-bold transition flex items-center justify-center gap-1.5';
+            }
+
+            // 3. 안 되는 시간대 리스트 렌더링 (각 항목 개별 삭제 가능)
+            const listEl = document.getElementById('blocked-slots-list');
+            const slots = [...(p.blockedSlots || [])].sort((a, b) => a.start.localeCompare(b.start));
+
+            if (slots.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-4 px-3 rounded-xl bg-emerald-50/70 border border-dashed border-emerald-300 text-xs text-emerald-800 font-medium">
+                        등록된 안 되는 시간대가 없습니다! (기상부터 취침까지 모든 시간 알람 가능)
+                    </div>
+                `;
+            } else {
+                listEl.innerHTML = slots.map(slot => `
+                    <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-rose-50 border border-rose-200 text-xs sm:text-sm">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="clock-font font-extrabold text-rose-700 bg-white px-2 py-0.5 rounded-lg border border-rose-200 shrink-0">${slot.start} ~ ${slot.end}</span>
+                            <span class="font-bold text-slate-800 truncate">${slot.label || '안 되는 시간'}</span>
+                        </div>
+                        <button type="button" onclick="removeBlockedSlot('${slot.id}')" title="이 시간대 지우기" class="px-2.5 py-1 rounded-lg bg-white hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 text-xs font-bold transition shrink-0 flex items-center gap-1">
+                            <i class="fa-solid fa-xmark"></i> 지우기
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            // 4. 24시간 타임라인 비율 및 가용 시간 계산
+            const wake = timeToMinutes(p.wakeTime);
+            let sleep = timeToMinutes(p.sleepTime);
+            if (sleep <= wake) sleep += 1440;
+
+            const awakeMinutes = Math.max(0, sleep - wake);
+            const sleepMinutes = Math.max(0, 1440 - awakeMinutes);
+            const freeWindows = getFreeTimeWindows();
+            const freeMinutes = freeWindows.reduce((acc, w) => acc + w.duration, 0);
+            const busyMinutes = Math.max(0, awakeMinutes - freeMinutes);
+
+            const freeHours = Math.floor(freeMinutes / 60);
+            const freeRemainMins = freeMinutes % 60;
+            document.getElementById('available-summary-text').textContent =
+                `하루 알람·운동 가능 시간: ${freeHours}시간 ${freeRemainMins > 0 ? freeRemainMins + '분' : ''}`;
+
+            // 우측 스케줄 헤더 안내 문구 업데이트
+            const exclusionNote = document.getElementById('schedule-exclusion-note');
+            if (slots.length > 0) {
+                exclusionNote.innerHTML = `<i class="fa-solid fa-shield-halved mr-1"></i>지정하신 안 되는 시간대 ${slots.length}개 구간은 알람에서 자동 제외되었습니다.`;
+            } else {
+                exclusionNote.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>기상(${p.wakeTime}) ~ 취침(${p.sleepTime}) 전체 가용 시간 기준 배분됨`;
+            }
+
+            // 24시간 타임라인 바 세그먼트 생성
+            const timelineBar = document.getElementById('timeline-bar');
+            const segments = [];
+            if (sleepMinutes > 0) {
+                segments.push(`<div style="width: ${(sleepMinutes / 1440) * 100}%" class="bg-slate-300 h-full transition-all" title="수면 시간"></div>`);
+            }
+
+            // 기상~취침 구간을 시간 순서대로 자유/제외 블록으로 분할 렌더링
+            const blocked = getMergedBlockedIntervals();
+            let cursor = wake;
+            for (const b of blocked) {
+                const bStart = Math.max(wake, b.start);
+                const bEnd = Math.min(sleep, b.end);
+                if (bStart > cursor) {
+                    const freeDur = bStart - cursor;
+                    segments.push(`<div style="width: ${(freeDur / 1440) * 100}%" class="bg-emerald-400 h-full transition-all" title="알람·운동 가능 시간"></div>`);
+                }
+                if (bEnd > bStart) {
+                    const busyDur = bEnd - bStart;
+                    segments.push(`<div style="width: ${(busyDur / 1440) * 100}%" class="bg-rose-400 h-full transition-all" title="안 되는 시간 (${b.label})"></div>`);
+                }
+                if (bEnd > cursor) cursor = bEnd;
+            }
+            if (sleep > cursor) {
+                const remDur = sleep - cursor;
+                segments.push(`<div style="width: ${(remDur / 1440) * 100}%" class="bg-emerald-400 h-full transition-all" title="알람·운동 가능 시간"></div>`);
+            }
+
+            timelineBar.innerHTML = segments.join('');
+        }
+
+        // =========================================================================
+        // 3. Web Audio API 차임벨 알람 사운드 & 브라우저 푸시 알림
+        // =========================================================================
+        let audioCtx = null;
+
+        function playAlarmSound() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                // 기분 좋은 4음계 아르페지오 차임벨 (C5 - E5 - G5 - C6) 2회 반복
+                const notes = [523.25, 659.25, 783.99, 1046.50, 523.25, 659.25, 783.99, 1046.50];
+                const now = audioCtx.currentTime;
+
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.18);
+
+                    gain.gain.setValueAtTime(0.001, now + idx * 0.18);
+                    gain.gain.exponentialRampToValueAtTime(0.25, now + idx * 0.18 + 0.04);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.18 + 0.45);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(now + idx * 0.18);
+                    osc.stop(now + idx * 0.18 + 0.48);
+                });
+            } catch (e) {
+                console.warn('오디오 재생 제한됨:', e);
+            }
+        }
+
+        // 브라우저 알림 권한 요청
+        function requestNotificationPermission() {
+            // 오디오 컨텍스트도 사용자 클릭 시 함께 활성화
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            if (!('Notification' in window)) {
+                showToast('이 브라우저는 데스크톱 푸시 알림을 지원하지 않습니다. 화면 내 알람 팝업으로 작동합니다.', 'info');
+                return;
+            }
+
+            Notification.requestPermission().then(permission => {
+                updateNotificationButtonUI();
+                if (permission === 'granted') {
+                    showToast('브라우저 푸시 알림이 활성화되었습니다!', 'success');
+                } else {
+                    showToast('푸시 알림이 차단되어 있습니다. 앱 내 소리와 팝업 알람은 정상 작동합니다.', 'warning');
+                }
+            });
+        }
+
+        function updateNotificationButtonUI() {
+            const btn = document.getElementById('notif-perm-btn');
+            const text = document.getElementById('notif-perm-text');
+            if (!('Notification' in window)) return;
+
+            if (Notification.permission === 'granted') {
+                btn.classList.remove('bg-slate-700', 'text-slate-200');
+                btn.classList.add('bg-emerald-600', 'text-white');
+                text.textContent = '알림 켜짐';
+            }
+        }
+
+        // =========================================================================
+        // 4. UI 렌더링 함수 (목표 선택, 지식 가이드, 스케줄 리스트)
+        // =========================================================================
+        function selectGoal(goalKey) {
+            state.selectedGoal = goalKey;
+            saveState();
+            renderAll();
+            showToast(`[${COACH_DATA[goalKey].name}] 맞춤 가이드와 알람 스케줄이 적용되었습니다.`, 'success');
+        }
+
+        function switchKnowledgeTab(tabKey) {
+            state.activeTab = tabKey;
+            saveState();
+            renderKnowledgeSection();
+        }
+
+        function renderAll() {
+            renderGoalCards();
+            renderProfileSection();
+            renderKnowledgeSection();
+            renderScheduleList();
+            updateNextAlarmDisplay();
+        }
+
+        function renderGoalCards() {
+            const colorMap = {
+                weight_loss: 'border-rose-500 ring-4 ring-rose-500/15 bg-rose-50/30',
+                muscle_gain: 'border-blue-600 ring-4 ring-blue-600/15 bg-blue-50/30',
+                healthy_life: 'border-emerald-500 ring-4 ring-emerald-500/15 bg-emerald-50/30'
+            };
+
+            Object.keys(COACH_DATA).forEach(key => {
+                const card = document.getElementById(`card-${key}`);
+                const badge = card.querySelector('.selected-badge');
+                // 기본 클래스 초기화
+                card.className = 'goal-card text-left p-5 sm:p-6 rounded-2xl bg-white border-2 transition-all shadow-sm hover:shadow-md relative overflow-hidden group';
+
+                if (state.selectedGoal === key) {
+                    card.className += ' ' + colorMap[key];
+                    badge.classList.remove('hidden');
+                } else {
+                    card.className += ' border-slate-200 opacity-85 hover:opacity-100';
+                    badge.classList.add('hidden');
+                }
+            });
+        }
+
+        function renderKnowledgeSection() {
+            const data = COACH_DATA[state.selectedGoal];
+            const banner = document.getElementById('guide-header-banner');
+            banner.className = `p-6 bg-gradient-to-r ${data.gradient} text-white transition-all`;
+
+            document.getElementById('guide-target-badge').textContent = data.badge;
+            document.getElementById('guide-main-title').textContent = data.title;
+            document.getElementById('guide-main-subtitle').textContent = data.subtitle;
+
+            // 탭 스타일 업데이트
+            const tabColors = {
+                weight_loss: 'text-rose-600',
+                muscle_gain: 'text-blue-600',
+                healthy_life: 'text-emerald-600'
+            };
+            const activeColor = tabColors[state.selectedGoal];
+
+            ['workout', 'diet', 'lifestyle'].forEach(t => {
+                const tabEl = document.getElementById(`tab-${t}`);
+                if (state.activeTab === t) {
+                    tabEl.className = `knowledge-tab flex-1 py-4 text-sm sm:text-base font-bold ${activeColor} tab-active flex items-center justify-center gap-2 transition`;
+                } else {
+                    tabEl.className = 'knowledge-tab flex-1 py-4 text-sm sm:text-base font-medium text-slate-500 hover:text-slate-800 flex items-center justify-center gap-2 transition';
+                }
+            });
+
+            // 콘텐츠 렌더링
+            const container = document.getElementById('knowledge-content');
+            const info = data.knowledge[state.activeTab];
+
+            if (state.activeTab === 'workout') {
+                container.innerHTML = `
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-700 leading-relaxed">
+                        <span class="font-bold text-slate-900 block mb-1"><i class="fa-solid fa-bullseye mr-1.5 text-indigo-600"></i>핵심 운동 처방 방향</span>
+                        ${info.summary}
+                    </div>
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">구체적 운동 종목 · 세트 수 · 반복 횟수</h4>
+                        ${info.routines.map((routine, rIdx) => `
+                            <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
+                                <div class="px-4 py-3 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2 font-extrabold text-sm sm:text-base">
+                                        <span class="w-6 h-6 rounded-full bg-indigo-500 text-white text-xs flex items-center justify-center font-black">${rIdx + 1}</span>
+                                        <span>${routine.title}</span>
+                                    </div>
+                                    <span class="text-[11px] font-bold bg-slate-800 text-amber-300 px-2.5 py-1 rounded-lg border border-slate-700">
+                                        <i class="fa-regular fa-clock mr-1"></i>${routine.rest}
+                                    </span>
+                                </div>
+                                <div class="divide-y divide-slate-100">
+                                    ${routine.exercises.map(ex => `
+                                        <div class="p-3.5 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50/80 transition">
+                                            <div class="min-w-0">
+                                                <div class="font-bold text-slate-900 text-sm">${ex.name}</div>
+                                                <div class="text-xs text-slate-500 mt-0.5">${ex.note}</div>
+                                            </div>
+                                            <div class="flex items-center gap-1.5 shrink-0">
+                                                <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/70 text-xs font-extrabold">${ex.sets}</span>
+                                                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-xs font-extrabold">${ex.reps}</span>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-sm text-amber-900 flex items-start gap-3">
+                        <i class="fa-solid fa-lightbulb text-amber-500 text-lg mt-0.5"></i>
+                        <div><strong class="font-bold">코치의 핵심 팁:</strong> ${info.tip}</div>
+                    </div>
+                `;
+            } else if (state.activeTab === 'diet') {
+                container.innerHTML = `
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-700 leading-relaxed">
+                        <span class="font-bold text-slate-900 block mb-1"><i class="fa-solid fa-chart-pie mr-1.5 text-emerald-600"></i>영양 섭취 원칙</span>
+                        ${info.summary}
+                        <div class="mt-2.5 inline-block px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800">
+                            권장 탄·단·지 비율: ${info.macros}
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <h4 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">하루 추천 샘플 식단표</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            ${info.meals.map(m => `
+                                <div class="p-4 rounded-2xl border border-slate-200 bg-white">
+                                    <span class="inline-block px-2.5 py-0.5 rounded-lg bg-slate-900 text-white text-xs font-bold mb-2">${m.time}</span>
+                                    <p class="text-sm text-slate-700 font-medium leading-relaxed">${m.menu}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-900 flex items-start gap-3">
+                        <i class="fa-solid fa-apple-whole text-emerald-600 text-lg mt-0.5"></i>
+                        <div><strong class="font-bold">식단 실천 팁:</strong> ${info.tip}</div>
+                    </div>
+                `;
+            } else if (state.activeTab === 'lifestyle') {
+                container.innerHTML = `
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-700 leading-relaxed">
+                        <span class="font-bold text-slate-900 block mb-1"><i class="fa-solid fa-heart-circle-check mr-1.5 text-rose-500"></i>생활 & 회복 관리 전략</span>
+                        ${info.summary}
+                    </div>
+                    <div class="space-y-3">
+                        <h4 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">매일 지켜야 할 4가지 건강한 습관</h4>
+                        ${info.habits.map(h => `
+                            <div class="p-4 rounded-2xl border border-slate-200 bg-white flex items-start gap-3.5">
+                                <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-slate-900 text-sm sm:text-base">${h.title}</h5>
+                                    <p class="text-sm text-slate-600 mt-1 leading-relaxed">${h.desc}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-sm text-indigo-900 flex items-start gap-3">
+                        <i class="fa-solid fa-sparkles text-indigo-600 text-lg mt-0.5"></i>
+                        <div><strong class="font-bold">라이프 코칭 팁:</strong> ${info.tip}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // =========================================================================
+        // 5. 데일리 스케줄 관리 & 알람 CRUD 기능 (불가 시간 블록 렌더링 포함)
+        // =========================================================================
+        function renderScheduleList() {
+            const listContainer = document.getElementById('schedule-list');
+            const items = state.schedules[state.selectedGoal];
+
+            // 시간순 정렬
+            items.sort((a, b) => a.time.localeCompare(b.time));
+
+            const categoryColors = {
+                '운동': 'bg-rose-100 text-rose-700',
+                '식단': 'bg-emerald-100 text-emerald-700',
+                '생활': 'bg-indigo-100 text-indigo-700',
+                '사용자': 'bg-amber-100 text-amber-800'
+            };
+
+            if (items.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-8 text-sm text-slate-400">등록된 스케줄이 없습니다. 위에서 새 일정을 추가해 보세요!</div>`;
+            } else {
+                listContainer.innerHTML = items.map(item => {
+                    // 학교/직장 불가 시간 보호 블록 전용 디자인
+                    if (item.isBusyBlock) {
+                        return `
+                            <div class="p-3.5 rounded-2xl border-2 border-dashed border-rose-300 bg-rose-50/70 flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-ban text-xs"></i>
+                                </div>
+                                <div class="min-w-0 flex-grow">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="clock-font text-xs font-extrabold text-rose-700 bg-white px-2 py-0.5 rounded-lg border border-rose-200">${item.time} ~ ${item.endTime}</span>
+                                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-rose-600 text-white">알람 자동 제외 구간</span>
+                                    </div>
+                                    <div class="text-sm font-extrabold text-rose-950 mt-1">${item.title}</div>
+                                    <p class="text-xs text-rose-800/80 mt-0.5 leading-relaxed">${item.desc}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    const badgeClass = categoryColors[item.category] || categoryColors['사용자'];
+                    const completedStyle = item.completed ? 'bg-slate-50 border-slate-200 opacity-65' : 'bg-white border-slate-200 hover:border-indigo-300';
+                    const titleStyle = item.completed ? 'line-through text-slate-400' : 'text-slate-900';
+
+                    return `
+                        <div class="p-3.5 rounded-2xl border ${completedStyle} transition flex items-center justify-between gap-3 shadow-2xs">
+                            <div class="flex items-center gap-3 min-w-0 flex-grow">
+                                <!-- 완료 체크박스 -->
+                                <button onclick="toggleCompleteItem('${item.id}')" title="실천 완료 체크" class="w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition ${item.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-emerald-500 text-transparent'}">
+                                    <i class="fa-solid fa-check text-xs"></i>
+                                </button>
+
+                                <!-- 시간 수정 인풋 & 일정 내용 -->
+                                <div class="min-w-0 flex-grow">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <input type="time" value="${item.time}" onchange="updateItemTime('${item.id}', this.value)" class="clock-font text-sm font-extrabold text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 px-2 py-0.5 rounded-lg border border-indigo-200/60 focus:outline-none cursor-pointer">
+                                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${badgeClass}">${item.category}</span>
+                                    </div>
+                                    <div class="text-sm font-bold mt-1 truncate ${titleStyle}" title="${item.title}">${item.title}</div>
+                                </div>
+                            </div>
+
+                            <!-- 우측 알람 스위치 & 삭제 버튼 -->
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button onclick="toggleAlarmEnabled('${item.id}')" title="${item.enabled ? '알람 켜짐 (클릭하여 끄기)' : '알람 꺼짐 (클릭하여 켜기)'}" class="p-2 rounded-xl transition ${item.enabled ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}">
+                                    <i class="fa-solid ${item.enabled ? 'fa-bell' : 'fa-bell-slash'} text-sm"></i>
+                                </button>
+                                <button onclick="deleteScheduleItem('${item.id}')" title="일정 삭제" class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">
+                                    <i class="fa-solid fa-trash-can text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            updateProgressBar();
+        }
+
+        function updateProgressBar() {
+            const actionableItems = state.schedules[state.selectedGoal].filter(i => !i.isBusyBlock);
+            const total = actionableItems.length;
+            const completed = actionableItems.filter(i => i.completed).length;
+            const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+            document.getElementById('progress-text').textContent = `${percent}% (${completed}/${total} 완료)`;
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+        }
+
+        function toggleCompleteItem(id) {
+            const items = state.schedules[state.selectedGoal];
+            const target = items.find(i => i.id === id);
+            if (target) {
+                target.completed = !target.completed;
+                saveState();
+                renderScheduleList();
+            }
+        }
+
+        function toggleAlarmEnabled(id) {
+            const items = state.schedules[state.selectedGoal];
+            const target = items.find(i => i.id === id);
+            if (target) {
+                target.enabled = !target.enabled;
+                saveState();
+                renderScheduleList();
+                updateNextAlarmDisplay();
+                showToast(target.enabled ? `[${target.time}] 알람이 켜졌습니다.` : `[${target.time}] 알람이 꺼졌습니다.`, 'info');
+            }
+        }
+
+        function updateItemTime(id, newTime) {
+            if (!newTime) return;
+            const items = state.schedules[state.selectedGoal];
+            const target = items.find(i => i.id === id);
+            if (target) {
+                target.time = newTime;
+                saveState();
+                renderScheduleList();
+                updateNextAlarmDisplay();
+                if (isTimeInBusyZone(newTime)) {
+                    showToast(`주의: ${newTime}은 설정된 학교/직장 불가 시간대입니다!`, 'warning');
+                } else {
+                    showToast(`알람 시간이 ${newTime}으로 변경되었습니다.`, 'success');
+                }
+            }
+        }
+
+        function addNewScheduleItem(e) {
+            e.preventDefault();
+            const timeInput = document.getElementById('new-item-time');
+            const titleInput = document.getElementById('new-item-title');
+
+            if (!timeInput.value || !titleInput.value.trim()) return;
+
+            const isBusy = isTimeInBusyZone(timeInput.value);
+
+            state.schedules[state.selectedGoal].push({
+                id: 'custom-' + Date.now(),
+                time: timeInput.value,
+                title: titleInput.value.trim(),
+                category: '사용자',
+                desc: '직접 추가한 나만의 건강 루틴입니다.',
+                enabled: true,
+                completed: false
+            });
+
+            titleInput.value = '';
+            saveState();
+            renderScheduleList();
+            updateNextAlarmDisplay();
+            if (isBusy) {
+                showToast('일정이 추가되었지만, 현재 설정된 학교/직장 불가 시간대에 포함되어 있습니다.', 'warning');
+            } else {
+                showToast('새로운 알람 스케줄이 추가되었습니다!', 'success');
+            }
+        }
+
+        function deleteScheduleItem(id) {
+            state.schedules[state.selectedGoal] = state.schedules[state.selectedGoal].filter(i => i.id !== id);
+            saveState();
+            renderScheduleList();
+            updateNextAlarmDisplay();
+        }
+
+        function resetScheduleToDefault() {
+            regenerateSmartSchedule(true);
+        }
+
+        // =========================================================================
+        // 6. 실시간 시계 엔진 & 정각 알람 트리거
+        // =========================================================================
+        function updateClockAndCheckAlarms() {
+            const now = new Date();
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const dateStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${days[now.getDay()]})`;
+
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            const currentHHMM = `${hh}:${mm}`;
+
+            document.getElementById('current-date').textContent = dateStr;
+            document.getElementById('live-clock').textContent = `${hh}:${mm}:${ss}`;
+
+            // 정각(00초)에 해당 분(Minute)의 활성화된 알람이 있는지 검사
+            if (ss === '00' && state.lastTriggeredMinute !== currentHHMM) {
+                const items = state.schedules[state.selectedGoal] || [];
+                const matchedItem = items.find(item => item.enabled && item.time === currentHHMM);
+
+                if (matchedItem) {
+                    state.lastTriggeredMinute = currentHHMM;
+                    fireAlarm(matchedItem);
+                }
+            }
+
+            // 매 10초마다 다음 알람 표시 갱신
+            if (now.getSeconds() % 10 === 0) {
+                updateNextAlarmDisplay();
+            }
+        }
+
+        function updateNextAlarmDisplay() {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const items = (state.schedules[state.selectedGoal] || []).filter(i => i.enabled);
+
+            if (items.length === 0) {
+                document.getElementById('next-alarm-display').textContent = '활성 알람 없음';
+                return;
+            }
+
+            // 현재 시간 이후의 가장 가까운 알람 찾기
+            let upcoming = items.find(item => {
+                const [h, m] = item.time.split(':').map(Number);
+                return (h * 60 + m) > currentMinutes;
+            });
+
+            // 오늘 남은 알람이 없으면 내일 첫 번째 알람 표시
+            if (!upcoming) {
+                upcoming = items[0];
+                document.getElementById('next-alarm-display').textContent = `내일 ${upcoming.time} · ${upcoming.title}`;
+            } else {
+                document.getElementById('next-alarm-display').textContent = `${upcoming.time} · ${upcoming.title}`;
+            }
+        }
+
+        function fireAlarm(item) {
+            state.activeAlarmItem = item;
+            playAlarmSound();
+
+            // 인앱 모달 표시
+            document.getElementById('modal-alarm-time').textContent = item.time;
+            document.getElementById('modal-alarm-title').textContent = item.title;
+            document.getElementById('modal-alarm-desc').textContent = item.desc || '예정된 건강 스케줄 시간입니다. 지금 바로 실천해 보세요!';
+
+            const modal = document.getElementById('alarm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // 브라우저 데스크톱 푸시 알림 발송 (권한 허용 시)
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(`⏰ [${item.time}] 나만의 건강 코치 알람`, {
+                    body: `${item.title}\n${item.desc || ''}`
+                });
+            }
+        }
+
+        function triggerTestAlarm() {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+
+            fireAlarm({
+                id: 'test-alarm',
+                time: `${hh}:${mm} (테스트)`,
+                title: '물 한 잔 마시기 & 바른 자세 스트레칭!',
+                desc: '알람 소리와 팝업이 정상적으로 작동합니다. 설정하신 스케줄 시간이 되면 이와 같이 알려드립니다.'
+            });
+        }
+
+        function completeAndCloseAlarm() {
+            if (state.activeAlarmItem && state.activeAlarmItem.id !== 'test-alarm') {
+                const items = state.schedules[state.selectedGoal];
+                const target = items.find(i => i.id === state.activeAlarmItem.id);
+                if (target) {
+                    target.completed = true;
+                    saveState();
+                    renderScheduleList();
+                    showToast('멋집니다! 오늘의 루틴 하나를 완료했습니다.', 'success');
+                }
+            }
+            closeAlarmModal();
+        }
+
+        function closeAlarmModal() {
+            const modal = document.getElementById('alarm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            state.activeAlarmItem = null;
+        }
+
+        // 토스트 알림 헬퍼
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColors = {
+                success: 'bg-slate-900 border-emerald-500 text-white',
+                warning: 'bg-amber-900 border-amber-400 text-white',
+                info: 'bg-slate-800 border-indigo-400 text-white'
+            };
+
+            toast.className = `pointer-events-auto px-4 py-3 rounded-2xl border-l-4 shadow-xl text-xs sm:text-sm font-medium flex items-center gap-2.5 transform transition-all duration-300 translate-y-2 opacity-0 ${bgColors[type] || bgColors.info}`;
+            toast.innerHTML = `<i class="fa-solid fa-bell text-emerald-400"></i><span>${message}</span>`;
+
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+
+        // =========================================================================
+        // 7. 초기화 실행
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            renderAll();
+            updateNotificationButtonUI();
+            updateClockAndCheckAlarms();
+            setInterval(updateClockAndCheckAlarms, 1000);
+        });
+    </script>
+</body>
+</html>
