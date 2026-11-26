@@ -424,7 +424,7 @@ async function main() {
       reason: s.reason,
       fix: FIXES[s.reason] ?? "선생님께 문의해 주세요.",
     }));
-  if (JSON.stringify(clean) !== JSON.stringify(prev) || JSON.stringify(rejected) !== JSON.stringify(prevData.rejected ?? [])) {
+  if (!prevData.updatedAt || JSON.stringify(clean) !== JSON.stringify(prev) || JSON.stringify(rejected) !== JSON.stringify(prevData.rejected ?? [])) {
     await writeFile(GAMES_JSON, JSON.stringify({ updatedAt: now, games: clean, rejected }, null, 2) + "\n");
   }
   if (JSON.stringify(skipped) !== JSON.stringify(prevReport.skipped ?? [])) {
