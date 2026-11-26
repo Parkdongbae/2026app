@@ -1,0 +1,15 @@
+{
+  "updatedAt": "2026-11-26T03:02:16.986Z",
+  "skipped": [
+    {
+      "sourceName": "v3_1_100_50 - 학생서민영.html",
+      "driveId": "17Y2Ipm0Dyf2XqZeqVpo8Sl3Mdr7j8uOW",
+      "reason": "파일명에서 학번·이름을 찾지 못함"
+    },
+    {
+      "sourceName": "v3_1_100_50 - 학생서민영.html",
+      "driveId": "1k5hSjkeLp_2y3WqxRm23kpm6UHKXCKtX",
+      "reason": "파일명에서 학번·이름을 찾지 못함"
+    }
+  ]
+}

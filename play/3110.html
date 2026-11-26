@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영단어 마스터 챌린지 (Lv.1 ~ Lv.6)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pretendard & Nunito Fonts -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background-color: #F8FAFC;
+            background-image: radial-gradient(#E2E8F0 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-en {
+            font-family: 'Nunito', 'Pretendard', sans-serif;
+        }
+
+        /* 듀오링고 스타일 3D 입체 버튼 */
+        .btn-3d {
+            transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-bottom-width: 4px;
+        }
+        .btn-3d:active:not(:disabled) {
+            transform: translateY(3px);
+            border-bottom-width: 1px;
+        }
+
+        /* 선택지 카드 스타일 */
+        .option-card {
+            transition: all 0.15s ease;
+            border-width: 2px;
+            border-bottom-width: 4px;
+        }
+        .option-card:hover:not(:disabled) {
+            transform: translateY(-2px);
+            border-color: #38BDF8;
+            background-color: #F0F9FF;
+        }
+        .option-card:active:not(:disabled) {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+        }
+
+        @keyframes popScale {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            60% { transform: scale(1.03); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popScale 0.28s ease-out forwards;
+        }
+
+        @keyframes shakeX {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shakeX 0.35s ease-in-out;
+        }
+
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-3 sm:p-5 text-slate-800">
+
+    <!-- 메인 컨테이너 -->
+    <div class="w-full max-w-xl bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden relative">
+        
+        <!-- 상단 헤더 바 -->
+        <header class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center font-en font-black text-lg shadow-inner">W</div>
+                <span class="font-bold text-lg tracking-tight">영단어 마스터 챌린지</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <!-- 자동 발음 읽기 토글 -->
+                <button id="auto-speak-btn" onclick="toggleAutoSpeak()" title="문제 출제 시 자동 발음 읽기" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 transition flex items-center gap-1">
+                    <span id="auto-speak-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>자동발음 ON</span>
+                </button>
+                <!-- 효과음 토글 -->
+                <button id="sound-btn" onclick="toggleSound()" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+                    <span id="sound-label">효과음 ON</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ========================================== -->
+        <!-- 1. 시작 (설정) 화면 -->
+        <!-- ========================================== -->
+        <main id="home-screen" class="p-6 sm:p-8">
+            <div class="text-center mb-7">
+                <span class="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 font-bold text-xs mb-2 border border-indigo-100">
+                    초등 기초부터 GRE 마스터까지 · 총 240개 고유 어휘
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">학습 모드와 난이도를 선택하세요</h1>
+                <p class="text-slate-500 text-sm mt-1">출제된 단어는 중복 없이 출제되며 한국어 발음이 제공됩니다.</p>
+            </div>
+
+            <!-- STEP 1: 진행 방식(난이도 모드) 선택 -->
+            <div class="mb-6">
+                <label class="block text-sm font-bold text-slate-700 mb-2.5">1. 진행 방식 선택</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- 모드 A: 난이도 점점 상승 -->
+                    <button id="prog-progressive" onclick="selectProgression('progressive')" class="p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/70 text-left transition relative shadow-xs">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-extrabold text-emerald-900 text-base">난이도 점점 상승</span>
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500 text-white">무한 도전</span>
+                        </div>
+                        <p class="text-xs text-emerald-700 leading-relaxed">
+                            Lv.1부터 시작해 4문제 맞힐 때마다 Lv.6 원어민 수준까지 자동으로 난이도가 상승합니다.
+                        </p>
+                    </button>
+
+                    <!-- 모드 B: 난이도 직접 선택 -->
+                    <button id="prog-fixed" onclick="selectProgression('fixed')" class="p-4 rounded-2xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-left transition relative">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-extrabold text-slate-800 text-base">난이도 직접 선택</span>
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-200 text-slate-700">집중 학습</span>
+                        </div>
+                        <p class="text-xs text-slate-500 leading-relaxed">
+                            Lv.1 ~ Lv.6 중 원하는 난이도 하나를 선택해 해당 단계의 단어만 집중적으로 학습합니다.
+                        </p>
+                    </button>
+                </div>
+
+                <!-- 난이도 직접 선택 시 나타나는 6단계 레벨 선택 패널 -->
+                <div id="level-selector-panel" class="hidden mt-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 animate-pop">
+                    <div class="text-xs font-bold text-slate-600 mb-2.5 flex items-center justify-between">
+                        <span>학습할 난이도 단계를 선택하세요 (단계별 40단어)</span>
+                        <span id="selected-level-desc" class="text-indigo-600">Lv.1 초등 기초</span>
+                    </div>
+                    <div id="level-buttons-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <!-- JS로 Lv.1 ~ Lv.6 버튼 렌더링 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: 퀴즈 방향 선택 -->
+            <div class="mb-8">
+                <label class="block text-sm font-bold text-slate-700 mb-2.5">2. 문제 출제 방향</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="dir-enToKo" onclick="selectDirection('enToKo')" class="p-3.5 rounded-2xl border-2 border-sky-500 bg-sky-50/70 text-sky-900 font-bold text-sm sm:text-base flex flex-col items-center justify-center gap-1 transition">
+                        <span>영어 단어 ➔ 한국어 뜻</span>
+                        <span class="text-xs font-normal text-sky-700">발음 표기 및 음성 지원</span>
+                    </button>
+                    <button id="dir-koToEn" onclick="selectDirection('koToEn')" class="p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-sm sm:text-base flex flex-col items-center justify-center gap-1 transition">
+                        <span>한국어 뜻 ➔ 영어 단어</span>
+                        <span class="text-xs font-normal text-slate-400">정답 확인 시 발음 공개</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 시작 버튼 -->
+            <button onclick="startNewSession()" class="btn-3d w-full py-4 bg-emerald-500 hover:bg-emerald-600 border-emerald-700 text-white rounded-2xl font-extrabold text-xl tracking-wide shadow-md">
+                퀴즈 시작하기
+            </button>
+        </main>
+
+        <!-- ========================================== -->
+        <!-- 2. 퀴즈 진행 화면 -->
+        <!-- ========================================== -->
+        <section id="quiz-screen" class="hidden p-5 sm:p-7">
+            <!-- 상단 컨트롤 및 실시간 스탯 -->
+            <div class="flex items-center justify-between gap-2 mb-4">
+                <button onclick="finishAndShowResults()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition">
+                    그만하고 결과 보기
+                </button>
+
+                <div class="flex items-center gap-2">
+                    <!-- 연속 정답 콤보 -->
+                    <div id="combo-pill" class="hidden px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-800 font-extrabold text-xs sm:text-sm animate-pop">
+                        <span id="combo-num">2</span>연속 정답
+                    </div>
+                    <!-- 누적 점수 -->
+                    <div class="px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 font-extrabold text-xs sm:text-sm">
+                        <span id="score-display">0</span>점
+                    </div>
+                </div>
+            </div>
+
+            <!-- 현재 난이도 배지 & 승급/진행 게이지 -->
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 mb-5">
+                <div class="flex items-center justify-between text-xs font-bold mb-2">
+                    <div class="flex items-center gap-2">
+                        <span id="current-level-badge" class="px-2.5 py-0.5 rounded-md bg-emerald-600 text-white">Lv.1 초등 기초</span>
+                        <span id="mode-status-text" class="text-slate-500">다음 레벨까지 4문제</span>
+                    </div>
+                    <span class="text-slate-600">푼 문제: <strong id="solved-count" class="text-slate-900">0</strong>개</span>
+                </div>
+                <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div id="level-progress-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- 레벨업 알림 배너 (레벨 상승 시 일시 표시) -->
+            <div id="levelup-banner" class="hidden mb-4 p-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-center font-bold text-sm shadow-md animate-pop">
+                난이도 상승! 새로운 단계의 단어가 출제됩니다.
+            </div>
+
+            <!-- 문제 제시 카드 (그림/이모지 제거, 선명한 한국어 발음 표기) -->
+            <div class="bg-white border-2 border-slate-200 rounded-3xl p-6 sm:p-8 mb-5 text-center shadow-xs flex flex-col items-center justify-center min-h-[185px]">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" id="question-guide">알맞은 한국어 뜻을 고르세요</div>
+                
+                <!-- 문제 메인 텍스트 -->
+                <div id="question-main" class="font-en text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-2.5 break-all">
+                    Apple
+                </div>
+
+                <!-- 한국어 발음 표기 -->
+                <div id="question-pron" class="text-lg sm:text-xl font-bold text-sky-700 bg-sky-50 border border-sky-200 px-4 py-1 rounded-full mb-4">
+                    [애플]
+                </div>
+
+                <!-- 원어민 발음 듣기 버튼 (단축키 R) -->
+                <button id="speak-btn" onclick="speakCurrent()" class="btn-3d px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700 font-bold text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                    <span>발음 듣기 (R)</span>
+                </button>
+            </div>
+
+            <!-- 4지선다 선택지 그리드 -->
+            <div id="options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                <!-- JS로 4개 보기 렌더링 -->
+            </div>
+
+            <!-- 정답/오답 피드백 및 다음 버튼 -->
+            <div id="feedback-box" class="hidden rounded-2xl p-4 border-2 animate-pop">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <p id="feedback-title" class="font-extrabold text-lg"></p>
+                        <p id="feedback-detail" class="text-sm font-medium mt-0.5"></p>
+                    </div>
+                    <button id="next-btn" onclick="loadNextQuestion()" class="btn-3d px-6 py-3 rounded-xl font-extrabold text-white text-base shrink-0">
+                        다음 문제 ➔
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 3. 결과 및 오답 노트 화면 -->
+        <!-- ========================================== -->
+        <section id="result-screen" class="hidden p-6 sm:p-8">
+            <div class="text-center mb-6">
+                <span id="result-status-badge" class="inline-block px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs mb-2">
+                    학습 리포트
+                </span>
+                <h2 id="result-headline" class="text-2xl sm:text-3xl font-black text-slate-900">도전 완료! 수고하셨습니다</h2>
+                <p id="result-subline" class="text-slate-500 text-sm mt-1">최종 달성 난이도와 학습 기록을 확인하세요.</p>
+            </div>
+
+            <!-- 핵심 통계 4칸 요약 -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-center">
+                    <div class="text-xs font-bold text-slate-400 mb-1">최종 난이도</div>
+                    <div id="res-level" class="text-base sm:text-lg font-black text-indigo-600">Lv.1</div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-center">
+                    <div class="text-xs font-bold text-slate-400 mb-1">누적 점수</div>
+                    <div id="res-score" class="text-base sm:text-lg font-black text-slate-800">0점</div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-center">
+                    <div class="text-xs font-bold text-slate-400 mb-1">정답률</div>
+                    <div id="res-accuracy" class="text-base sm:text-lg font-black text-emerald-600">0%</div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-center">
+                    <div class="text-xs font-bold text-slate-400 mb-1">최고 콤보</div>
+                    <div id="res-combo" class="text-base sm:text-lg font-black text-amber-600">0연속</div>
+                </div>
+            </div>
+
+            <!-- 오답 노트 섹션 -->
+            <div id="wrong-note-container" class="hidden mb-6">
+                <div class="flex items-center justify-between mb-2.5">
+                    <h3 class="font-extrabold text-slate-800 text-base">오답 노트 (<span id="wrong-count-label">0</span>개)</h3>
+                    <span class="text-xs text-slate-400">단어를 클릭하면 발음을 들을 수 있습니다</span>
+                </div>
+                <div id="wrong-list" class="max-h-56 overflow-y-auto space-y-2 pr-1">
+                    <!-- 틀린 단어 카드 렌더링 -->
+                </div>
+            </div>
+
+            <!-- 하단 버튼 그룹 -->
+            <div class="flex flex-col gap-2.5">
+                <button id="retry-wrong-btn" onclick="startWrongReviewSession()" class="hidden btn-3d w-full py-3.5 bg-rose-500 hover:bg-rose-600 border-rose-700 text-white rounded-2xl font-extrabold text-base">
+                    틀린 문제만 다시 풀기 (<span id="retry-wrong-count">0</span>문제)
+                </button>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button onclick="returnToHome()" class="btn-3d py-3.5 bg-slate-200 hover:bg-slate-300 border-slate-400 text-slate-800 rounded-2xl font-extrabold text-base">
+                        난이도/모드 변경
+                    </button>
+                    <button onclick="startNewSession()" class="btn-3d py-3.5 bg-emerald-500 hover:bg-emerald-600 border-emerald-700 text-white rounded-2xl font-extrabold text-base">
+                        새로 시작하기
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="mt-4 text-center text-xs text-slate-400">
+        단축키 안내: [1~4] 보기 선택 · [R] 발음 다시 듣기 · [Enter/Space] 다음 문제
+    </footer>
+
+    <script>
+        /**
+         * ============================================================================
+         * 1. 6단계 난이도별 영단어 데이터베이스 (총 240개 고유 어휘, 단계별 40개)
+         *    - 그림/이모지 없음, 모든 단어에 정확한 한국어 발음(pron) 포함
+         * ============================================================================
+         */
+        const LEVEL_META = {
+            1: { level: 1, name: "Lv.1 초등 기초", short: "초등 기초", badgeColor: "bg-emerald-600", barColor: "bg-emerald-500", desc: "초등 저학년 필수 기초 단어" },
+            2: { level: 2, name: "Lv.2 초등 필수", short: "초등 필수", badgeColor: "bg-sky-600", barColor: "bg-sky-500", desc: "초등 고학년 교과 핵심 어휘" },
+            3: { level: 3, name: "Lv.3 중등 핵심", short: "중등 핵심", badgeColor: "bg-indigo-600", barColor: "bg-indigo-500", desc: "중학교 내신 필수 어휘" },
+            4: { level: 4, name: "Lv.4 고등/수능", short: "고등/수능", badgeColor: "bg-violet-600", barColor: "bg-violet-500", desc: "수능 및 모의고사 1등급 어휘" },
+            5: { level: 5, name: "Lv.5 토익/시사", short: "토익/시사", badgeColor: "bg-amber-600", barColor: "bg-amber-500", desc: "비즈니스·시사 심화 어휘" },
+            6: { level: 6, name: "Lv.6 원어민 마스터", short: "원어민 마스터", badgeColor: "bg-rose-600", barColor: "bg-rose-500", desc: "GRE·원어민 최상위 고급 어휘" }
+        };
+
+        const RAW_WORDS = [
+            // [Lv.1 초등 기초 - 40개]
+            { l: 1, en: "Apple", pron: "애플", ko: "사과" },
+            { l: 1, en: "Banana", pron: "버내너", ko: "바나나" },
+            { l: 1, en: "Water", pron: "워터", ko: "물" },
+            { l: 1, en: "Milk", pron: "밀크", ko: "우유" },
+            { l: 1, en: "Bread", pron: "브레드", ko: "빵" },
+            { l: 1, en: "Happy", pron: "해피", ko: "행복한" },
+            { l: 1, en: "Sad", pron: "새드", ko: "슬픈" },
+            { l: 1, en: "Smile", pron: "스마일", ko: "미소 짓다" },
+            { l: 1, en: "Friend", pron: "프렌드", ko: "친구" },
+            { l: 1, en: "Family", pron: "패밀리", ko: "가족" },
+            { l: 1, en: "School", pron: "스쿨", ko: "학교" },
+            { l: 1, en: "Teacher", pron: "티처", ko: "선생님" },
+            { l: 1, en: "Student", pron: "스튜던트", ko: "학생" },
+            { l: 1, en: "Pencil", pron: "펜슬", ko: "연필" },
+            { l: 1, en: "Book", pron: "북", ko: "책" },
+            { l: 1, en: "Flower", pron: "플라워", ko: "꽃" },
+            { l: 1, en: "Tree", pron: "트리", ko: "나무" },
+            { l: 1, en: "Cloud", pron: "클라우드", ko: "구름" },
+            { l: 1, en: "Rain", pron: "레인", ko: "비" },
+            { l: 1, en: "Snow", pron: "스노우", ko: "눈" },
+            { l: 1, en: "Summer", pron: "서머", ko: "여름" },
+            { l: 1, en: "Winter", pron: "윈터", ko: "겨울" },
+            { l: 1, en: "Spring", pron: "스프링", ko: "봄" },
+            { l: 1, en: "Autumn", pron: "오텀", ko: "가을" },
+            { l: 1, en: "Morning", pron: "모닝", ko: "아침" },
+            { l: 1, en: "Night", pron: "나이트", ko: "밤" },
+            { l: 1, en: "Animal", pron: "애니멀", ko: "동물" },
+            { l: 1, en: "Rabbit", pron: "래빗", ko: "토끼" },
+            { l: 1, en: "Elephant", pron: "엘리펀트", ko: "코끼리" },
+            { l: 1, en: "Dolphin", pron: "돌핀", ko: "돌고래" },
+            { l: 1, en: "Clean", pron: "클린", ko: "깨끗한" },
+            { l: 1, en: "Fast", pron: "패스트", ko: "빠른" },
+            { l: 1, en: "Slow", pron: "슬로우", ko: "느린" },
+            { l: 1, en: "Strong", pron: "스트롱", ko: "강한" },
+            { l: 1, en: "Heavy", pron: "헤비", ko: "무거운" },
+            { l: 1, en: "Light", pron: "라이트", ko: "가벼운, 빛" },
+            { l: 1, en: "Listen", pron: "리슨", ko: "귀 기울여 듣다" },
+            { l: 1, en: "Speak", pron: "스피크", ko: "말하다" },
+            { l: 1, en: "Write", pron: "라이트", ko: "글을 쓰다" },
+            { l: 1, en: "Dream", pron: "드림", ko: "꿈" },
+
+            // [Lv.2 초등 필수 - 40개]
+            { l: 2, en: "Airport", pron: "에어포트", ko: "공항" },
+            { l: 2, en: "Library", pron: "라이브러리", ko: "도서관" },
+            { l: 2, en: "Hospital", pron: "하스피털", ko: "병원" },
+            { l: 2, en: "Museum", pron: "뮤지엄", ko: "박물관" },
+            { l: 2, en: "Weather", pron: "웨더", ko: "날씨" },
+            { l: 2, en: "Season", pron: "시즌", ko: "계절" },
+            { l: 2, en: "Holiday", pron: "할리데이", ko: "휴일, 명절" },
+            { l: 2, en: "Vacation", pron: "베리케이션", ko: "방학, 휴가" },
+            { l: 2, en: "Breakfast", pron: "브렉퍼스트", ko: "아침 식사" },
+            { l: 2, en: "Delicious", pron: "딜리셔스", ko: "맛있는" },
+            { l: 2, en: "Healthy", pron: "헬시", ko: "건강한" },
+            { l: 2, en: "Exercise", pron: "엑서사이즈", ko: "운동하다" },
+            { l: 2, en: "Practice", pron: "프랙티스", ko: "연습하다" },
+            { l: 2, en: "Subject", pron: "서브젝트", ko: "과목, 주제" },
+            { l: 2, en: "Science", pron: "사이언스", ko: "과학" },
+            { l: 2, en: "History", pron: "히스토리", ko: "역사" },
+            { l: 2, en: "Language", pron: "랭귀지", ko: "언어" },
+            { l: 2, en: "Question", pron: "퀘스천", ko: "질문" },
+            { l: 2, en: "Answer", pron: "앤서", ko: "대답" },
+            { l: 2, en: "Problem", pron: "프라블럼", ko: "문제" },
+            { l: 2, en: "Important", pron: "임포턴트", ko: "중요한" },
+            { l: 2, en: "Different", pron: "디퍼런트", ko: "다른" },
+            { l: 2, en: "Together", pron: "투게더", ko: "함께" },
+            { l: 2, en: "Always", pron: "올웨이즈", ko: "항상" },
+            { l: 2, en: "Sometimes", pron: "섬타임즈", ko: "가끔" },
+            { l: 2, en: "Remember", pron: "리멤버", ko: "기억하다" },
+            { l: 2, en: "Forget", pron: "포겟", ko: "잊어버리다" },
+            { l: 2, en: "Believe", pron: "빌리브", ko: "믿다" },
+            { l: 2, en: "Understand", pron: "언더스탠드", ko: "이해하다" },
+            { l: 2, en: "Adventure", pron: "어드벤처", ko: "모험" },
+            { l: 2, en: "Treasure", pron: "트레저", ko: "보물" },
+            { l: 2, en: "Island", pron: "아일랜드", ko: "섬" },
+            { l: 2, en: "Mountain", pron: "마운틴", ko: "산" },
+            { l: 2, en: "Ocean", pron: "오션", ko: "대양, 큰 바다" },
+            { l: 2, en: "Planet", pron: "플래닛", ko: "행성" },
+            { l: 2, en: "Future", pron: "퓨처", ko: "미래" },
+            { l: 2, en: "Present", pron: "프레즌트", ko: "현재, 선물" },
+            { l: 2, en: "Neighbor", pron: "네이버", ko: "이웃" },
+            { l: 2, en: "Kindness", pron: "카인드니스", ko: "친절" },
+            { l: 2, en: "Brave", pron: "브레이브", ko: "용감한" },
+
+            // [Lv.3 중등 핵심 - 40개]
+            { l: 3, en: "Achieve", pron: "어치브", ko: "성취하다, 달성하다" },
+            { l: 3, en: "Encourage", pron: "인커리지", ko: "격려하다, 용기를 북돋우다" },
+            { l: 3, en: "Environment", pron: "인바이런먼트", ko: "환경" },
+            { l: 3, en: "Pollution", pron: "폴루션", ko: "오염" },
+            { l: 3, en: "Recycle", pron: "리사이클", ko: "재활용하다" },
+            { l: 3, en: "Experience", pron: "익스피리언스", ko: "경험" },
+            { l: 3, en: "Knowledge", pron: "날리지", ko: "지식" },
+            { l: 3, en: "Confidence", pron: "컨피던스", ko: "자신감" },
+            { l: 3, en: "Patient", pron: "페이션트", ko: "인내심 있는, 환자" },
+            { l: 3, en: "Generous", pron: "제너러스", ko: "관대한, 너그러운" },
+            { l: 3, en: "Curious", pron: "큐리어스", ko: "호기심이 많은" },
+            { l: 3, en: "Creative", pron: "크리에이티브", ko: "창의적인" },
+            { l: 3, en: "Develop", pron: "디벨롭", ko: "개발하다, 발전시키다" },
+            { l: 3, en: "Improve", pron: "임프루브", ko: "향상시키다, 개선하다" },
+            { l: 3, en: "Prepare", pron: "프리페어", ko: "준비하다" },
+            { l: 3, en: "Provide", pron: "프로바이드", ko: "제공하다" },
+            { l: 3, en: "Protect", pron: "프로텍트", ko: "보호하다" },
+            { l: 3, en: "Prevent", pron: "프리벤트", ko: "예방하다, 막다" },
+            { l: 3, en: "Reduce", pron: "리듀스", ko: "줄이다, 감소시키다" },
+            { l: 3, en: "Increase", pron: "인크리스", ko: "증가하다" },
+            { l: 3, en: "Decision", pron: "디시전", ko: "결정" },
+            { l: 3, en: "Opinion", pron: "오피니언", ko: "의견" },
+            { l: 3, en: "Suggest", pron: "서제스트", ko: "제안하다" },
+            { l: 3, en: "Express", pron: "익스프레스", ko: "표현하다" },
+            { l: 3, en: "Communicate", pron: "커뮤니케이트", ko: "의사소통하다" },
+            { l: 3, en: "Relationship", pron: "릴레이션십", ko: "관계" },
+            { l: 3, en: "Society", pron: "소사이어티", ko: "사회" },
+            { l: 3, en: "Culture", pron: "컬처", ko: "문화" },
+            { l: 3, en: "Tradition", pron: "트래디션", ko: "전통" },
+            { l: 3, en: "Technology", pron: "테크놀로지", ko: "과학 기술" },
+            { l: 3, en: "Advantage", pron: "어드밴티지", ko: "이점, 장점" },
+            { l: 3, en: "Disadvantage", pron: "디스어드밴티지", ko: "단점, 불이익" },
+            { l: 3, en: "Opportunity", pron: "오퍼튜니티", ko: "기회" },
+            { l: 3, en: "Challenge", pron: "챌린지", ko: "도전, 난제" },
+            { l: 3, en: "Responsibility", pron: "리스판서빌리티", ko: "책임감" },
+            { l: 3, en: "Independent", pron: "인디펜던트", ko: "독립적인" },
+            { l: 3, en: "Necessary", pron: "네서세리", ko: "필요한" },
+            { l: 3, en: "Common", pron: "커먼", ko: "흔한, 공통의" },
+            { l: 3, en: "Similar", pron: "시밀러", ko: "비슷한" },
+            { l: 3, en: "Discover", pron: "디스커버", ko: "발견하다" },
+
+            // [Lv.4 고등/수능 - 40개]
+            { l: 4, en: "Ambiguous", pron: "앰비규어스", ko: "모호한, 애매한" },
+            { l: 4, en: "Phenomenon", pron: "피나미넌", ko: "현상" },
+            { l: 4, en: "Substantial", pron: "서브스탠셜", ko: "상당한, 실질적인" },
+            { l: 4, en: "Inevitable", pron: "이네비터블", ko: "피할 수 없는, 필연적인" },
+            { l: 4, en: "Perspective", pron: "퍼스펙티브", ko: "관점, 시각" },
+            { l: 4, en: "Prejudice", pron: "프레주디스", ko: "편견, 선입견" },
+            { l: 4, en: "Consequence", pron: "칸시퀀스", ko: "결과, 중요성" },
+            { l: 4, en: "Contradict", pron: "칸트러딕트", ko: "모순되다, 반박하다" },
+            { l: 4, en: "Distinguish", pron: "디스팅귀시", ko: "구별하다, 식별하다" },
+            { l: 4, en: "Emphasize", pron: "엠퍼사이즈", ko: "강조하다" },
+            { l: 4, en: "Fundamental", pron: "펀더멘털", ko: "근본적인, 기본적인" },
+            { l: 4, en: "Hypothesis", pron: "하이파서시스", ko: "가설" },
+            { l: 4, en: "Implement", pron: "임플리먼트", ko: "시행하다, 실행하다" },
+            { l: 4, en: "Legitimate", pron: "리지티밋", ko: "합법적인, 타당한" },
+            { l: 4, en: "Manipulate", pron: "머니퓰레이트", ko: "조작하다, 다루다" },
+            { l: 4, en: "Objective", pron: "옵젝티브", ko: "객관적인, 목표" },
+            { l: 4, en: "Subjective", pron: "서브젝티브", ko: "주관적인" },
+            { l: 4, en: "Paradox", pron: "패러닥스", ko: "역설, 모순" },
+            { l: 4, en: "Plausible", pron: "플로저블", ko: "그럴듯한, 타당한" },
+            { l: 4, en: "Reluctant", pron: "릴럭턴트", ko: "꺼리는, 마지못해 하는" },
+            { l: 4, en: "Simultaneous", pron: "사이멀테이니어스", ko: "동시의" },
+            { l: 4, en: "Spontaneous", pron: "스판테이니어스", ko: "자발적인, 즉흥적인" },
+            { l: 4, en: "Sustainable", pron: "서스테이너블", ko: "지속 가능한" },
+            { l: 4, en: "Tentative", pron: "텐터티브", ko: "잠정적인, 임시의" },
+            { l: 4, en: "Underlying", pron: "언더라잉", ko: "근본적인, 기저에 있는" },
+            { l: 4, en: "Versatile", pron: "버서틸", ko: "다재다능한, 다용도의" },
+            { l: 4, en: "Abundant", pron: "어번던트", ko: "풍부한" },
+            { l: 4, en: "Accumulate", pron: "어큐뮬레이트", ko: "축적하다, 모으다" },
+            { l: 4, en: "Advocate", pron: "애드버킷", ko: "옹호하다, 지지자" },
+            { l: 4, en: "Aesthetic", pron: "에스테틱", ko: "미학적인, 심미적인" },
+            { l: 4, en: "Allocate", pron: "앨러케이트", ko: "할당하다, 배분하다" },
+            { l: 4, en: "Anonymous", pron: "어나니머스", ko: "익명의" },
+            { l: 4, en: "Anticipate", pron: "앤티시페이트", ko: "예상하다, 기대하다" },
+            { l: 4, en: "Arbitrary", pron: "아비тр러리", ko: "임의적인, 독단적인" },
+            { l: 4, en: "Coherent", pron: "코히어런트", ko: "일관성 있는, 조리 있는" },
+            { l: 4, en: "Compensate", pron: "캄펜세이트", ko: "보상하다" },
+            { l: 4, en: "Comprehensive", pron: "캄프리헨시브", ko: "포괄적인, 종합적인" },
+            { l: 4, en: "Diminish", pron: "디미니시", ko: "줄어들다, 약화시키다" },
+            { l: 4, en: "Elaborate", pron: "일래버릿", ko: "정교한, 상세히 설명하다" },
+            { l: 4, en: "Fluctuate", pron: "플럭추에이트", ko: "변동하다, 오르내리다" },
+
+            // [Lv.5 토익/시사 - 40개]
+            { l: 5, en: "Alleviate", pron: "얼리비에이트", ko: "완화하다, 경감하다" },
+            { l: 5, en: "Deteriorate", pron: "디티리어레이트", ko: "악화되다" },
+            { l: 5, en: "Vulnerable", pron: "벌너러블", ko: "취약한, 상처받기 쉬운" },
+            { l: 5, en: "Unprecedented", pron: "언프레시덴티드", ko: "전례 없는" },
+            { l: 5, en: "Scrutinize", pron: "스크루티나이즈", ko: "면밀히 조사하다" },
+            { l: 5, en: "Reimburse", pron: "리임버스", ko: "변제하다, 상환하다" },
+            { l: 5, en: "Prerequisite", pron: "프리레퀴짓", ko: "전제 조건, 필수 과목" },
+            { l: 5, en: "Obsolescence", pron: "압설레슨스", ko: "노후화, 쓸모없게 됨" },
+            { l: 5, en: "Mitigate", pron: "미티게이트", ko: "완화시키다, 누그러뜨리다" },
+            { l: 5, en: "Lucrative", pron: "루크러티브", ko: "수익성이 좋은, 돈벌이가 되는" },
+            { l: 5, en: "Jurisdiction", pron: "주리스딕션", ko: "관할권, 사법권" },
+            { l: 5, en: "Incentive", pron: "인센티브", ko: "장려책, 동기 부여" },
+            { l: 5, en: "Feasible", pron: "피저블", ko: "실현 가능한" },
+            { l: 5, en: "Exacerbate", pron: "이그재서베이트", ko: "악화시키다" },
+            { l: 5, en: "Discrepancy", pron: "디스크레펀시", ko: "불일치, 차이" },
+            { l: 5, en: "Consensus", pron: "컨센서스", ko: "합의, 의견 일치" },
+            { l: 5, en: "Consolidate", pron: "컨살리데이트", ko: "통합하다, 강화하다" },
+            { l: 5, en: "Complacent", pron: "컴플레이슨트", ko: "현실에 안주하는" },
+            { l: 5, en: "Bilateral", pron: "바이래터럴", ko: "쌍방의, 양국 간의" },
+            { l: 5, en: "Austerity", pron: "오스테리티", ko: "긴축, 내핍" },
+            { l: 5, en: "Appraise", pron: "어프레이즈", ko: "평가하다, 감정하다" },
+            { l: 5, en: "Amalgamate", pron: "어맬거메이트", ko: "합병하다, 통합하다" },
+            { l: 5, en: "Affluent", pron: "애플루언트", ko: "부유한, 풍부한" },
+            { l: 5, en: "Adversary", pron: "애드버서리", ko: "적, 상대방" },
+            { l: 5, en: "Accountability", pron: "어카운터빌리티", ko: "책임 소재, 설명 책임" },
+            { l: 5, en: "Contingency", pron: "컨틴전시", ko: "만일의 사태, 우발 사고" },
+            { l: 5, en: "Endorse", pron: "인도스", ko: "지지하다, 서명하다" },
+            { l: 5, en: "Exempt", pron: "이그젬프트", ko: "면제된" },
+            { l: 5, en: "Formidable", pron: "포미더블", ko: "만만치 않은, 경외심을 불러일으키는" },
+            { l: 5, en: "Imminent", pron: "이미넌트", ko: "임박한, 촉박한" },
+            { l: 5, en: "Incur", pron: "인커", ko: "(손실·비용을) 초래하다" },
+            { l: 5, en: "Jeopardize", pron: "제퍼다이즈", ko: "위태롭게 하다" },
+            { l: 5, en: "Mandatory", pron: "맨더토리", ko: "의무적인, 강제적인" },
+            { l: 5, en: "Negligible", pron: "네글리저블", ko: "무시해도 될 정도의" },
+            { l: 5, en: "Proliferate", pron: "프롤리퍼레이트", ko: "급증하다, 확산되다" },
+            { l: 5, en: "Recession", pron: "리세션", ko: "경기 침체, 불황" },
+            { l: 5, en: "Redundant", pron: "리던던트", ko: "불필요한, 정리 해고된" },
+            { l: 5, en: "Stringent", pron: "스트린전트", ko: "엄격한, 긴축된" },
+            { l: 5, en: "Subsidy", pron: "섭시디", ko: "보조금, 장려금" },
+            { l: 5, en: "Viable", pron: "바이어블", ko: "실행 가능한, 생존 가능한" },
+
+            // [Lv.6 원어민 마스터 (GRE) - 40개]
+            { l: 6, en: "Aberration", pron: "애버레이션", ko: "일탈, 비정상적 현상" },
+            { l: 6, en: "Ephemeral", pron: "이페머럴", ko: "덧없는, 수명이 짧은" },
+            { l: 6, en: "Ubiquitous", pron: "유비쿼터스", ko: "어디에나 존재하는" },
+            { l: 6, en: "Sycophant", pron: "시커펀트", ko: "아첨꾼, 알랑거리는 사람" },
+            { l: 6, en: "Equivocal", pron: "이퀴버컬", ko: "애매모호한, 다의적인" },
+            { l: 6, en: "Fastidious", pron: "패스티디어스", ko: "까다로운, 꼼꼼한" },
+            { l: 6, en: "Magnanimous", pron: "매그내니머스", ko: "도량이 넓은, 아량 있는" },
+            { l: 6, en: "Obfuscate", pron: "압퍼스케이트", ko: "혼란스럽게 하다, 모호하게 만들다" },
+            { l: 6, en: "Pernicious", pron: "퍼니셔스", ko: "치명적인, 유해한" },
+            { l: 6, en: "Recalcitrant", pron: "리캘시트런트", ko: "반항하는, 다루기 힘든" },
+            { l: 6, en: "Taciturn", pron: "태시턴", ko: "과묵한, 말수가 적은" },
+            { l: 6, en: "Vociferous", pron: "보시퍼러스", ko: "목청이 큰, 시끄럽게 외치는" },
+            { l: 6, en: "Acrimonious", pron: "애크리모니어스", ko: "신랄한, 험악한" },
+            { l: 6, en: "Cacophony", pron: "커카퍼니", ko: "불협화음, 굉음" },
+            { l: 6, en: "Deleterious", pron: "델리테리어스", ko: "해로운, 유독한" },
+            { l: 6, en: "Enervate", pron: "에너베이트", ko: "기력을 약화시키다" },
+            { l: 6, en: "Garrulous", pron: "개럴러스", ko: "수다스러운" },
+            { l: 6, en: "Iconoclast", pron: "아이카노클래스트", ko: "인습 타파주의자" },
+            { l: 6, en: "Loquacious", pron: "로퀘이셔스", ko: "말이 많은, 수다스러운" },
+            { l: 6, en: "Mendacious", pron: "멘데이셔스", ko: "거짓말을 하는, 허위의" },
+            { l: 6, en: "Nefarious", pron: "니페리어스", ko: "극악무도한, 범죄의" },
+            { l: 6, en: "Obsequious", pron: "옵시퀴어스", ko: "비굴할 정도로 아첨하는" },
+            { l: 6, en: "Parsimonious", pron: "파시모니어스", ko: "지독히 인색한" },
+            { l: 6, en: "Quixotic", pron: "퀵사틱", ko: "돈키호테식의, 비현실적인" },
+            { l: 6, en: "Sanguine", pron: "생귄", ko: "낙관적인, 쾌활한" },
+            { l: 6, en: "Truculent", pron: "트러큘런트", ko: "호전적인, 신랄한" },
+            { l: 6, en: "Venerate", pron: "베너레이트", ko: "공경하다, 숭배하다" },
+            { l: 6, en: "Zealous", pron: "젤러스", ko: "열성적인, 열광적인" },
+            { l: 6, en: "Alacrity", pron: "얼래크리티", ko: "민첩함, 흔쾌히 응함" },
+            { l: 6, en: "Capricious", pron: "커프리셔스", ko: "변덕스러운" },
+            { l: 6, en: "Didactic", pron: "다이댁틱", ko: "교훈적인, 설교조의" },
+            { l: 6, en: "Esoteric", pron: "에소테릭", ko: "난해한, 소수만 이해하는" },
+            { l: 6, en: "Harangue", pron: "허랭", ko: "장광설, 열변을 토하다" },
+            { l: 6, en: "Inscrutable", pron: "인스크루터블", ko: "헤아리기 어려운, 불가해한" },
+            { l: 6, en: "Lethargic", pron: "리사직", ko: "무기력한, 혼수상태의" },
+            { l: 6, en: "Misanthrope", pron: "미샌스로프", ko: "염세주의자, 인간 혐오자" },
+            { l: 6, en: "Ostentatious", pron: "아스텐테이셔스", ko: "과시하는, 허세 부리는" },
+            { l: 6, en: "Perfunctory", pron: "퍼펑터리", ko: "형식적인, 겉치레의" },
+            { l: 6, en: "Superfluous", pron: "수퍼플루어스", ko: "불필요한, 잉여의" },
+            { l: 6, en: "Vicarious", pron: "바이케어리어스", ko: "대리의, 간접 경험의" }
+        ];
+
+        // 오타 수정된 항목 보정 및 고유 ID 부여
+        const WORD_BANK = RAW_WORDS.map((item, idx) => {
+            if (item.en === "Arbitrary") item.pron = "아비트러리";
+            return {
+                id: `word_${idx + 1}`,
+                level: item.l,
+                en: item.en,
+                pron: item.pron,
+                ko: item.ko
+            };
+        });
+
+        /**
+         * ============================================================================
+         * 2. 앱 상태 관리
+         * ============================================================================
+         */
+        const state = {
+            progressionMode: 'progressive', // 'progressive' (난이도 점점 상승) | 'fixed' (난이도 직접 선택)
+            selectedStartLevel: 1,          // 직접 선택 모드에서 고른 레벨 (1~6)
+            direction: 'enToKo',            // 'enToKo' (영어->한글) | 'koToEn' (한글->영어)
+            autoSpeak: true,
+            soundEnabled: true,
+
+            // 세션 진행 상태
+            isReviewMode: false,            // 오답 복습 모드 여부
+            reviewQueue: [],                // 오답 복습용 단어 배열
+            currentLevel: 1,                // 현재 출제 난이도
+            levelCorrectProgress: 0,        // 현재 레벨에서 맞힌 개수 (4개마다 승급)
+            usedWordIds: new Set(),         // 중복 출제 차단용 Set
+            currentQuestion: null,
+            isAnswered: false,
+
+            // 통계
+            solvedCount: 0,
+            correctCount: 0,
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            wrongWordsMap: new Map()        // id -> word 객체
+        };
+
+        /**
+         * ============================================================================
+         * 3. Web Audio API (효과음 생성) & Web Speech API (발음 읽기)
+         * ============================================================================
+         */
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            if (!state.soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.07);
+                    osc.frequency.setValueAtTime(783.99, now + 0.14);
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'wrong') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(280, now);
+                    osc.frequency.linearRampToValueAtTime(190, now + 0.25);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+                    osc.start(now);
+                    osc.stop(now + 0.28);
+                } else if (type === 'levelup') {
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((f, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.type = 'triangle';
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.frequency.setValueAtTime(f, now + i * 0.09);
+                        g.gain.setValueAtTime(0.2, now + i * 0.09);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.09 + 0.35);
+                        o.start(now + i * 0.09);
+                        o.stop(now + i * 0.09 + 0.35);
+                    });
+                } else if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(620, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                }
+            } catch (e) {
+                // 오디오 컨텍스트 차단 환경 무시
+            }
+        }
+
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'en-US';
+            utter.rate = 0.88;
+            const voices = window.speechSynthesis.getVoices();
+            const preferred = voices.find(v => v.lang.includes('en-US') && v.name.includes('Google')) ||
+                              voices.find(v => v.lang.includes('en-US')) ||
+                              voices.find(v => v.lang.includes('en'));
+            if (preferred) utter.voice = preferred;
+            window.speechSynthesis.speak(utter);
+        }
+
+        function speakCurrent() {
+            if (state.currentQuestion) {
+                speakText(state.currentQuestion.en);
+            }
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+        }
+
+        /**
+         * ============================================================================
+         * 4. 시작 화면 UI 설정 및 선택 핸들러
+         * ============================================================================
+         */
+        function initUI() {
+            renderLevelButtons();
+            selectProgression('progressive');
+            selectLevelButton(1);
+            selectDirection('enToKo');
+        }
+
+        function renderLevelButtons() {
+            const grid = document.getElementById('level-buttons-grid');
+            grid.innerHTML = '';
+            for (let lv = 1; lv <= 6; lv++) {
+                const meta = LEVEL_META[lv];
+                const btn = document.createElement('button');
+                btn.id = `lv-btn-${lv}`;
+                btn.type = 'button';
+                btn.onclick = () => {
+                    playSound('click');
+                    selectLevelButton(lv);
+                };
+                btn.className = "p-2.5 rounded-xl border-2 border-slate-200 bg-white text-left transition hover:border-indigo-300";
+                btn.innerHTML = `
+                    <div class="font-extrabold text-xs text-indigo-600">Lv.${lv}</div>
+                    <div class="font-bold text-sm text-slate-800">${meta.short}</div>
+                `;
+                grid.appendChild(btn);
+            }
+        }
+
+        function selectProgression(mode) {
+            playSound('click');
+            state.progressionMode = mode;
+
+            const btnProg = document.getElementById('prog-progressive');
+            const btnFixed = document.getElementById('prog-fixed');
+            const levelPanel = document.getElementById('level-selector-panel');
+
+            if (mode === 'progressive') {
+                btnProg.className = "p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/70 text-left transition relative shadow-xs";
+                btnProg.querySelector('span:first-child').className = "font-extrabold text-emerald-900 text-base";
+                
+                btnFixed.className = "p-4 rounded-2xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-left transition relative";
+                btnFixed.querySelector('span:first-child').className = "font-extrabold text-slate-800 text-base";
+                
+                levelPanel.classList.add('hidden');
+            } else {
+                btnFixed.className = "p-4 rounded-2xl border-2 border-indigo-500 bg-indigo-50/70 text-left transition relative shadow-xs";
+                btnFixed.querySelector('span:first-child').className = "font-extrabold text-indigo-900 text-base";
+                
+                btnProg.className = "p-4 rounded-2xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-left transition relative";
+                btnProg.querySelector('span:first-child').className = "font-extrabold text-slate-800 text-base";
+                
+                levelPanel.classList.remove('hidden');
+            }
+        }
+
+        function selectLevelButton(lv) {
+            state.selectedStartLevel = lv;
+            document.getElementById('selected-level-desc').textContent = `${LEVEL_META[lv].name} (${LEVEL_META[lv].desc})`;
+
+            for (let i = 1; i <= 6; i++) {
+                const btn = document.getElementById(`lv-btn-${i}`);
+                if (i === lv) {
+                    btn.className = "p-2.5 rounded-xl border-2 border-indigo-600 bg-indigo-600 text-white text-left transition shadow-xs";
+                    btn.children[0].className = "font-extrabold text-xs text-indigo-200";
+                    btn.children[1].className = "font-bold text-sm text-white";
+                } else {
+                    btn.className = "p-2.5 rounded-xl border-2 border-slate-200 bg-white text-left transition hover:border-indigo-300";
+                    btn.children[0].className = "font-extrabold text-xs text-indigo-600";
+                    btn.children[1].className = "font-bold text-sm text-slate-800";
+                }
+            }
+        }
+
+        function selectDirection(dir) {
+            playSound('click');
+            state.direction = dir;
+            const enBtn = document.getElementById('dir-enToKo');
+            const koBtn = document.getElementById('dir-koToEn');
+
+            if (dir === 'enToKo') {
+                enBtn.className = "p-3.5 rounded-2xl border-2 border-sky-500 bg-sky-50/70 text-sky-900 font-bold text-sm sm:text-base flex flex-col items-center justify-center gap-1 transition";
+                koBtn.className = "p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-sm sm:text-base flex flex-col items-center justify-center gap-1 transition";
+            } else {
+                koBtn.className = "p-3.5 rounded-2xl border-2 border-sky-500 bg-sky-50/70 text-sky-900 font-bold text-sm sm:text-base flex flex-col items-center justify-center gap-1 transition";
+                enBtn.className = "p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-sm sm:text-base flex flex-col items-center justify-center gap-1 transition";
+            }
+        }
+
+        function toggleAutoSpeak() {
+            state.autoSpeak = !state.autoSpeak;
+            const dot = document.getElementById('auto-speak-dot');
+            const btn = document.getElementById('auto-speak-btn');
+            if (state.autoSpeak) {
+                dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+                btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 transition flex items-center gap-1";
+                btn.querySelector('span:last-child').textContent = "자동발음 ON";
+            } else {
+                dot.className = "w-2 h-2 rounded-full bg-slate-500";
+                btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 transition flex items-center gap-1";
+                btn.querySelector('span:last-child').textContent = "자동발음 OFF";
+            }
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            document.getElementById('sound-label').textContent = state.soundEnabled ? "효과음 ON" : "효과음 OFF";
+            if (state.soundEnabled) playSound('click');
+        }
+
+        /**
+         * ============================================================================
+         * 5. 퀴즈 세션 제어 및 중복 없는 문제 출제 로직
+         * ============================================================================
+         */
+        function shuffle(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function startNewSession() {
+            playSound('click');
+            state.isReviewMode = false;
+            state.reviewQueue = [];
+            state.currentLevel = state.progressionMode === 'progressive' ? 1 : state.selectedStartLevel;
+            state.levelCorrectProgress = 0;
+            state.usedWordIds = new Set();
+            state.solvedCount = 0;
+            state.correctCount = 0;
+            state.score = 0;
+            state.combo = 0;
+            state.maxCombo = 0;
+            state.wrongWordsMap = new Map();
+
+            switchScreen('quiz-screen');
+            loadNextQuestion();
+        }
+
+        function startWrongReviewSession() {
+            const wrongArr = Array.from(state.wrongWordsMap.values());
+            if (wrongArr.length === 0) return;
+
+            playSound('click');
+            state.isReviewMode = true;
+            state.reviewQueue = shuffle(wrongArr);
+            state.usedWordIds = new Set();
+            state.solvedCount = 0;
+            state.correctCount = 0;
+            state.score = 0;
+            state.combo = 0;
+            state.maxCombo = 0;
+            state.wrongWordsMap = new Map();
+
+            switchScreen('quiz-screen');
+            loadNextQuestion();
+        }
+
+        function switchScreen(screenId) {
+            ['home-screen', 'quiz-screen', 'result-screen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function getNextWordCandidate() {
+            // 1. 오답 복습 모드인 경우
+            if (state.isReviewMode) {
+                return state.reviewQueue.shift() || null;
+            }
+
+            // 2. 난이도 직접 선택(고정) 모드인 경우
+            if (state.progressionMode === 'fixed') {
+                const pool = WORD_BANK.filter(w => w.level === state.currentLevel && !state.usedWordIds.has(w.id));
+                if (pool.length === 0) return null; // 해당 난이도 40개 모두 소진
+                return pool[Math.floor(Math.random() * pool.length)];
+            }
+
+            // 3. 난이도 점점 상승(무한 도전) 모드인 경우
+            let pool = WORD_BANK.filter(w => w.level === state.currentLevel && !state.usedWordIds.has(w.id));
+            // 만약 현재 레벨 단어를 다 풀었다면 다음 상위 레벨로 자동 이동
+            while (pool.length === 0 && state.currentLevel < 6) {
+                state.currentLevel++;
+                state.levelCorrectProgress = 0;
+                pool = WORD_BANK.filter(w => w.level === state.currentLevel && !state.usedWordIds.has(w.id));
+            }
+            if (pool.length === 0) return null; // 전체 240단어 모두 정복!
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        function loadNextQuestion() {
+            const nextWord = getNextWordCandidate();
+
+            // 더 이상 출제할 단어가 없으면 축하 완주 화면으로 이동
+            if (!nextWord) {
+                finishAndShowResults(true);
+                return;
+            }
+
+            state.usedWordIds.add(nextWord.id);
+            state.currentQuestion = nextWord;
+            state.isAnswered = false;
+
+            updateStatusHeader();
+            renderQuestionCard(nextWord);
+            renderOptions(nextWord);
+
+            document.getElementById('feedback-box').classList.add('hidden');
+        }
+
+        function updateStatusHeader() {
+            document.getElementById('score-display').textContent = state.score;
+            document.getElementById('solved-count').textContent = state.solvedCount;
+
+            const comboPill = document.getElementById('combo-pill');
+            if (state.combo >= 2) {
+                comboPill.classList.remove('hidden');
+                document.getElementById('combo-num').textContent = state.combo;
+            } else {
+                comboPill.classList.add('hidden');
+            }
+
+            const badge = document.getElementById('current-level-badge');
+            const statusText = document.getElementById('mode-status-text');
+            const bar = document.getElementById('level-progress-bar');
+
+            if (state.isReviewMode) {
+                badge.className = "px-2.5 py-0.5 rounded-md bg-rose-600 text-white";
+                badge.textContent = "오답 집중 복습";
+                const totalReview = state.solvedCount + state.reviewQueue.length + 1;
+                statusText.textContent = `남은 복습 단어 ${state.reviewQueue.length + 1}개`;
+                bar.className = "h-full bg-rose-500 rounded-full transition-all duration-300";
+                bar.style.width = `${(state.solvedCount / totalReview) * 100}%`;
+                return;
+            }
+
+            const meta = LEVEL_META[state.currentLevel];
+            badge.className = `px-2.5 py-0.5 rounded-md text-white ${meta.badgeColor}`;
+            badge.textContent = meta.name;
+            bar.className = `h-full rounded-full transition-all duration-300 ${meta.barColor}`;
+
+            if (state.progressionMode === 'progressive') {
+                if (state.currentLevel < 6) {
+                    const remain = 4 - state.levelCorrectProgress;
+                    statusText.textContent = `다음 레벨 승급까지 ${remain}문제`;
+                    bar.style.width = `${(state.levelCorrectProgress / 4) * 100}%`;
+                } else {
+                    const lv6Used = WORD_BANK.filter(w => w.level === 6 && state.usedWordIds.has(w.id)).length;
+                    statusText.textContent = `최고 난이도 도전 중 (${lv6Used}/40)`;
+                    bar.style.width = `${(lv6Used / 40) * 100}%`;
+                }
+            } else {
+                // 고정 난이도 모드 진행률 (40단어 기준)
+                const usedInLv = WORD_BANK.filter(w => w.level === state.currentLevel && state.usedWordIds.has(w.id)).length;
+                statusText.textContent = `단계 진행도 (${usedInLv} / 40단어)`;
+                bar.style.width = `${(usedInLv / 40) * 100}%`;
+            }
+        }
+
+        function renderQuestionCard(word) {
+            const guideEl = document.getElementById('question-guide');
+            const mainEl = document.getElementById('question-main');
+            const pronEl = document.getElementById('question-pron');
+            const speakBtn = document.getElementById('speak-btn');
+
+            if (state.direction === 'enToKo') {
+                guideEl.textContent = "영어 단어를 보고 알맞은 한국어 뜻을 고르세요";
+                mainEl.textContent = word.en;
+                mainEl.className = "font-en text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-2.5 break-words";
+                pronEl.textContent = `[${word.pron}]`;
+                pronEl.classList.remove('hidden');
+                speakBtn.classList.remove('hidden');
+
+                if (state.autoSpeak) {
+                    setTimeout(() => speakText(word.en), 150);
+                }
+            } else {
+                guideEl.textContent = "한국어 뜻을 보고 알맞은 영어 단어를 고르세요";
+                mainEl.textContent = word.ko;
+                mainEl.className = "text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3 break-keep";
+                pronEl.textContent = `[${word.pron}]`;
+                pronEl.classList.add('hidden');
+                speakBtn.classList.add('hidden');
+            }
+        }
+
+        function renderOptions(correctWord) {
+            // 같은 난이도 우선, 부족하면 인접 난이도에서 오답 보기 3개 추출
+            let distractorPool = WORD_BANK.filter(w => w.id !== correctWord.id && w.level === correctWord.level);
+            if (distractorPool.length < 3) {
+                distractorPool = WORD_BANK.filter(w => w.id !== correctWord.id);
+            }
+            const distractors = shuffle(distractorPool).slice(0, 3);
+            const choices = shuffle([correctWord, ...distractors]);
+
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+
+            choices.forEach((choice, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.dataset.wordId = choice.id;
+                btn.onclick = () => handleAnswer(choice, btn);
+
+                if (state.direction === 'enToKo') {
+                    btn.className = "option-card w-full p-4 rounded-2xl border-slate-200 bg-white text-slate-800 font-bold text-base sm:text-lg flex items-center gap-3 text-left";
+                    btn.innerHTML = `
+                        <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 font-en font-extrabold text-xs flex items-center justify-center shrink-0">${idx + 1}</span>
+                        <span class="break-keep">${choice.ko}</span>
+                    `;
+                } else {
+                    btn.className = "option-card w-full p-4 rounded-2xl border-slate-200 bg-white text-slate-800 flex items-center gap-3 text-left";
+                    btn.innerHTML = `
+                        <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 font-en font-extrabold text-xs flex items-center justify-center shrink-0">${idx + 1}</span>
+                        <div class="flex flex-col">
+                            <span class="font-en font-extrabold text-lg sm:text-xl text-slate-900">${choice.en}</span>
+                            <span class="choice-pron hidden text-xs font-bold text-sky-600 mt-0.5">[${choice.pron}]</span>
+                        </div>
+                    `;
+                }
+                grid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedWord, clickedBtn) {
+            if (state.isAnswered) return;
+            state.isAnswered = true;
+            state.solvedCount++;
+
+            const target = state.currentQuestion;
+            const isCorrect = selectedWord.id === target.id;
+            const buttons = document.querySelectorAll('#options-grid button');
+
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                const wId = btn.dataset.wordId;
+                const wObj = WORD_BANK.find(w => w.id === wId);
+
+                if (state.direction === 'enToKo') {
+                    if (wId === target.id) {
+                        btn.className = "w-full p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-500 text-white font-extrabold text-base sm:text-lg flex items-center gap-3 text-left shadow-sm animate-pop";
+                        btn.children[0].className = "w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0";
+                        btn.children[0].textContent = "O";
+                    } else if (btn === clickedBtn && !isCorrect) {
+                        btn.className = "w-full p-4 rounded-2xl border-2 border-rose-600 bg-rose-500 text-white font-extrabold text-base sm:text-lg flex items-center gap-3 text-left shadow-sm animate-shake";
+                        btn.children[0].className = "w-7 h-7 rounded-lg bg-rose-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0";
+                        btn.children[0].textContent = "X";
+                    } else {
+                        btn.classList.add('opacity-45');
+                    }
+                } else {
+                    // 한국어 -> 영어 모드에서는 선택 직후 모든 보기의 한국어 발음을 공개
+                    const pronSpan = btn.querySelector('.choice-pron');
+                    if (pronSpan) pronSpan.classList.remove('hidden');
+
+                    if (wId === target.id) {
+                        btn.className = "w-full p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-500 text-white flex items-center gap-3 text-left shadow-sm animate-pop";
+                        btn.children[0].className = "w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0";
+                        btn.children[0].textContent = "O";
+                        btn.querySelector('.font-en').className = "font-en font-extrabold text-lg sm:text-xl text-white";
+                        if (pronSpan) pronSpan.className = "text-xs font-bold text-emerald-100 mt-0.5";
+                    } else if (btn === clickedBtn && !isCorrect) {
+                        btn.className = "w-full p-4 rounded-2xl border-2 border-rose-600 bg-rose-500 text-white flex items-center gap-3 text-left shadow-sm animate-shake";
+                        btn.children[0].className = "w-7 h-7 rounded-lg bg-rose-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0";
+                        btn.children[0].textContent = "X";
+                        btn.querySelector('.font-en').className = "font-en font-extrabold text-lg sm:text-xl text-white";
+                        if (pronSpan) pronSpan.className = "text-xs font-bold text-rose-100 mt-0.5";
+                    } else {
+                        btn.classList.add('opacity-55');
+                    }
+                }
+            });
+
+            // 한국어 -> 영어 모드였을 때도 정답 확인 후 발음 표기 및 발음 듣기 버튼 노출
+            document.getElementById('question-pron').classList.remove('hidden');
+            document.getElementById('speak-btn').classList.remove('hidden');
+            if (state.autoSpeak && state.direction === 'koToEn') {
+                speakText(target.en);
+            }
+
+            const feedbackBox = document.getElementById('feedback-box');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackDetail = document.getElementById('feedback-detail');
+            const nextBtn = document.getElementById('next-btn');
+            const levelupBanner = document.getElementById('levelup-banner');
+            levelupBanner.classList.add('hidden');
+
+            if (isCorrect) {
+                state.correctCount++;
+                state.combo++;
+                if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+
+                // 레벨 가중치 점수 + 콤보 보너스
+                const gained = (target.level * 10) + (state.combo >= 2 ? state.combo * 2 : 0);
+                state.score += gained;
+
+                // 난이도 점점 상승 모드 승급 체크 (4문제 정답 시 승급)
+                let leveledUp = false;
+                if (!state.isReviewMode && state.progressionMode === 'progressive' && state.currentLevel < 6) {
+                    state.levelCorrectProgress++;
+                    if (state.levelCorrectProgress >= 4) {
+                        state.currentLevel++;
+                        state.levelCorrectProgress = 0;
+                        leveledUp = true;
+                    }
+                }
+
+                if (leveledUp) {
+                    playSound('levelup');
+                    levelupBanner.textContent = `축하합니다! [${LEVEL_META[state.currentLevel].name}] 단계로 난이도가 상승했습니다!`;
+                    levelupBanner.classList.remove('hidden');
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: 55, spread: 70, origin: { y: 0.65 } });
+                    }
+                } else {
+                    playSound('correct');
+                }
+
+                feedbackBox.className = "rounded-2xl p-4 border-2 border-emerald-300 bg-emerald-50 text-emerald-900 animate-pop";
+                feedbackTitle.textContent = `정답입니다! (+${gained}점)`;
+                feedbackDetail.textContent = `${target.en} [${target.pron}] : ${target.ko}`;
+                nextBtn.className = "btn-3d px-6 py-3 rounded-xl font-extrabold text-white text-base shrink-0 bg-emerald-500 hover:bg-emerald-600 border-emerald-700";
+            } else {
+                playSound('wrong');
+                state.combo = 0;
+                state.wrongWordsMap.set(target.id, target);
+
+                feedbackBox.className = "rounded-2xl p-4 border-2 border-rose-300 bg-rose-50 text-rose-900 animate-pop";
+                feedbackTitle.textContent = "오답입니다. 발음과 뜻을 확인하세요.";
+                feedbackDetail.innerHTML = `정답: <strong>${target.en} [${target.pron}]</strong> — ${target.ko}`;
+                nextBtn.className = "btn-3d px-6 py-3 rounded-xl font-extrabold text-white text-base shrink-0 bg-rose-500 hover:bg-rose-600 border-rose-700";
+            }
+
+            feedbackBox.classList.remove('hidden');
+            updateStatusHeader();
+        }
+
+        /**
+         * ============================================================================
+         * 6. 결과 화면 및 오답 노트 렌더링
+         * ============================================================================
+         */
+        function finishAndShowResults(isAllCompleted = false) {
+            playSound('click');
+            switchScreen('result-screen');
+
+            const badge = document.getElementById('result-status-badge');
+            const headline = document.getElementById('result-headline');
+            const subline = document.getElementById('result-subline');
+
+            if (isAllCompleted) {
+                badge.textContent = "모든 단어 정복 완료!";
+                badge.className = "inline-block px-3.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-xs mb-2";
+                headline.textContent = "준비된 모든 단어를 완료했습니다!";
+                subline.textContent = "중복 없이 모든 문제를 풀어내셨습니다. 대단합니다!";
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 90, spread: 80, origin: { y: 0.6 } });
+                }
+            } else {
+                badge.textContent = "학습 리포트";
+                badge.className = "inline-block px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs mb-2";
+                headline.textContent = "도전 완료! 수고하셨습니다";
+                subline.textContent = "최종 달성 난이도와 오답 노트를 확인해 보세요.";
+            }
+
+            const accuracy = state.solvedCount > 0 ? Math.round((state.correctCount / state.solvedCount) * 100) : 0;
+            document.getElementById('res-level').textContent = state.isReviewMode ? "오답 복습" : LEVEL_META[state.currentLevel].short;
+            document.getElementById('res-score').textContent = `${state.score}점`;
+            document.getElementById('res-accuracy').textContent = `${accuracy}% (${state.correctCount}/${state.solvedCount})`;
+            document.getElementById('res-combo').textContent = `${state.maxCombo}연속`;
+
+            // 오답 노트 렌더링 (그림/이모지 없음, 한국어 발음 선명히 표기)
+            const wrongWords = Array.from(state.wrongWordsMap.values());
+            const wrongContainer = document.getElementById('wrong-note-container');
+            const wrongList = document.getElementById('wrong-list');
+            const retryBtn = document.getElementById('retry-wrong-btn');
+
+            if (wrongWords.length > 0) {
+                wrongContainer.classList.remove('hidden');
+                retryBtn.classList.remove('hidden');
+                document.getElementById('wrong-count-label').textContent = wrongWords.length;
+                document.getElementById('retry-wrong-count').textContent = wrongWords.length;
+
+                wrongList.innerHTML = '';
+                wrongWords.forEach(w => {
+                    const card = document.createElement('div');
+                    card.onclick = () => speakText(w.en);
+                    card.className = "cursor-pointer p-3.5 rounded-2xl bg-slate-50 hover:bg-sky-50 border border-slate-200 hover:border-sky-300 flex items-center justify-between gap-3 transition";
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">Lv.${w.level}</span>
+                                <span class="font-en font-black text-lg text-slate-900">${w.en}</span>
+                                <span class="text-sm font-bold text-sky-700">[${w.pron}]</span>
+                            </div>
+                            <div class="text-sm font-semibold text-slate-600 mt-1">${w.ko}</div>
+                        </div>
+                        <div class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-sky-600 shrink-0 shadow-2xs">
+                            발음 듣기
+                        </div>
+                    `;
+                    wrongList.appendChild(card);
+                });
+            } else {
+                wrongContainer.classList.add('hidden');
+                retryBtn.classList.add('hidden');
+            }
+        }
+
+        function returnToHome() {
+            playSound('click');
+            switchScreen('home-screen');
+        }
+
+        /**
+         * ============================================================================
+         * 7. 키보드 단축키 지원 (1~4 선택, R 발음 듣기, Enter/Space 다음 문제)
+         * ============================================================================
+         */
+        document.addEventListener('keydown', (e) => {
+            const quizVisible = !document.getElementById('quiz-screen').classList.contains('hidden');
+            if (!quizVisible) return;
+
+            if (['1', '2', '3', '4'].includes(e.key) && !state.isAnswered) {
+                const idx = parseInt(e.key, 10) - 1;
+                const btns = document.querySelectorAll('#options-grid button');
+                if (btns[idx]) btns[idx].click();
+            } else if (e.key.toLowerCase() === 'r') {
+                speakCurrent();
+            } else if ((e.key === 'Enter' || e.key === ' ') && state.isAnswered) {
+                e.preventDefault();
+                loadNextQuestion();
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', initUI);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2615 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>치명적 야생 생물 & 극한 생존 대처 도감 (255종)</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Noto Sans KR -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 흑(Dark) / 백(Light) 테마 CSS 변수 정의 */
+        :root {
+            --bg-primary: #090d16;
+            --bg-secondary: #0d1320;
+            --bg-header-grad: linear-gradient(to bottom, #111827, #0d1320, #090d16);
+            --bg-banner-grad: linear-gradient(to right, #0f172a, #151d2e, #0f172a);
+            --bg-card: #111827;
+            --bg-elevated: #020617;
+            --bg-input: #020617;
+            --bg-chip: #0f172a;
+            --bg-chip-hover: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #1e293b;
+            --border-strong: #334155;
+            --grid-dot: #1e293b;
+            --scrollbar-track: #090d16;
+            --scrollbar-thumb: #1e293b;
+            --scrollbar-thumb-hover: #334155;
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.35);
+            --modal-box-threat-bg: rgba(76, 5, 25, 0.35);
+            --modal-box-escape-bg: rgba(8, 47, 73, 0.30);
+            --modal-box-dont-bg: rgba(76, 5, 25, 0.50);
+            --modal-box-do-bg: rgba(6, 78, 59, 0.45);
+            --modal-box-repel-bg: rgba(6, 78, 59, 0.25);
+            --modal-box-firstaid-bg: rgba(69, 26, 3, 0.30);
+        }
+
+        html.light-theme {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-header-grad: linear-gradient(to bottom, #ffffff, #f8fafc, #f1f5f9);
+            --bg-banner-grad: linear-gradient(to right, #ffffff, #f8fafc, #ffffff);
+            --bg-card: #ffffff;
+            --bg-elevated: #f1f5f9;
+            --bg-input: #ffffff;
+            --bg-chip: #f1f5f9;
+            --bg-chip-hover: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --border-strong: #cbd5e1;
+            --grid-dot: #cbd5e1;
+            --scrollbar-track: #f1f5f9;
+            --scrollbar-thumb: #cbd5e1;
+            --scrollbar-thumb-hover: #94a3b8;
+            --shadow-card: 0 4px 16px rgba(15, 23, 42, 0.06);
+            --modal-box-threat-bg: #fff1f2;
+            --modal-box-escape-bg: #f0f9ff;
+            --modal-box-dont-bg: #ffe4e6;
+            --modal-box-do-bg: #ecfdf5;
+            --modal-box-repel-bg: #f0fdf4;
+            --modal-box-firstaid-bg: #fffbeb;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        .theme-header {
+            background: var(--bg-header-grad);
+            border-color: var(--border-color);
+        }
+        .theme-grid-dots {
+            background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .theme-sticky-bar {
+            background-color: color-mix(in srgb, var(--bg-secondary) 95%, transparent);
+            border-color: var(--border-color);
+        }
+        .theme-banner {
+            background: var(--bg-banner-grad);
+            border-color: var(--border-color);
+        }
+        .theme-surface {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+        }
+        .theme-elevated {
+            background-color: var(--bg-elevated);
+            border-color: var(--border-color);
+        }
+        .theme-card {
+            background-color: var(--bg-card);
+            box-shadow: var(--shadow-card);
+            transition: background-color 0.25s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .theme-input {
+            background-color: var(--bg-input);
+            border-color: var(--border-strong);
+            color: var(--text-primary);
+        }
+        .theme-input::placeholder {
+            color: var(--text-muted);
+        }
+        .theme-chip {
+            background-color: var(--bg-chip);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+        .theme-chip:hover {
+            background-color: var(--bg-chip-hover);
+            color: var(--text-primary);
+        }
+        .theme-text-primary { color: var(--text-primary); }
+        .theme-text-secondary { color: var(--text-secondary); }
+        .theme-text-muted { color: var(--text-muted); }
+        .theme-border { border-color: var(--border-color); }
+
+        /* 라이트 모드 시 유틸리티 색상 가독성 보정 */
+        html.light-theme .badge-danger-4 { background-color: #ffe4e6; color: #be123c; border-color: #fda4af; }
+        html.light-theme .badge-danger-3 { background-color: #ffedd5; color: #c2410c; border-color: #fdba74; }
+        html.light-theme .badge-danger-2 { background-color: #fef3c7; color: #b45309; border-color: #fcd34d; }
+        html.light-theme .badge-danger-1 { background-color: #d1fae5; color: #047857; border-color: #6ee7b7; }
+        html.light-theme .badge-cat-animal { background-color: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+        html.light-theme .badge-cat-insect { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
+        html.light-theme .card-border-normal { border-color: #e2e8f0; }
+        html.light-theme .card-border-normal:hover { border-color: #94a3b8; }
+        html.light-theme .stat-val-lvl12 { color: #d97706; }
+
+        /* 다크/라이트 공용 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+        /* 모달 애니메이션 */
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.96) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-animate {
+            animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        /* 치명적 등급 펄스 글로우 */
+        .lethal-glow {
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.15);
+        }
+        .lethal-glow:hover {
+            box-shadow: 0 0 28px rgba(244, 63, 94, 0.32);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col selection:bg-rose-500 selection:text-white">
+
+    <!-- 상단 택티컬 헤더 & 대시보드 -->
+    <header class="theme-header border-b relative overflow-hidden">
+        <!-- 배경 장식 그리드 -->
+        <div class="absolute inset-0 theme-grid-dots opacity-30 pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 relative z-10">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2.5 mb-3">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-500 dark:text-rose-400 text-xs font-extrabold tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                            <span>TACTICAL SURVIVAL & VENOM ENCYCLOPEDIA</span>
+                        </div>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight theme-text-primary flex items-center gap-3">
+                        <span>치명적 야생 생물 & 극한 생존 대처 도감</span>
+                    </h1>
+                    <p class="mt-2 theme-text-muted text-sm sm:text-base max-w-2xl leading-relaxed">
+                        지구상에서 가장 치명적인 맹수, 맹독 파충류, 해양 포식자 및 살인 곤충·절지동물 <strong class="text-rose-500 font-extrabold" id="header-total-badge">255종</strong>의 공격 메커니즘, <span class="text-sky-500 font-semibold">절대 금지 행동 vs 생존 도주법</span>, 퇴치 수단 및 의학적 응급처치를 수록했습니다.
+                    </p>
+                </div>
+
+                <!-- 우측 상단 흑/백 테마 전환 스위치 + 실시간 통계 대시보드 -->
+                <div class="flex flex-col items-stretch lg:items-end gap-3">
+                    <!-- 흑/백 배경 테마 선택 토글 버튼 -->
+                    <div class="inline-flex items-center p-1 rounded-xl theme-elevated border shadow-xs self-start lg:self-end" role="group" aria-label="배경 테마 선택">
+                        <button type="button" id="theme-dark-btn" onclick="setTheme('dark')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all bg-slate-800 text-white shadow-xs">
+                            <span>⬛</span>
+                            <span>다크 모드 (흑)</span>
+                        </button>
+                        <button type="button" id="theme-light-btn" onclick="setTheme('light')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all theme-text-muted hover:theme-text-primary">
+                            <span>⬜</span>
+                            <span>라이트 모드 (백)</span>
+                        </button>
+                    </div>
+
+                    <!-- 실시간 통계 대시보드 -->
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-2.5 theme-surface backdrop-blur-md p-3 sm:p-4 rounded-2xl border shadow-md">
+                        <div class="text-center px-2 py-1">
+                            <div class="text-[11px] theme-text-muted font-semibold">전체 수록</div>
+                            <div class="text-xl sm:text-2xl font-black theme-text-primary" id="stat-total">0</div>
+                        </div>
+                        <div class="text-center px-2 py-1 border-l theme-border">
+                            <div class="text-[11px] text-emerald-500 font-semibold">🦁 동물</div>
+                            <div class="text-xl sm:text-2xl font-black text-emerald-500" id="stat-animal">0</div>
+                        </div>
+                        <div class="text-center px-2 py-1 border-l theme-border">
+                            <div class="text-[11px] text-amber-500 font-semibold">🕷️ 곤충·절지</div>
+                            <div class="text-xl sm:text-2xl font-black text-amber-500" id="stat-insect">0</div>
+                        </div>
+                        <div class="text-center px-2 py-1 sm:border-l theme-border">
+                            <div class="text-[11px] text-rose-500 font-semibold">☠️ 즉사/치명(4)</div>
+                            <div class="text-lg sm:text-xl font-black text-rose-500" id="stat-lvl4">0</div>
+                        </div>
+                        <div class="text-center px-2 py-1 border-l theme-border">
+                            <div class="text-[11px] text-orange-500 font-semibold">🚨 중상/응급(3)</div>
+                            <div class="text-lg sm:text-xl font-black text-orange-500" id="stat-lvl3">0</div>
+                        </div>
+                        <div class="text-center px-2 py-1 border-l theme-border">
+                            <div class="text-[11px] text-amber-500 font-semibold">⚠️ 주의/경계(1~2)</div>
+                            <div class="text-lg sm:text-xl font-black text-yellow-400 stat-val-lvl12" id="stat-lvl12">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sticky 컨트롤 & 필터 바 -->
+    <section class="sticky top-0 z-30 theme-sticky-bar backdrop-blur-md border-b shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3">
+            
+            <!-- 1단: 대분류 탭 (전체 / 동물 / 곤충·절지동물) + 통합 검색 + 정렬 -->
+            <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+                <!-- 대분류 전환 탭 -->
+                <div class="inline-flex p-1 theme-elevated rounded-xl border self-start w-full lg:w-auto">
+                    <button type="button" data-main="all" class="main-tab-btn flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs sm:text-sm font-extrabold transition-all bg-rose-600 text-white shadow-md">
+                        전체 도감 (<span id="tab-count-all">0</span>)
+                    </button>
+                    <button type="button" data-main="동물" class="main-tab-btn flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs sm:text-sm font-extrabold transition-all theme-text-muted hover:theme-text-primary">
+                        🦁 동물 (<span id="tab-count-animal">0</span>)
+                    </button>
+                    <button type="button" data-main="곤충/절지동물" class="main-tab-btn flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs sm:text-sm font-extrabold transition-all theme-text-muted hover:theme-text-primary">
+                        🕷️ 곤충·절지동물 (<span id="tab-count-insect">0</span>)
+                    </button>
+                </div>
+
+                <!-- 검색창 & 최고 위험군 원클릭 토글 & 정렬 -->
+                <div class="flex flex-col sm:flex-row flex-1 max-w-3xl gap-2">
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center theme-text-muted pointer-events-none">
+                            🔍
+                        </span>
+                        <input type="text" id="search-input" placeholder="생물명, 독성(신경독/출혈독), 대처법, 서식지 검색..." 
+                            class="w-full pl-10 pr-9 py-2 theme-input border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all">
+                        <button type="button" id="clear-search-btn" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center theme-text-muted hover:theme-text-primary font-bold text-sm">
+                            ✕
+                        </button>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <!-- 원클릭 4단계 최고 위험군 토글 버튼 -->
+                        <button type="button" id="lethal-only-btn" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold border border-rose-500/50 bg-rose-500/15 text-rose-500 hover:bg-rose-500/25 transition-all flex items-center gap-1.5 shrink-0">
+                            <span>☠️</span>
+                            <span>최고 위험군(4단계)만</span>
+                        </button>
+
+                        <select id="sort-select" class="px-3 py-2 theme-input border rounded-xl text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-rose-500">
+                            <option value="danger-desc">위험도 높은순</option>
+                            <option value="danger-asc">위험도 낮은순</option>
+                            <option value="name-asc">가나다순</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2단: 세부 카테고리 칩 (대분류에 따라 자동 전환) -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar" id="subcat-chips-container">
+                <!-- JS로 동적 생성 -->
+            </div>
+
+            <!-- 3단: 4단계 위험도 필터 + 상황별 긴급 필터 -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t theme-border">
+                <!-- 위험도 등급 버튼 -->
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-xs font-bold theme-text-muted mr-1">위험 등급:</span>
+                    <button type="button" data-level="all" class="level-btn px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all">전체</button>
+                    <button type="button" data-level="4" class="level-btn px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all">☠️ 4단계: 즉사/치명적</button>
+                    <button type="button" data-level="3" class="level-btn px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all">🚨 3단계: 중상/응급</button>
+                    <button type="button" data-level="2" class="level-btn px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all">⚠️ 2단계: 통증/감염주의</button>
+                    <button type="button" data-level="1" class="level-btn px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all">🛡️ 1단계: 경계/경미</button>
+                </div>
+
+                <!-- 상황/서식지 퀵 셀렉트 & 초기화 -->
+                <div class="flex items-center gap-2">
+                    <select id="habitat-select" class="px-2.5 py-1.5 theme-input border rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <option value="all">📍 모든 환경/상황</option>
+                        <option value="산/숲">⛰️ 산·숲에서 만났을 때</option>
+                        <option value="바다/강">🌊 바다·계곡·강에서</option>
+                        <option value="캠핑/도심">⛺ 캠핑·야영장·도심</option>
+                        <option value="해외/오지">🌍 해외 오지·열대우림·사파리</option>
+                    </select>
+
+                    <button type="button" id="reset-filters-btn" class="px-2.5 py-1.5 rounded-lg text-xs font-bold theme-chip border transition-all">
+                        ↻ 초기화
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 긴급 생존 시뮬레이터 / 상황별 빠른 검색 배너 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-5 w-full">
+        <div class="theme-banner border rounded-2xl p-4 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-xs">
+            <div class="flex items-start sm:items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-xl shrink-0">
+                    🧭
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-black uppercase tracking-wider text-rose-500">EMERGENCY FIELD GUIDE</span>
+                        <span class="text-xs theme-text-muted">|</span>
+                        <span class="text-xs font-bold theme-text-secondary" id="situation-title">상황별 긴급 생존 수칙</span>
+                    </div>
+                    <p class="text-xs sm:text-sm theme-text-secondary mt-1 leading-relaxed" id="survival-tip-text">
+                        아래 상황 버튼을 누르면 해당 장소에서 조우할 수 있는 치명적 생물만 즉시 필터링하고 핵심 생존 원칙을 안내합니다.
+                    </p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-1.5 shrink-0">
+                <button type="button" onclick="setQuickSituation('산/숲')" class="px-3 py-1.5 theme-chip border rounded-xl text-xs font-extrabold transition">⛰️ 산·숲에서</button>
+                <button type="button" onclick="setQuickSituation('바다/강')" class="px-3 py-1.5 theme-chip border rounded-xl text-xs font-extrabold transition">🌊 바다·계곡에서</button>
+                <button type="button" onclick="setQuickSituation('캠핑/도심')" class="px-3 py-1.5 theme-chip border rounded-xl text-xs font-extrabold transition">⛺ 캠핑·야영장</button>
+                <button type="button" onclick="setQuickSituation('해외/오지')" class="px-3 py-1.5 theme-chip border rounded-xl text-xs font-extrabold transition">🌍 해외 오지·밀림</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 카드 그리드 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <p class="text-sm theme-text-muted font-medium">
+                검색 결과 <span id="result-count" class="font-black theme-text-primary text-base">0</span>종 표시 중
+                <span class="text-xs theme-text-muted ml-1">(카드를 클릭하면 절대 금지 행동 vs 생존 도주법과 응급처치가 열립니다)</span>
+            </p>
+        </div>
+
+        <!-- 카드 목록 컨테이너 -->
+        <div id="cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+            <!-- JS 동적 렌더링 -->
+        </div>
+
+        <!-- 더 보기 버튼 -->
+        <div id="load-more-container" class="hidden mt-8 text-center">
+            <button type="button" id="load-more-btn" class="px-6 py-3 theme-chip font-extrabold text-sm rounded-xl border shadow-md transition">
+                더 많은 생물 보기 (+60종)
+            </button>
+        </div>
+
+        <!-- 검색 결과 없음 안내 -->
+        <div id="empty-state" class="hidden text-center py-16 theme-surface rounded-2xl border mt-4">
+            <div class="text-5xl mb-3">🔍</div>
+            <h3 class="text-lg font-bold theme-text-primary">조건에 일치하는 치명적 생물이 없습니다</h3>
+            <p class="text-sm theme-text-muted mt-1">검색어를 수정하거나 필터를 초기화하여 전체 255종을 확인해 보세요.</p>
+            <button type="button" onclick="resetAllFilters()" class="mt-4 px-5 py-2.5 bg-rose-600 text-white rounded-xl text-sm font-extrabold hover:bg-rose-500 transition">
+                모든 필터 초기화
+            </button>
+        </div>
+    </main>
+
+    <!-- 상세 생존 모달 -->
+    <div id="detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="theme-card w-full max-w-3xl rounded-3xl shadow-2xl border theme-border overflow-hidden modal-animate my-auto">
+            <!-- 모달 상단 헤더 -->
+            <div id="modal-header-bg" class="p-5 sm:p-6 text-white relative">
+                <button type="button" id="close-modal-btn" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center font-bold text-lg transition">
+                    ✕
+                </button>
+                <div class="flex items-start sm:items-center gap-4">
+                    <div id="modal-emoji" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-black/25 backdrop-blur-md border border-white/15 flex items-center justify-center text-4xl sm:text-5xl shadow-inner shrink-0">
+                        🐻
+                    </div>
+                    <div class="min-w-0 flex-1 pr-6">
+                        <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                            <span id="modal-danger-badge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-white text-slate-950">
+                                4단계: 즉사/치명적
+                            </span>
+                            <span id="modal-category-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-black/30 text-white border border-white/15">
+                                동물 · 맹수·육상포유류
+                            </span>
+                            <span id="modal-habitat-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-black/30 text-white border border-white/15">
+                                📍 산/숲
+                            </span>
+                        </div>
+                        <h2 id="modal-name" class="text-2xl sm:text-3xl font-black tracking-tight truncate text-white">회색곰 (그리즐리)</h2>
+                        <p id="modal-subname" class="text-xs sm:text-sm text-white/85 font-medium mt-0.5 italic">Grizzly Bear / Ursus arctos horribilis</p>
+                        
+                        <!-- 위험도 시각 게이지 바 -->
+                        <div class="mt-3 flex items-center gap-2 max-w-xs">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-white/85">치명도 게이지</span>
+                            <div class="flex-1 h-2 bg-black/35 rounded-full overflow-hidden flex gap-0.5 p-0.5" id="modal-gauge-bars">
+                                <!-- JS 동적 생성 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 모달 본문 (스크롤 영역) -->
+            <div class="p-5 sm:p-6 space-y-4 max-h-[72vh] overflow-y-auto">
+                
+                <!-- 1. 치명적 위험 요인 및 독성/공격 메커니즘 -->
+                <div style="background-color: var(--modal-box-threat-bg);" class="border border-rose-500/35 rounded-2xl p-4">
+                    <h3 class="text-sm font-black text-rose-500 flex items-center gap-2 mb-1.5">
+                        <span>⚠️ 치명적 위험 요인 및 공격·독성 메커니즘</span>
+                    </h3>
+                    <p id="modal-threat" class="text-sm theme-text-primary leading-relaxed"></p>
+                </div>
+
+                <!-- 2. 도망가는 법 & 회피 요령 (절대 금지 행동 ❌ vs 생존 행동 ✅ 분리 표시) -->
+                <div style="background-color: var(--modal-box-escape-bg);" class="border border-sky-500/35 rounded-2xl p-4 space-y-3">
+                    <h3 class="text-sm font-black text-sky-500 flex items-center gap-2">
+                        <span>🏃 도망가는 법 & 극한 회피 요령</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div style="background-color: var(--modal-box-dont-bg);" class="border border-rose-500/35 rounded-xl p-3">
+                            <div class="text-xs font-black text-rose-500 mb-1">❌ 절대 해서는 안 될 행동</div>
+                            <p id="modal-dont" class="text-xs sm:text-sm theme-text-primary leading-relaxed"></p>
+                        </div>
+                        <div style="background-color: var(--modal-box-do-bg);" class="border border-emerald-500/35 rounded-xl p-3">
+                            <div class="text-xs font-black text-emerald-500 mb-1">✅ 생존을 위한 필수 행동</div>
+                            <p id="modal-do" class="text-xs sm:text-sm theme-text-primary leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 퇴치법 & 방어 수단 -->
+                <div style="background-color: var(--modal-box-repel-bg);" class="border border-emerald-500/35 rounded-2xl p-4">
+                    <h3 class="text-sm font-black text-emerald-500 flex items-center gap-2 mb-1.5">
+                        <span>🛡️ 퇴치법 및 장비·방어 수단</span>
+                    </h3>
+                    <p id="modal-repel" class="text-sm theme-text-primary leading-relaxed"></p>
+                </div>
+
+                <!-- 4. 물리거나 쏘였을 때 의학적 응급처치 -->
+                <div style="background-color: var(--modal-box-firstaid-bg);" class="border border-amber-500/40 rounded-2xl p-4">
+                    <h3 class="text-sm font-black text-amber-500 flex items-center gap-2 mb-1.5">
+                        <span>🚑 물리거나 쏘였을 때 의학적 응급처치</span>
+                    </h3>
+                    <p id="modal-firstaid" class="text-sm theme-text-primary leading-relaxed"></p>
+                </div>
+            </div>
+
+            <!-- 모달 하단 푸터 -->
+            <div class="px-5 sm:px-6 py-3.5 theme-elevated border-t theme-border flex flex-col sm:flex-row justify-between items-center gap-2">
+                <span class="text-xs theme-text-muted">🚨 위급 상황 발생 시 지체 없이 119 또는 현지 긴급 구조대에 신고하십시오.</span>
+                <button type="button" id="modal-confirm-btn" class="w-full sm:w-auto px-6 py-2 bg-rose-600 hover:bg-rose-500 text-white text-sm font-extrabold rounded-xl transition">
+                    확인 및 닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 하단 푸터 -->
+    <footer class="theme-elevated theme-text-muted text-xs py-6 border-t theme-border mt-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div>
+                <strong class="theme-text-secondary">치명적 야생 생물 & 극한 생존 대처 도감</strong> · 총 255종 (동물 168종 + 곤충·절지동물 87종)
+            </div>
+            <div>
+                ※ 본 도감은 야외 활동 및 재난 안전 교육을 위한 가이드이며, 응급 상황 시 즉시 전문 의료기관의 처치를 받으십시오.
+            </div>
+        </div>
+    </footer>
+
+    <!-- 255종 치명적 야생 생물 데이터베이스 및 애플리케이션 로직 -->
+    <script>
+        /**
+         * 4단계 치명도(위험도) 정의
+         */
+        const DANGER_LEVELS = {
+            4: {
+                label: "4단계: 즉사/치명적",
+                short: "즉사/치명적",
+                icon: "☠️",
+                badgeClass: "badge-danger-4 bg-rose-500/20 text-rose-300 border-rose-500/50",
+                cardBorder: "border-rose-500/45 hover:border-rose-400 lethal-glow",
+                headerBg: "bg-gradient-to-r from-rose-800 via-red-900 to-slate-950",
+                barColor: "bg-rose-500"
+            },
+            3: {
+                label: "3단계: 중상/응급",
+                short: "중상/응급",
+                icon: "🚨",
+                badgeClass: "badge-danger-3 bg-orange-500/20 text-orange-300 border-orange-500/50",
+                cardBorder: "border-orange-500/40 hover:border-orange-400",
+                headerBg: "bg-gradient-to-r from-orange-700 via-amber-900 to-slate-950",
+                barColor: "bg-orange-500"
+            },
+            2: {
+                label: "2단계: 통증/감염주의",
+                short: "통증/감염주의",
+                icon: "⚠️",
+                badgeClass: "badge-danger-2 bg-amber-400/20 text-amber-300 border-amber-400/40",
+                cardBorder: "card-border-normal border-slate-800 hover:border-amber-400/60",
+                headerBg: "bg-gradient-to-r from-amber-700 via-yellow-900 to-slate-950",
+                barColor: "bg-amber-400"
+            },
+            1: {
+                label: "1단계: 경계/경미",
+                short: "경계/경미",
+                icon: "🛡️",
+                badgeClass: "badge-danger-1 bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+                cardBorder: "card-border-normal border-slate-800 hover:border-emerald-400/60",
+                headerBg: "bg-gradient-to-r from-emerald-800 via-teal-950 to-slate-950",
+                barColor: "bg-emerald-400"
+            }
+        };
+
+        /**
+         * 대분류별 세부 카테고리 구조
+         */
+        const SUB_CATEGORIES = {
+            '동물': ['맹수·육상포유류', '맹독파충류·양서류', '악어·거북', '치명적해양생물', '위험조류'],
+            '곤충/절지동물': ['맹독거미·전갈·지네', '살인말벌·독개미', '치명적질병매개체', '독성애벌레·딱정벌레']
+        };
+
+        /**
+         * 255종 실제 생물 데이터 배열 (동물 168종 + 곤충/절지동물 87종)
+         * 압축 튜플 포맷을 구조화된 객체로 파싱하여 용량 최적화 및 100% 실제 데이터 보장
+         * [name, subname, mainCat, subCat, habitat, emoji, danger, threat, dontAct, doAct, repel, firstAid]
+         */
+        const RAW_SPECIES = [
+            // ================= [A] 동물 - 맹수·육상포유류 (63종) =================
+            ["회색곰 (그리즐리)", "Grizzly Bear / Ursus arctos horribilis", "동물", "맹수·육상포유류", "해외/오지", "🐻", 4,
+             "체중 350~600kg의 최상위 포식자로, 앞발 한 번의 타격으로 두개골을 부수며 시속 55km로 질주합니다. 특히 새끼를 동반한 어미는 극도로 공격적입니다.",
+             "절대 등을 보이고 뛰거나 나무 위로 올라가지 마세요. 곰의 추격 본능을 자극하며 곰은 나무를 매우 잘 탑니다.",
+             "시선을 유지한 채 천천히 뒷걸음질치세요. 방어적 공격으로 쓰러졌다면 배를 땅에 대고 목 뒤를 두 손으로 감싸 웅크려 죽은 척합니다.",
+             "베어 스프레이(고농도 캡사이신)를 10m 이내 접근 시 얼굴을 향해 분사하고, 이동 시 곰 방울이나 말소리로 인기척을 미리 내세요.",
+             "대량 출혈이 동반되므로 압박 붕대나 의류로 출혈 부위를 강하게 압박 지혈하고 즉시 구조대를 호출합니다."],
+            ["북극곰", "Polar Bear / Ursus maritimus", "동물", "맹수·육상포유류", "해외/오지", "🐻‍❄️", 4,
+             "지구상 가장 큰 육식 곰으로, 먹이가 부족한 극지방 환경 탓에 인간을 실제 사냥감으로 추적해 포식하는 유일한 곰과 맹수입니다.",
+             "북극곰 앞에서는 절대 '죽은 척'을 하지 마세요. 살아있는 먹이처럼 그대로 잡아먹힙니다.",
+             "실내나 차량, 선박 안으로 즉시 대피하고, 도망칠 곳이 없다면 코와 눈 등 민감한 부위를 향해 소지품으로 끝까지 저항하세요.",
+             "신호탄(플레어), 조명탄, 공포탄, 베어 스프레이를 사용하며, 후퇴 시 외투나 장갑을 하나씩 떨어뜨려 곰의 호기심을 분산시킵니다.",
+             "저체온증 방지를 위해 체온을 유지하면서 심각한 열상과 출혈을 압박 지혈한 뒤 헬기 구조를 요청합니다."],
+            ["반달가슴곰", "Asiatic Black Bear / Ursus thibetanus", "동물", "맹수·육상포유류", "산/숲", "🐻", 4,
+             "한반도와 아시아 산악에 서식하며, 불곰보다 체구는 작지만 성질이 예민하고 나무 타기와 덤불 돌파 능력이 매우 뛰어납니다.",
+             "등산로를 벗어나 샛길로 들어가거나, 소리를 지르며 돌을 던져 곰을 구석으로 몰지 마세요.",
+             "곰이 나를 인지하지 못했다면 조용히 자리를 피하고, 마주쳤다면 팔을 크게 보이게 들며 천천히 뒷걸음질로 시야에서 벗어납니다.",
+             "호루라기, 곰 방울, 등산 스틱 부딪히는 소리로 미리 인기척을 내어 우발적 조우를 예방합니다.",
+             "상처를 깨끗한 물로 씻어낸 뒤 지혈하고, 야생동물 교상에 의한 파상풍 및 광견병 예방을 위해 119로 즉시 이송합니다."],
+            ["시베리아호랑이", "Siberian Tiger / Panthera tigris altaica", "동물", "맹수·육상포유류", "해외/오지", "🐅", 4,
+             "체중 300kg에 육박하는 고양잇과 최대 맹수로, 소리 없이 배후로 접근해 목덜미 경추를 한 번에 부러뜨리는 매복 사냥을 합니다.",
+             "절대 등을 보이거나 몸을 웅크려 작게 만들지 마세요. 배후 습격의 표적이 됩니다.",
+             "호랑이와 눈을 똑바로 마주친 상태에서 팔을 높이 들어 몸집을 크게 보이고, 굵고 큰 목소리로 외치며 천천히 뒷걸음질칩니다.",
+             "강력 손전등 불빛, 폭죽, 화염을 사용하며, 서식지 트레킹 시 뒤통수에 눈 모양 가면을 착용하면 배후 기습 확률이 급감합니다.",
+             "경동맥 및 기도 손상 위험이 높으므로 출혈 부위를 강하게 압박하고 기도를 확보한 채 긴급 후송합니다."],
+            ["벵골호랑이", "Bengal Tiger / Panthera tigris tigris", "동물", "맹수·육상포유류", "해외/오지", "🐅", 4,
+             "인도와 방글라데시 맹그로브 숲(순다르반스) 등에서 가장 많은 인명 사고를 기록한 최상위 포식자로 수영도 매우 능숙합니다.",
+             "물속으로 뛰어들어 도망치려 하지 마세요. 호랑이는 강과 바다를 수 km씩 헤엄칠 수 있습니다.",
+             "시선을 고정한 채 굵은 소리로 위협하며 후퇴하고, 여러 명이 함께 있다면 등을 맞대고 서서 모든 방향을 주시합니다.",
+             "사파리 지프차에서 절대 하차하지 말고, 도보 이동 시 조명탄과 횃불을 휴대합니다.",
+             "치명적 열상과 심부 세균 감염을 막기 위해 지혈 후 항생제 및 파상풍 치료가 가능한 병원으로 이송합니다."],
+            ["아프리카사자", "African Lion / Panthera leo", "동물", "맹수·육상포유류", "해외/오지", "🦁", 4,
+             "무리(프라이드)를 이루어 조직적으로 포위 사냥을 하며, 강력한 앞발 타격과 턱 힘으로 대형 초식동물도 제압합니다.",
+             "공포에 질려 뒤돌아 전력 질주하지 마세요. 시속 80km의 단거리 질주로 수 초 만에 따라잡힙니다.",
+             "사자를 똑바로 바라보며 양팔을 흔들고 옷을 펼쳐 몸집을 크게 보이게 한 뒤, 굵고 단호한 목소리로 고함치며 천천히 뒤로 물러납니다.",
+             "야간 캠핑 시 모닥불을 유지하고 텐트 밖으로 혼자 나가지 않으며, 사파리 차량 창문 밖으로 신체 일부를 내밀지 마세요.",
+             "다발성 교상 및 골절이 발생하므로 출혈 부위 압박 지혈과 골절 고정을 시행한 뒤 즉시 응급 이송합니다."],
+            ["아프리카표범", "African Leopard / Panthera pardus pardus", "동물", "맹수·육상포유류", "해외/오지", "🐆", 4,
+             "자기 체중보다 무거운 사냥감을 물고 나무 위로 올라갈 만큼 악력과 근력이 강하며, 야간 기습 능력이 탁월합니다.",
+             "나무 위로 올라가 피하려 하지 마세요. 표범의 주 활동 무대가 나무 위입니다.",
+             "시선을 마주치고 큰 소리를 지르며 돌이나 나뭇가지를 던져 적극적으로 맞서야 기습 의지를 꺾을 수 있습니다.",
+             "야간에 강력한 손전등 불빛을 눈에 비추고 소음기를 울려 접근을 차단합니다.",
+             "발톱과 이빨에 의한 심부 감염(파스퇴렐라균 등) 위험이 크므로 철저한 세척과 항생제 치료가 필수입니다."],
+            ["재규어", "Jaguar / Panthera onca", "동물", "맹수·육상포유류", "해외/오지", "🐆", 4,
+             "고양잇과 맹수 중 압도적인 치악력(약 1,500 PSI)으로 악어의 두개골이나 거북 등껍질까지 깨뜨리며 물속 사냥도 능숙합니다.",
+             "강물 속으로 뛰어들어 피신하지 마세요. 재규어는 물속에서 가장 민첩하게 사냥합니다.",
+             "눈을 마주치고 몸집을 크게 보이게 한 채 큰 소리를 내며 천천히 뒷걸음질로 벗어납니다.",
+             "밀림 야영 시 불을 피우고 연기 및 불꽃으로 야간 접근을 막습니다.",
+             "두부 및 경추 교상 시 즉시 지혈하고 전문 외상 병원으로 긴급 후송합니다."],
+            ["퓨마 (쿠거/마운틴라이온)", "Cougar / Puma concolor", "동물", "맹수·육상포유류", "해외/오지", "🐈", 4,
+             "미주 대륙 산악 지대에 서식하며, 조용히 뒤를 밟다 목덜미를 덮치는 매복형 포식자입니다.",
+             "절대 몸을 웅크리거나 뒤돌아 뛰지 마세요. 사슴 같은 먹잇감으로 오인받습니다.",
+             "퓨마를 똑바로 노려보며 옷자락을 펼쳐 크게 보이고, 돌·등산 스틱 등 손에 잡히는 모든 것으로 맹렬히 반격하세요.",
+             "호루라기, 에어혼, 베어 스프레이를 휴대하고 해질녘이나 새벽에는 단독 산행을 피합니다.",
+             "목과 얼굴 부위 열상을 압박 지혈하고 즉시 구조 요청을 합니다."],
+            ["치타", "Cheetah / Acinonyx jubatus", "동물", "맹수·육상포유류", "해외/오지", "🐆", 2,
+             "시속 110km의 지상 최고 속도를 지녔으나 골격이 가벼워 성인 인간을 공격하는 사례는 극히 드뭅니다. 단, 어린이나 달리는 사람에게 반응할 수 있습니다.",
+             "어린이를 혼자 뛰게 두거나 등을 보이고 도망치지 마세요.",
+             "제자리에 꼿꼿이 서서 팔을 들어 올리면 대부분 경계하다 스스로 물러납니다.",
+             "큰 손뼉 소리와 단호한 목소리로 쉽게 쫓아낼 수 있습니다.",
+             "물리거나 할퀴어진 부위를 소독하고 파상풍 예방 주사를 맞습니다."],
+            ["스라소니 (유라시아스라소니)", "Eurasian Lynx / Lynx lynx", "동물", "맹수·육상포유류", "산/숲", "🐈", 2,
+             "날카로운 발톱과 송곳니를 지녔으나 경계심이 강해 사람을 피합니다. 덫에 걸렸거나 새끼를 지킬 때만 공격합니다.",
+             "야생에서 발견 시 사진 촬영을 위해 가까이 다가가거나 먹이를 주지 마세요.",
+             "조용히 거리를 벌리며 스라소니의 퇴로를 열어줍니다.",
+             "손뼉을 치거나 지팡이로 바닥을 두드리면 숲속으로 달아납니다.",
+             "할퀴어진 상처는 비눗물로 15분간 세척한 뒤 소독합니다."],
+            ["회색늑대", "Gray Wolf / Canis lupus", "동물", "맹수·육상포유류", "해외/오지", "🐺", 3,
+             "무리(팩) 단위로 조직적인 포위와 지구력 추격을 구사하며, 먹이에 길들여졌거나 광견병에 걸린 개체는 인간을 습격합니다.",
+             "절대 등을 보이고 뛰지 마세요. 무리 전체의 추격 본능을 유발합니다.",
+             "늑대와 시선을 유지하며 천천히 후퇴하고, 포위하려 하면 바위나 튼튼한 나무 위로 올라가 등을 보호하세요.",
+             "불빛, 연기, 큰 고함, 돌 던지기로 강하게 맞서 우위를 점해야 합니다.",
+             "물린 상처를 소독하고 즉시 광견병 노출 후 예방요법(PEP) 및 파상풍 접종을 받습니다."],
+            ["코요테", "Coyote / Canis latrans", "동물", "맹수·육상포유류", "해외/오지", "🐺", 2,
+             "북미 도심 공원까지 진출해 있으며, 반려견이나 어린이를 공격하거나 광견병을 매개할 수 있습니다.",
+             "먹이를 주거나 귀엽다고 다가가지 마세요.",
+             "몸을 크게 보이게 하고 굵은 목소리로 소리치며 천천히 물러납니다.",
+             "우산 펴기, 물 뿌리기, 호루라기 불기 등 '헤이징(Hazing)' 기법으로 도심 경계심을 심어줍니다.",
+             "물렸을 경우 즉시 상처를 세척하고 광견병 백신 접종을 받습니다."],
+            ["야생 들개 무리", "Feral Dog Pack / Canis familiaris", "동물", "맹수·육상포유류", "산/숲", "🐕", 3,
+             "산간이나 도심 외곽에서 무리 지어 야생화된 개들로, 인간에 대한 두려움이 없어 영역 침범 시 집단 교상을 입힙니다.",
+             "비명을 지르며 팔을 허우적거리거나 뒤돌아 전력 질주하지 마세요.",
+             "가방이나 외투를 몸 앞에 방패처럼 세우고, 시선을 맞춘 채 천천히 뒷걸음질로 민가나 차량 쪽으로 이동합니다.",
+             "등산 스틱이나 우산을 펼쳐 거리를 확보하고, 돌을 줍는 시늉과 낮고 굵은 고함으로 제압합니다.",
+             "비눗물로 상처를 15분 이상 씻어낸 뒤 병원에서 광견병 및 파상풍 예방 조치를 받습니다."],
+            ["붉은여우", "Red Fox / Vulpes vulpes", "동물", "맹수·육상포유류", "산/숲", "🦊", 1,
+             "온순한 편이나 광견병 및 치명적 기생충(다방조충/에키노코쿠스)의 숙주이므로 직접 접촉을 피해야 합니다.",
+             "야생 여우를 만지거나 배설물 근처에 손을 대지 마세요.",
+             "거리를 유지한 채 조용히 지나갑니다.",
+             "손뼉을 치거나 발을 구르면 즉시 도망갑니다.",
+             "물렸을 경우 즉시 세척 후 광견병 예방 조치를 받습니다."],
+            ["점박이하이에나", "Spotted Hyena / Crocuta crocuta", "동물", "맹수·육상포유류", "해외/오지", "🐕", 4,
+             "사자를 능가하는 4,500N 이상의 턱 힘으로 뼈까지 부수며, 야간에 텐트 지퍼를 뜯고 잠자는 사람을 습격한 사례가 많습니다.",
+             "절대 땅에 눕거나 죽은 척하지 마세요. 하이에나는 부상당하거나 죽은 먹이를 가장 먼저 노립니다.",
+             "즉시 일어서서 팔을 높이 들어 크게 보이고, 큰 소리로 외치며 불빛을 비춘 채 천천히 후퇴합니다.",
+             "텐트 문을 완전히 잠그고 음식물을 텐트 안에 두지 않으며, 모닥불과 강력한 손전등을 사용합니다.",
+             "심각한 압궤 교상과 오염이 동반되므로 즉시 지혈 후 항생제 치료가 가능한 병원으로 이송합니다."],
+            ["아프리카코끼리", "African Bush Elephant / Loxodonta africana", "동물", "맹수·육상포유류", "해외/오지", "🐘", 4,
+             "체중 6톤에 달하는 지상 최대 육상동물로, 발정기(머스트) 수컷이나 새끼를 데린 어미는 차량을 뒤집고 상아로 찌르며 짓밟습니다.",
+             "코끼리가 귀를 뒤로 바짝 젖히고 코를 말아 올린 채 돌진할 때 직선으로 계속 뛰지 마세요.",
+             "귀를 크게 펄럭이며 멈춰 서는 것은 '모의 돌진'이므로 움직이지 말고 굵은 소리를 내고, 진짜 돌진 시에는 바람 아래쪽(풍하)으로 급회전해 도랑이나 큰 바위 뒤로 숨으세요.",
+             "사파리 차량 경적이나 시끄러운 금속음을 내어 거리를 확보하고 최소 50m 이상 거리를 둡니다.",
+             "압궤 손상과 내부 출혈 위험이 크므로 환자를 함부로 움직이지 말고 즉시 구조 헬기를 요청합니다."],
+            ["아시아코끼리", "Asian Elephant / Elephas maximus", "동물", "맹수·육상포유류", "해외/오지", "🐘", 4,
+             "인도와 동남아에서 매년 수백 명의 인명 피해를 내는 대형 동물로, 농작물 보호 중이나 발정기에 극도로 공격적입니다.",
+             "플래시를 터뜨리며 사진을 찍거나 술에 취해 코끼리 무리에 접근하지 마세요.",
+             "바람 방향을 파악해 코끼리가 냄새를 맡지 못하는 쪽으로 조용히 우회하여 대피합니다.",
+             "현지 산림청이 사용하는 고추 연기탄, 불꽃놀이, 큰 북소리로 접근을 저지합니다.",
+             "골절 및 내장 파열 여부를 확인하고 최단 시간 내 응급 외상 센터로 이송합니다."],
+            ["하마", "Hippopotamus / Hippopotamus amphibius", "동물", "맹수·육상포유류", "해외/오지", "🦛", 4,
+             "아프리카에서 가장 많은 사람을 죽이는 포유류로, 180도 벌어지는 입과 50cm 송곳니, 시속 30km의 달리기 속도로 보트를 부수고 사람을 절단합니다.",
+             "강가 수풀에서 하마와 물길(퇴로) 사이에 절대 서지 마세요. 위협을 느낀 하마가 물로 돌진하면서 경로상의 모든 것을 짓밟습니다.",
+             "물속에서 하마를 만나면 즉시 얕은 강둑으로 올라가 튼튼한 나무 위나 높은 바위 위로 피신하세요.",
+             "물리적 퇴치가 불가능하므로 하마 서식 강가에서는 야간 도보 및 소형 카누 운항을 금지합니다.",
+             "치명적인 절단 및 압박 외상이 발생하므로 즉각적인 지혈과 응급 수혈이 가능한 병원으로 후송합니다."],
+            ["검은코뿔소 / 흰코뿔소", "Black & White Rhinoceros", "동물", "맹수·육상포유류", "해외/오지", "🦏", 4,
+             "시력은 매우 나쁘지만 후각과 청각이 예민하며, 놀라면 시속 50km로 돌진해 거대한 뿔로 들이받습니다.",
+             "코뿔소 정면 바람 위쪽(풍상)에서 소리를 내며 접근하지 마세요.",
+             "시력이 나쁘므로 돌진 시 마지막 순간에 90도 옆으로 급회전하거나 큰 나무·바위 뒤로 숨으면 시야에서 사라집니다.",
+             "자극하지 않고 숨을 죽인 채 지나가기를 기다리는 것이 최선입니다.",
+             "뿔에 의한 관통상과 골절을 고정·지혈한 뒤 즉시 응급 이송합니다."],
+            ["아프리카물소 (케이프버팔로)", "African Buffalo / Syncerus caffer", "동물", "맹수·육상포유류", "해외/오지", "🐃", 4,
+             "'검은 죽음'이라 불리는 사파리 최악의 맹수로, 무리에서 떨어진 늙은 수컷(다그 보이)은 이유 없이 매복했다가 돌진해 뿔로 들이받습니다.",
+             "무리에서 홀로 떨어진 수컷 물소에게 절대 가까이 가지 마세요.",
+             "돌진 시 주변의 가장 튼튼하고 높은 나무 위로 즉시 올라가거나 차량 내부로 대피해야 합니다.",
+             "차량 밖 하차를 금지하고 안전거리를 엄격히 지킵니다.",
+             "복부·흉부 관통상 위험이 크므로 기도를 확보하고 압박 지혈한 채 구조대를 호출합니다."],
+            ["아메리카들소 (바이슨)", "American Bison / Bison bison", "동물", "맹수·육상포유류", "해외/오지", "🦬", 3,
+             "체중 900kg에 시속 55km로 질주하며, 국립공원에서 셀카를 찍으려 가까이 다가가는 관광객을 뿔로 공중에 띄워 중상을 입힙니다.",
+             "온순한 소처럼 보인다고 25m 이내로 절대 접근하지 마세요.",
+             "바이슨이 꼬리를 꼿꼿이 세우고 발을 구르면 돌진 직전이므로 즉시 건물, 차량, 큰 나무 뒤로 숨습니다.",
+             "자극하지 않고 천천히 뒷걸음질로 거리를 벌립니다.",
+             "타박상 및 늑골 골절 부위를 고정하고 응급실로 이동합니다."],
+            ["멧돼지 (한국/유럽멧돼지)", "Wild Boar / Sus scrofa", "동물", "맹수·육상포유류", "산/숲", "🐗", 3,
+             "시속 40km 이상의 돌진력과 면도날 같은 아래턱 어금니로 허벅지 대퇴동맥을 찢어 과다출혈 사망을 유발할 수 있습니다.",
+             "소리를 지르거나 돌을 던져 자극하지 말고, 멧돼지와 눈을 마주친 채 등을 보이고 뛰지 마세요.",
+             "주변의 큰 나무, 바위, 옹벽 등 은폐물 뒤로 조용히 몸을 숨기고 멧돼지가 시야에서 사라질 때까지 움직임을 멈춥니다.",
+             "정면 돌진 시 우산이나 등산복을 펼쳐 시야를 가리고, 높은 바위나 나무 위로 올라가세요.",
+             "송곳니에 찔려 동맥 출혈이 발생하면 상처 위쪽을 벨트나 붕대로 강하게 묶거나 압박 지혈한 뒤 즉시 119에 신고합니다."],
+            ["울버린 (오소리곰)", "Wolverine / Gulo gulo", "동물", "맹수·육상포유류", "해외/오지", "🦡", 3,
+             "족제비과 최대 맹수로 체중은 20kg 내외지만 곰이나 늑대와도 싸워 먹이를 빼앗을 만큼 흉포한 공격성과 턱 힘을 지녔습니다.",
+             "굴이나 먹이 저장고 근처에서 마주쳤을 때 구석으로 몰아넣지 마세요.",
+             "시선을 유지하며 천천히 뒷걸음질로 영역 밖으로 벗어납니다.",
+             "베어 스프레이와 등산 스틱으로 거리를 유지합니다.",
+             "깊은 열상과 세균 감염을 막기 위해 철저히 세척 후 항생제 및 파상풍 치료를 받습니다."],
+            ["벌꿀오소리", "Honey Badger / Mellivora capensis", "동물", "맹수·육상포유류", "해외/오지", "🦡", 3,
+             "두껍고 유연한 피부와 코브라 독 내성, 공포를 모르는 성격으로 사자나 표범에게도 덤비며 끝까지 물고 늘어집니다.",
+             "절대 쫓아가거나 막대기로 건드리지 마세요.",
+             "차량 안이나 높은 구조물 위로 신속히 올라가 접촉을 피합니다.",
+             "가벼운 위협이나 소음이 통하지 않으므로 물리적 장벽 뒤로 대피하는 것이 유일한 방법입니다.",
+             "물린 상처를 소독하고 광견병 및 파상풍 예방 주사를 접종합니다."],
+            ["아시아오소리", "Asian Badger / Meles leucurus", "동물", "맹수·육상포유류", "산/숲", "🦡", 2,
+             "한국 산림에도 서식하며, 체구는 작지만 턱 힘이 매우 강하고 성질이 사나워 포획이나 접근 시 심하게 뭅니다.",
+             "굴 입구 주변에 손을 넣거나 쫓지 마세요.",
+             "조용히 거리를 두고 지나갑니다.",
+             "등산 스틱으로 바닥을 두드려 인기척을 냅니다.",
+             "깊게 물릴 수 있으므로 지혈과 소독 후 병원에서 항생제 처방을 받습니다."],
+            ["침팬지", "Chimpanzee / Pan troglodytes", "동물", "맹수·육상포유류", "해외/오지", "🦍", 4,
+             "성인 남성보다 1.5~2배 강한 근력과 긴 송곳니를 지녔으며, 영역 침범이나 위협을 느끼면 얼굴과 손가락을 집중 공격하는 잔혹성을 보입니다.",
+             "절대 이를 드러내고 웃거나 눈을 노려보지 마세요(영장류에게 공격 도전 신호로 인식됩니다).",
+             "가이드의 지시에 따라 즉시 자세를 낮추고 시선을 내린 채 조용히 후퇴합니다.",
+             "야생 서식지에서는 최소 10m 이상 안전거리를 유지하고 음식물을 노출하지 않습니다.",
+             "중증 안면·수부 외상이 발생하므로 지혈 후 즉각 응급 외상 센터로 이송합니다."],
+            ["서부고릴라", "Western Gorilla / Gorilla gorilla", "동물", "맹수·육상포유류", "해외/오지", "🦍", 3,
+             "기본적으로 온순한 초식성이지만, 우두머리 실버백이 가족을 보호하기 위해 돌진하면 엄청난 완력으로 중상을 입힙니다.",
+             "실버백이 가슴을 치며 돌진할 때 절대 도망치거나 소리를 지르지 마세요.",
+             "눈을 내리깔고 자세를 낮춘 채 복종하는 태도로 가만히 있으면 대부분 코앞에서 멈추고 물러납니다.",
+             "카메라 플래시를 끄고 7m 이상의 관람 거리를 엄수합니다.",
+             "충격에 의한 골절과 타박상을 고정하고 구조대의 도움을 받습니다."],
+            ["오랑우탄", "Orangutan / Pongo", "동물", "맹수·육상포유류", "해외/오지", "🦧", 2,
+             "매우 온순하지만 성인 남성 4배 이상의 팔 악력을 지녀 사람 팔다리를 붙잡고 놓지 않거나 물 수 있습니다.",
+             "먹이를 주려고 가까이 다가가 손을 내밀지 마세요.",
+             "옷이나 가방을 붙잡혔을 때 힘으로 당기지 말고 옷을 벗어 빠져나옵니다.",
+             "안전거리를 유지하며 조용히 물러납니다.",
+             "물린 부위를 소독하고 관절 염좌 여부를 확인합니다."],
+            ["개코원숭이 (차크마바분)", "Chacma Baboon / Papio ursinus", "동물", "맹수·육상포유류", "해외/오지", "🐒", 3,
+             "표범과 맞먹는 5cm 길이의 송곳니와 집단 행동력을 지녔으며, 음식을 빼앗기 위해 차량 문을 열거나 사람을 공격합니다.",
+             "손에 음식이나 비닐봉지를 들고 있지 말고, 이를 드러내 웃지 마세요.",
+             "가방을 빼앗으려 하면 저항하지 말고 놓아준 뒤 천천히 뒷걸음질로 벗어납니다.",
+             "차량 창문과 문을 반드시 잠그고, 도보 시 굵은 목소리와 막대기로 위엄을 보입니다.",
+             "영장류 매개 바이러스(B바이러스 등) 위험이 있으므로 15분간 비눗물 세척 후 병원에서 항바이러스 처치를 받습니다."],
+            ["붉은털원숭이 (히말라야원숭이)", "Rhesus Macaque / Macaca mulatta", "동물", "맹수·육상포유류", "해외/오지", "🐒", 3,
+             "동남아·인도 관광지 사원 등에서 집단으로 달려들어 할퀴거나 물며, 치명적인 헤르페스 B바이러스와 광견병을 매개합니다.",
+             "음식물을 꺼내 먹거나 가방 지퍼를 열어두지 마세요.",
+             "원숭이가 몸에 올라타면 당황해 때리지 말고 가방을 내려놓은 채 천천히 인파가 있는 곳으로 걸어갑니다.",
+             "현지 관리인이 사용하는 새총이나 긴 지팡이를 휴대하거나 거리를 둡니다.",
+             "할퀴거나 물렸다면 즉시 비눗물로 철저히 씻고 병원에서 광견병 및 B바이러스 예방 치료를 받습니다."],
+            ["말코손바닥사슴 (무스)", "Moose / Alces alces", "동물", "맹수·육상포유류", "해외/오지", "🫎", 3,
+             "체중 700kg의 거대 사슴으로, 발정기 수컷과 새끼를 데린 어미는 앞발굽으로 사람을 짓밟아 사망에 이르게 합니다.",
+             "무스가 귀를 뒤로 젖히고 목덜미 털을 바짝 세울 때 제자리에 버티지 마세요.",
+             "곰과 달리 무스는 큰 나무나 바위, 차량 뒤로 뛰어 숨어 시야에서 벗어나면 추격을 멈춥니다.",
+             "반려견을 동반한 경우 개가 무스를 자극해 주인 쪽으로 끌고 오지 않도록 목줄을 반드시 채웁니다.",
+             "발굽 타격에 의한 두부·흉부 손상을 확인하고 즉시 구조 요청합니다."],
+            ["순록 / 카리부", "Reindeer / Caribou", "동물", "맹수·육상포유류", "해외/오지", "🦌", 2,
+             "가을철 번식기(러트) 수컷은 테스토스테론이 급증해 거대한 뿔로 사람이나 차량을 들이받을 수 있습니다.",
+             "번식기 수컷 무리 사이에 끼어들지 마세요.",
+             "나무나 차량 뒤로 몸을 피하고 거리를 벌립니다.",
+             "소음을 내어 위치를 알리고 충분히 우회합니다.",
+             "뿔에 찔리거나 부딪힌 부위를 소독 및 압박 지혈합니다."],
+            ["붉은캥거루", "Red Kangaroo / Osphranter rufus", "동물", "맹수·육상포유류", "해외/오지", "🦘", 3,
+             "강력한 근육질 꼬리로 몸을 지탱한 채 두 뒷발로 차는 킥은 갈비뼈를 부러뜨리고 날카로운 발톱으로 복부를 찢습니다.",
+             "수컷 캥거루가 가슴을 펴고 다가올 때 복싱하듯 맞서 싸우려 하지 마세요.",
+             "등을 약간 숙이고 기침하듯 낮은 소리를 내며 천천히 뒷걸음질로 나무나 차량 뒤로 숨습니다.",
+             "물가에서 캥거루가 기다리고 있다면 물속으로 따라 들어가지 마세요(익사시키려 할 수 있습니다).",
+             "복부 열상 및 골절 여부를 확인하고 즉시 응급실로 이송합니다."],
+            ["표범물범 (바다표범)", "Leopard Seal / Hydrurga leptonyx", "동물", "맹수·육상포유류", "바다/강", "🦭", 3,
+             "남극 생태계의 최상위 포식자로, 펭귄뿐 아니라 다이버나 보트 탑승자를 물속으로 끌고 들어가려 한 사례가 있습니다.",
+             "유빙 가장자리에 혼자 서 있거나 표범물범 출몰 해역에서 단독 스노클링을 하지 마세요.",
+             "보트나 육지 안쪽으로 신속히 물러나 최소 20m 이상 거리를 둡니다.",
+             "탐사 선박의 안전 규정을 준수하고 엔진 소음으로 경계심을 줍니다.",
+             "저체온증 처치와 심부 교상 지혈·항생제 치료를 즉시 시행합니다."],
+            ["바다코끼리", "Walrus / Odobenus rosmarus", "동물", "맹수·육상포유류", "바다/강", "🦭", 3,
+             "체중 1톤 이상과 1m 길이의 엄니를 지녔으며, 새끼를 보호할 때 소형 보트를 엄니로 뚫고 전복시킵니다.",
+             "해변이나 유빙에 무리 지어 쉬고 있을 때 배로 가까이 접근하지 마세요.",
+             "엔진을 끄거나 저속으로 조용히 우회하여 서식지를 벗어납니다.",
+             "안전거리를 유지하고 큰 소음으로 놀라게 하지 않습니다.",
+             "저체온증 방지 및 외상 지혈 후 해경/구조대에 신고합니다."],
+            ["바다사자 (캘리포니아바다사자)", "California Sea Lion / Zalophus californianus", "동물", "맹수·육상포유류", "바다/강", "🦭", 2,
+             "번식기 수컷은 영역 의식이 매우 강해 서퍼나 다이버를 물거나 수중으로 끌고 들어가려 할 수 있습니다.",
+             "해변이나 선착장에서 잠자는 바다사자에게 셀카를 찍으려 다가가지 마세요.",
+             "수컷이 짖으며 돌진하면 즉시 물 밖으로 나와 갯바위 위로 피신합니다.",
+             "서핑보드나 노를 방패처럼 세워 거리를 유지합니다.",
+             "'실 핑거(Seal Finger)'라는 특수 세균 감염이 발생하므로 병원에서 테트라사이클린계 항생제 처방을 받습니다."],
+            ["흡혈박쥐", "Common Vampire Bat / Desmodus rotundus", "동물", "맹수·육상포유류", "해외/오지", "🦇", 3,
+             "중남미에 서식하며 야간에 잠든 사람의 발가락이나 귀를 면도날 같은 앞니로 살짝 베어 피를 핥아먹고 치명적인 광견병을 전파합니다.",
+             "중남미 오지에서 모기장이나 문이 없는 개방된 공간에서 맨발을 내놓고 자지 마세요.",
+             "밀폐형 텐트나 방충망이 완비된 숙소에서 취침합니다.",
+             "야간 조명을 켜두면 접근을 줄일 수 있습니다.",
+             "물린 흔적이 있거나 자는 동안 방에 박쥐가 들어왔다면 즉시 병원에서 광견병 예방접종을 받아야 합니다."],
+            ["관박쥐 / 집박쥐 (일반 박쥐류)", "Bat / Chiroptera", "동물", "맹수·육상포유류", "산/숲", "🦇", 3,
+             "광견병(공수병) 및 각종 바이러스의 자연 숙주로, 이빨이 바늘처럼 작아 물려도 통증이나 자국이 거의 남지 않습니다.",
+             "낮에 땅에 떨어져 있거나 날지 못하는 박쥐를 불쌍하다고 맨손으로 줍지 마세요.",
+             "실내에 들어왔다면 창문을 활짝 열고 불을 끈 뒤 스스로 날아나가길 기다립니다.",
+             "두꺼운 가죽 장갑이나 상자를 이용해 직접 접촉 없이 격리합니다.",
+             "직접 만졌거나 자는 방에 박쥐가 있었다면 물린 자국이 안 보여도 반드시 병원에서 광견병 백신을 맞습니다."],
+            ["너구리", "Raccoon Dog / Nyctereutes procyonoides", "동물", "맹수·육상포유류", "캠핑/도심", "🦝", 2,
+             "국내 하천변과 공원에 자주 나타나며, 광견병과 심각한 피부병을 옮기는 개선충(옴 진드기)의 주요 매개체입니다.",
+             "귀엽다고 만지거나 먹이를 주지 말고, 반려견이 다가가지 못하게 하세요.",
+             "천천히 뒷걸음질로 거리를 벌립니다.",
+             "손뼉을 치거나 발을 구르면 수풀로 도망갑니다.",
+             "물리거나 타액이 묻었다면 즉시 세척 후 광견병 예방 처치를 받습니다."],
+            ["미국너구리 (라쿤)", "Raccoon / Procyon lotor", "동물", "맹수·육상포유류", "해외/오지", "🦝", 2,
+             "날카로운 발톱과 이빨을 지녔으며 북미 광견병 및 뇌를 손상시키는 라쿤회충의 주요 매개체입니다.",
+             "구석으로 몰아넣거나 음식을 손으로 주지 마세요.",
+             "큰 소리를 내며 천천히 물러납니다.",
+             "물 호스, 손전등, 소음기를 이용해 캠핑장 접근을 막습니다.",
+             "상처를 비눗물로 씻고 즉시 광견병 예방접종을 받습니다."],
+            ["스컹크", "Striped Skunk / Mephitis mephitis", "동물", "맹수·육상포유류", "해외/오지", "🦨", 2,
+             "항문샘에서 4m 거리까지 황화합물 악취액을 정확히 분사해 일시적 실명과 구토를 유발하며, 북미 광견병의 주요 보균 동물입니다.",
+             "스컹크가 앞발을 쿵쿵 구르며 꼬리를 수직으로 세울 때 가까이 가지 마세요(발사 1초 전 신호입니다).",
+             "소리를 지르지 말고 조용히 천천히 뒷걸음질로 시야에서 벗어납니다.",
+             "동작 감지 조명이나 스프링클러로 마당 접근을 예방합니다.",
+             "눈에 닿으면 찬물로 15분간 씻고, 피부 냄새는 과산화수소·베이킹소다·주방세제 혼합액으로 씻어냅니다."],
+            ["수달", "Eurasian Otter / Lutra lutra", "동물", "맹수·육상포유류", "바다/강", "🦦", 2,
+             "강력한 치악력을 가진 족제비과 육식동물로, 영역 침범 시 사람을 집요하게 공격해 심각한 교상을 입힌 사례가 있습니다.",
+             "물가에서 수달이 다가와도 만지려 하지 마세요.",
+             "물 밖으로 천천히 나와 거리를 벌립니다.",
+             "노나 막대기로 거리를 유지합니다.",
+             "수중 세균 감염 위험이 크므로 소독 후 병원에서 항생제 치료를 받습니다."],
+            ["비버", "North American Beaver / Castor canadensis", "동물", "맹수·육상포유류", "바다/강", "🦫", 2,
+             "나무를 자르는 거대한 앞니로 수영하던 사람의 허벅지 동맥을 물어 과다출혈 사망을 일으킨 사례가 있습니다.",
+             "비버 댐 근처에서 수영하거나 좁은 수로에서 비버의 길을 막지 마세요.",
+             "비버가 꼬리로 수면을 강하게 내리치면 경고 신호이므로 즉시 물에서 나옵니다.",
+             "거리를 두고 관찰하며 자극하지 않습니다.",
+             "깊은 열상 및 출혈 시 즉시 압박 지혈 후 응급실로 이동합니다."],
+            ["호저 (산미치광이)", "Crested Porcupine / Hystrix cristata", "동물", "맹수·육상포유류", "해외/오지", "🦔", 2,
+             "수만 개의 날카롭고 역방향 미늘이 달린 가시가 피부 깊숙이 박혀 빠지지 않고 2차 감염을 일으킵니다.",
+             "가시를 쏘지는 않지만 뒤돌아서 급격히 후진하며 들이받으므로 절대 가까이 가지 마세요.",
+             "반려견의 목줄을 짧게 잡고 멀리 우회합니다.",
+             "접근하지 않으면 먼저 공격하지 않습니다.",
+             "가시가 박혔다면 억지로 뽑다 부러뜨리지 말고 병원에서 마취 후 안전하게 제거합니다."],
+            ["시궁창쥐 / 집쥐", "Brown Rat / Rattus norvegicus", "동물", "맹수·육상포유류", "캠핑/도심", "🐀", 2,
+             "렙토스피라증, 한타바이러스, 서교열 등 치명적 인수공통감염병을 교상과 배설물로 전파합니다.",
+             "구석에 몰린 쥐는 얼굴을 향해 뛰어오르며 물 수 있으므로 퇴로를 막지 마세요.",
+             "도망갈 출구를 열어주고 거리를 둡니다.",
+             "음식물 밀폐 및 초음파 기피제, 트랩을 설치합니다.",
+             "물렸을 경우 즉시 소독 후 항생제 및 파상풍 치료를 받습니다."],
+            ["등줄쥐 (야생 들쥐)", "Striped Field Mouse / Apodemus agrarius", "동물", "맹수·육상포유류", "산/숲", "🐁", 2,
+             "치사율이 높은 유행성출혈열(신증후군출혈열)을 일으키는 한타바이러스의 자연 숙주입니다.",
+             "풀밭에 눕거나 야생 쥐 배설물이 있는 곳에 맨손·맨살이 닿지 않게 하세요.",
+             "야외 활동 후 겉옷을 털고 즉시 샤워합니다.",
+             "캠핑 시 텐트 바닥 방수포를 깔고 음식물을 밀봉합니다.",
+             "야외 활동 1~2주 후 고열과 오한, 요통이 발생하면 즉시 병원에 방문합니다."],
+            ["고라니", "Water Deer / Hydropotes inermis", "동물", "맹수·육상포유류", "산/숲", "🦌", 1,
+             "사람을 먼저 공격하지 않으나 야간 도로 로드킬 사고의 주원인이며, 부상 개체 구조 시 송곳니와 발굽에 다칠 수 있습니다.",
+             "야간 산간 도로에서 과속하지 말고, 부상당한 고라니를 맨손으로 안으려 하지 마세요.",
+             "야생동물구조센터에 신고하고 거리를 둡니다.",
+             "농작물 피해 방지용으로는 기피제와 울타리를 활용합니다.",
+             "긁히거나 물렸다면 소독 후 파상풍 주사를 맞습니다."],
+            ["노루", "Siberian Roe Deer / Capreolus pygargus", "동물", "맹수·육상포유류", "산/숲", "🦌", 1,
+             "온순하지만 번식기 수컷의 뿔과 몸에 붙은 살인진드기(작은소피참진드기)를 주의해야 합니다.",
+             "새끼 노루를 발견해도 만지지 마세요(사람 냄새가 묻으면 어미가 버릴 수 있습니다).",
+             "조용히 지나가도록 비켜줍니다.",
+             "인기척을 내면 스스로 숲으로 숨습니다.",
+             "접촉 후 진드기 부착 여부를 꼼꼼히 확인합니다."],
+            ["산양", "Long-tailed Goral / Naemorhedus caudatus", "동물", "맹수·육상포유류", "산/숲", "🐐", 1,
+             "천연기념물로 사람을 피하지만 좁은 암벽 능선에서 놀라면 돌진하거나 낙석을 유발할 수 있습니다.",
+             "좁은 등산로에서 산양의 길을 막고 사진을 찍지 마세요.",
+             "바위 한쪽으로 비켜서서 지나가길 기다립니다.",
+             "안전거리를 유지합니다.",
+             "낙석 충돌 시 타박상 냉찜질 후 하산합니다."],
+            ["족제비", "Siberian Weasel / Mustela sibirica", "동물", "맹수·육상포유류", "캠핑/도심", "🦦", 1,
+             "위협을 느끼면 날카로운 이빨로 물고 지독한 악취 분비액을 뿜습니다.",
+             "맨손으로 잡으려 하지 마세요.",
+             "문을 열어 도망갈 퇴로를 확보해 줍니다.",
+             "큰 소리를 내거나 불빛을 비춥니다.",
+             "물린 부위를 소독하고 악취액이 눈에 닿으면 물로 씻습니다."],
+            ["청설모 / 다람쥐", "Squirrel / Sciurus vulgaris", "동물", "맹수·육상포유류", "산/숲", "🐿️", 1,
+             "사람 손에서 먹이를 받아먹다 손가락을 깊게 물 수 있으며 진드기와 벼룩을 옮길 수 있습니다.",
+             "손으로 직접 먹이를 건네지 마세요.",
+             "거리를 두고 관찰합니다.",
+             "손뼉을 치면 나무 위로 올라갑니다.",
+             "물렸을 경우 소독 후 파상풍 예방 조치를 받습니다."],
+            ["고슴도치", "Hedgehog / Erinaceus", "동물", "맹수·육상포유류", "캠핑/도심", "🦔", 1,
+             "가시에 찔릴 수 있으며 살모넬라균이나 진드기를 보유하고 있습니다.",
+             "맨손으로 집어 들지 마세요.",
+             "지나가도록 그대로 둡니다.",
+             "정원 틈새를 정리합니다.",
+             "가시에 찔린 부위를 소독하고 손을 씻습니다."],
+            ["카피바라", "Capybara / Hydrochoerus hydrochaeris", "동물", "맹수·육상포유류", "해외/오지", "🦫", 1,
+             "온순하지만 위협 시 날카로운 앞니로 물 수 있고 진드기 매개 열병의 숙주가 될 수 있습니다.",
+             "새끼와 함께 있는 무리에 가까이 가지 마세요.",
+             "천천히 물러납니다.",
+             "자극하지 않으면 공격하지 않습니다.",
+             "물린 상처를 소독하고 진드기 부착을 확인합니다."],
+            ["야생말 / 야생당나귀", "Feral Horse / Equus ferus", "동물", "맹수·육상포유류", "해외/오지", "🐎", 2,
+             "뒤쪽 사각지대로 접근하면 놀라서 뒷발길질을 하며 두개골이나 늑골 골절을 유발합니다.",
+             "말의 엉덩이 뒤쪽으로 절대 지나가지 마세요.",
+             "앞쪽이나 측면에서 부드러운 목소리를 내며 거리를 둡니다.",
+             "팔을 벌려 크게 보이게 하며 물러납니다.",
+             "발길질 충격 시 내부 출혈 여부를 확인하고 병원으로 이송합니다."],
+            ["낙타", "Camel / Camelus", "동물", "맹수·육상포유류", "해외/오지", "🐪", 2,
+             "발정기 수컷은 입에서 거품을 물며 극도로 난폭해져 사람 머리를 물거나 체중으로 깔아뭉갤 수 있습니다.",
+             "목 주머니를 부풀리며 울부짖는 수컷에게 접근하지 마세요.",
+             "울타리나 건물 뒤로 신속히 피신합니다.",
+             "현지 사육사의 통제에 따릅니다.",
+             "교상 및 압박 골절을 응급 처치한 뒤 병원으로 이송합니다."],
+            ["바다표범 (점박이물범)", "Spotted Seal / Phoca largha", "동물", "맹수·육상포유류", "바다/강", "🦭", 2,
+             "백령도 등 연안에서도 관찰되며, 만지려 하면 날카로운 이빨로 물려 특수 세균 감염을 일으킵니다.",
+             "해변에서 쉬고 있는 물범에게 가까이 다가가지 마세요.",
+             "최소 30m 이상 거리를 유지합니다.",
+             "보호종이므로 접촉을 금합니다.",
+             "물린 경우 병원에서 특수 항생제 처방을 받습니다."],
+            ["범고래", "Orca / Orcinus orca", "동물", "맹수·육상포유류", "바다/강", "🐋", 2,
+             "야생에서 인간을 포식한 공식 기록은 없으나, 거대한 체구와 최근 소형 요트의 방향타를 파손하는 행동으로 조난 위험을 유발할 수 있습니다.",
+             "범고래 무리가 접근할 때 물속에 뛰어들거나 소리를 지르며 자극하지 마세요.",
+             "보트 엔진을 끄고 방향타를 중립에 둔 채 무리가 지나가기를 조용히 기다립니다.",
+             "소음을 최소화하고 구명조끼를 착용합니다.",
+             "선박 파손 시 즉시 해양경찰에 구조 요청을 합니다."],
+            ["자이언트수달", "Giant Otter / Pteronura brasiliensis", "동물", "맹수·육상포유류", "해외/오지", "🦦", 3,
+             "아마존강에 서식하는 길이 1.8m의 대형 수달로, 가족 단위로 악어와도 싸울 만큼 영역 방어 본능이 매우 강합니다.",
+             "아마존 지류에서 자이언트수달 무리가 수면 위로 고개를 들고 콧바람을 뿜을 때 가까이 노를 젓지 마세요.",
+             "즉시 보트 방향을 돌려 수달의 영역 밖으로 빠져나옵니다.",
+             "물속 입수를 금지합니다.",
+             "심한 교상 발생 시 압박 지혈 후 항생제 치료를 받습니다."],
+            ["딩고", "Dingo / Canis lupus dingo", "동물", "맹수·육상포유류", "해외/오지", "🐕", 3,
+             "호주 프레이저섬 등에 서식하는 야생 들개로, 관광객이 준 음식에 길들여져 어린이나 단독 보행자를 공격합니다.",
+             "절대 먹이를 주지 말고, 딩고 앞에서 뛰거나 넘어지지 마세요.",
+             "팔짱을 끼고 꼿꼿이 서서 딩고의 눈을 똑바로 바라보며 굵은 목소리로 'NO!'라고 외친 뒤 천천히 후퇴합니다.",
+             "호주 국립공원 레인저가 권고하는 긴 나무 막대기(딩고 스틱)를 휴대하고 캠핑장 음식물을 잠금 상자에 보관합니다.",
+             "물린 상처를 세척하고 파상풍 및 항생제 치료를 받습니다."],
+            ["자칼 (검은등자칼)", "Black-backed Jackal / Lupulella mesomelas", "동물", "맹수·육상포유류", "해외/오지", "🐺", 2,
+             "아프리카 사바나에 서식하며, 광견병의 주요 매개체로 대낮에도 사람을 두려워하지 않고 다가오는 개체는 광견병 감염 가능성이 높습니다.",
+             "낮에 비틀거리거나 침을 흘리며 다가오는 자칼을 절대 만지지 마세요.",
+             "차량 안으로 피하거나 돌을 던져 거리를 둡니다.",
+             "야영지 음식물을 철저히 밀폐합니다.",
+             "물리거나 침이 상처에 닿았다면 즉시 광견병 백신을 접종합니다."],
+            ["안경곰", "Spectacled Bear / Tremarctos ornatus", "동물", "맹수·육상포유류", "해외/오지", "🐻", 3,
+             "남미 안데스 산맥 유일의 곰으로 평소엔 온순하나 새끼를 동반하거나 코너에 몰리면 강한 앞발로 공격합니다.",
+             "안데스 트레킹 중 새끼 곰을 발견하면 어미가 바로 근처에 있으므로 즉시 자리를 피하세요.",
+             "시선을 유지하며 천천히 뒷걸음질로 벗어납니다.",
+             "인기척을 내며 산행합니다.",
+             "상처를 소독·지혈하고 병원으로 이송합니다."],
+            ["느림보곰", "Sloth Bear / Melursus ursinus", "동물", "맹수·육상포유류", "해외/오지", "🐻", 4,
+             "인도와 스리랑카에 서식하며 청력과 시력이 약해 사람과 갑자기 마주치면 극도로 놀라 얼굴과 머리를 집중적으로 공격하는 가장 예측 불가능한 곰입니다.",
+             "덤불이 우거진 숲에서 조용히 걷지 마세요. 갑작스러운 조우가 공격의 주원인입니다.",
+             "큰 소리를 내며 곰이 먼저 피할 시간을 주고, 공격당할 경우 웅크려 목과 얼굴을 보호합니다.",
+             "호루라기나 방울을 휴대하고 단독 야간 보행을 피합니다.",
+             "안면부 열상이 심하므로 기도 확보와 지혈 후 즉시 응급실로 이송합니다."],
+
+            // ================= [B] 동물 - 맹독파충류·양서류 (40종) =================
+            ["블랙맘바", "Black Mamba / Dendroaspis polylepis", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "시속 20km의 이동 속도와 극도로 빠른 신경독을 가진 아프리카 최악의 독사로, 물린 후 20분~수 시간 내 호흡 마비로 사망할 수 있습니다.",
+             "절대 막대기로 건드리거나 잡으려 하지 마세요. 목을 치켜세우고 입 안의 검은 점막을 보이며 연속으로 타격합니다.",
+             "급격한 움직임을 멈추고 뱀이 스스로 도망갈 퇴로를 열어준 뒤 천천히 뒷걸음질로 사거리 밖으로 물러납니다.",
+             "두꺼운 장화와 긴 바지를 착용하고, 덤불이나 바위 틈에 손을 넣지 않습니다.",
+             "즉시 압박 고정 붕대(Pressure Immobilization)로 물린 팔다리를 감아 독의 림프 이동을 늦추고, 호흡 정지에 대비하며 최단 시간 내 항독소 병원으로 이송합니다."],
+            ["인랜드타이판 (피어스스네이크)", "Inland Taipan / Oxyuranus microlepidotus", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "육상 뱀 중 가장 강력한 맹독(한 번 교상으로 성인 100명 치사량)을 보유했으며 신경독, 혈액응고독, 근육독이 복합 작용합니다.",
+             "호주 내륙 건조 지대에서 갈색 뱀을 발견했을 때 절대 가까이 다가가 촬영하지 마세요.",
+             "그 자리에 멈춰 선 뒤 뱀이 이동하는 반대 방향으로 조용히 물러납니다.",
+             "두꺼운 부츠를 착용하고 흙 갈라진 틈새를 밟지 않도록 주의합니다.",
+             "즉시 압박 고정 붕대를 적용하고 움직임을 최소화한 채 호주 항공 구조대(RFDS) 등 긴급 의료망을 호출합니다."],
+            ["해안타이판", "Coastal Taipan / Oxyuranus scutellatus", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "인랜드타이판과 달리 공격성이 매우 높고 번개처럼 여러 번 연속으로 물어 치사율이 극도로 높은 호주 맹독사입니다.",
+             "사탕수수밭이나 해안 수풀에서 마주쳤을 때 도발하거나 쫓지 마세요.",
+             "즉시 동작을 멈추고 천천히 뒤로 물러납니다.",
+             "보호 장화와 각반을 착용합니다.",
+             "압박 고정 붕대를 감고 부목으로 팔다리를 고정한 채 즉시 응급실로 이송합니다."],
+            ["동부갈색뱀 (이스턴브라운스네이크)", "Eastern Brown Snake / Pseudonaja textilis", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "호주 뱀 교상 사망 사고의 60% 이상을 차지하는 민첩하고 공격적인 맹독사로, 극소량의 독으로도 혈액 응고 장애와 심정지를 유발합니다.",
+             "마당이나 산책로에서 발견 시 빗자루나 삽으로 때려잡으려 하지 마세요. 몸을 S자로 말고 빠르게 달려듭니다.",
+             "동작을 완전히 멈추고 뱀이 지나갈 때까지 기다린 뒤 조용히 후퇴합니다.",
+             "정원 잔디를 짧게 깎고 장작 더미를 집 벽에서 떼어 놓습니다.",
+             "즉시 압박 고정 붕대를 적용하고 119(현지 000)에 신고해 항독소를 투여받습니다."],
+            ["킹코브라", "King Cobra / Ophiophagus hannah", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "길이 5m에 달하는 세계 최장 독사로, 코끼리도 쓰러뜨릴 막대한 양의 신경독을 주입해 30분 내 호흡 부전을 일으킬 수 있습니다.",
+             "몸을 1m 이상 세우고 후드를 펼치며 낮게 으르렁거릴 때 등을 보이고 뛰지 마세요.",
+             "시선을 유지한 채 모자나 가방을 천천히 바닥에 떨어뜨려 시선을 분산시키면서 뒷걸음질로 사거리에서 벗어납니다.",
+             "동남아·인도 밀림 트레킹 시 긴 지팡이로 앞길을 두드리며 이동합니다.",
+             "즉시 압박 고정 붕대를 감고 인공호흡 장비를 갖춘 병원으로 긴급 이송합니다."],
+            ["인도코브라 (안경코브라)", "Indian Cobra / Naja naja", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "인도 '빅4' 독사 중 하나로, 인가와 논밭에 자주 출몰하며 강력한 신경독과 조직 괴사 독을 지녔습니다.",
+             "맨발로 야간 산책을 하거나 쥐 구멍에 손을 넣지 마세요.",
+             "코브라의 타격 반경(몸길이의 약 1/3) 밖으로 천천히 물러납니다.",
+             "야간 이동 시 손전등을 비추고 발을 쿵쿵 구르며 걸어 진동으로 뱀이 피하게 합니다.",
+             "압박 고정 붕대를 적용하고 즉시 병원으로 이송해 다가 항독소를 투여받습니다."],
+            ["모잠비크스피팅코브라 (독뿜는코브라)", "Mozambique Spitting Cobra / Naja mossambica", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "물 뿐만 아니라 최대 3m 거리까지 정확하게 눈을 향해 독액을 분사하여 극심한 통증과 영구적 실명을 유발합니다.",
+             "스피팅코브라가 고개를 들 때 얼굴을 가까이 대거나 맨눈으로 들여다보지 마세요.",
+             "즉시 눈을 감고 손이나 옷으로 얼굴을 가린 채 뒤로 물러납니다.",
+             "서식지 탐험 시 고글(보안경)을 착용하면 독액 분사로부터 눈을 보호할 수 있습니다.",
+             "눈에 독액이 들어갔다면 즉시 다량의 물, 생리식염수, 우유 등으로 15~20분간 씻어낸 뒤 안과 및 응급실을 방문합니다."],
+            ["데스애더", "Common Death Adder / Acanthophis antarcticus", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "낙엽과 똑같은 위장색을 띠고 밟히기 직전까지 도망치지 않고 매복하다 0.15초 만에 타격하는 호주 맹독사입니다.",
+             "낙엽이 쌓인 숲길에서 발밑을 보지 않고 걷거나 낙엽 더미에 앉지 마세요.",
+             "발견 시 최소 2m 이상 뒤로 물러나 우회합니다.",
+             "두꺼운 등산화와 각반을 착용합니다.",
+             "신경독에 의한 마비가 진행되므로 즉시 압박 고정 붕대를 감고 응급 이송합니다."],
+            ["퍼프애더 (아프리카살모사)", "Puff Adder / Bitis arietans", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "아프리카에서 가장 많은 뱀 교상 사망 사고를 일으키는 독사로, 몸을 부풀려 큰 경고음을 낸 뒤 번개처럼 출혈독·세포독을 주입합니다.",
+             "사바나 오솔길에서 낮잠 자는 뱀을 밟지 않도록 주의하고, 경고음이 들리면 절대 앞으로 나아가지 마세요.",
+             "즉시 걸음을 멈추고 뒤로 물러납니다.",
+             "야간 이동 시 랜턴과 부츠를 필수로 착용합니다.",
+             "출혈독·괴사독이므로 압박 지혈대를 꽉 묶지 말고(괴사 악화), 부목으로 고정한 채 즉시 병원으로 이송합니다."],
+            ["가분살모사 (가봉바이퍼)", "Gaboon Viper / Bitis gabonica", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "독사 중 가장 긴 독니(5cm)와 최다 독 주입량을 기록한 거대 살모사로, 낙엽 위 위장술이 완벽해 밟혀서 물리는 사고가 많습니다.",
+             "열대우림 바닥의 기하학적 낙엽 무늬를 주의 깊게 살피고 절대 만지지 마세요.",
+             "발견 시 거리를 두고 우회합니다.",
+             "두꺼운 가죽 부츠를 착용합니다.",
+             "급성 쇼크와 전신 출혈이 발생하므로 부목 고정 후 즉시 항독소 치료 병원으로 이송합니다."],
+            ["톱비늘살모사", "Saw-scaled Viper / Echis carinatus", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "성질이 매우 사납고 비늘을 마찰시켜 톱질 소리를 낸 뒤 순식간에 여러 번 물어 치명적 출혈독을 주입합니다.",
+             "사막이나 바위 지대에서 쉭쉭거리는 마찰음이 들리면 절대 발을 내딛지 마세요.",
+             "소리의 방향을 파악한 뒤 반대편으로 물러납니다.",
+             "야간 캠핑 시 신발과 침낭을 반드시 털어서 확인합니다.",
+             "출혈독이므로 꽉 조이는 압박대를 피하고 심장 높이 아래로 안정시킨 채 응급 이송합니다."],
+            ["러셀살모사", "Russell's Viper / Daboia russelii", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "압력솥 증기 새는 듯한 큰 소리를 내며 공격하고, 혈액 응고 장애와 급성 신부전, 뇌하수체 손상을 일으키는 맹독사입니다.",
+             "농경지나 수풀에서 경고음이 들릴 때 호기심에 다가가지 마세요.",
+             "즉시 2m 이상 뒤로 물러납니다.",
+             "장화와 손전등을 착용합니다.",
+             "신부전 및 전신 출혈 예방을 위해 최단 시간 내 항독소를 투여받아야 합니다."],
+            ["붐슬랑", "Boomslang / Dispholidus typus", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "아프리카 나무 위에 서식하며, 물린 직후에는 통증이 거의 없다가 12~24시간 뒤 온몸의 점막과 장기에 출혈을 일으키는 혈액독을 가졌습니다.",
+             "나무를 오르거나 나뭇가지를 잡을 때 초록색·갈색 뱀이 있는지 확인하세요.",
+             "온순한 편이므로 잡으려 하지 않고 거리를 두면 물지 않습니다.",
+             "수풀과 나뭇가지 접촉 시 장갑을 착용합니다.",
+             "물린 직후 증상이 없더라도 반드시 병원에 입원해 혈액 응고 수치를 24시간 이상 추적 관찰해야 합니다."],
+            ["동부다이아몬드방울뱀", "Eastern Diamondback Rattlesnake", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "북미 최대 독사로 다량의 조직 파괴 독과 출혈독을 주입하며 사거리가 깁니다.",
+             "꼬리 방울 소리가 들렸을 때 뱀이 어디 있는지 찾기 전까지 발을 떼어 아무 데나 뛰지 마세요.",
+             "소리의 위치를 확인한 뒤 뱀에서 멀어지는 방향으로 천천히 물러납니다.",
+             "바위 틈이나 통나무 아래에 손을 넣지 않고 가죽 부츠를 착용합니다.",
+             "출혈·괴사독이므로 압박 지혈대·얼음찜질·독 빨아내기를 절대 금지하고, 반지·시계를 뺀 뒤 부목 고정하여 응급실로 이송합니다."],
+            ["모하비방울뱀", "Mojave Rattlesnake / Crotalus scutulatus", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "일반 방울뱀과 달리 치명적인 신경독(모하비 독소)을 함께 지녀 호흡 마비와 횡문근융해증을 일으킵니다.",
+             "방울 소리를 내지 않고 공격하는 개체도 있으므로 사막 트레킹 시 발밑을 주시하세요.",
+             "2m 이상 거리를 두고 우회합니다.",
+             "두꺼운 부츠와 각반을 착용합니다.",
+             "호흡곤란 모니터링과 함께 즉시 병원으로 이송해 항독소를 투여받습니다."],
+            ["부시마스터", "Bushmaster / Lachesis muta", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "중남미 열대우림의 제왕이라 불리는 최대 3.5m 거대 독사로, 막대한 양의 출혈·신경 복합독을 주입합니다.",
+             "밀림에서 낙엽 더미나 쓰러진 고목 위를 무심코 밟지 마세요.",
+             "긴 지팡이로 앞길을 짚으며 걷고 발견 시 크게 우회합니다.",
+             "야간 밀림 보행을 자제합니다.",
+             "즉시 안정을 취하고 헬기 등 긴급 구조망을 통해 항독소 보유 병원으로 이송합니다."],
+            ["창살모사 (페르드랑스)", "Fer-de-lance / Bothrops asper", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "중남미에서 가장 많은 인명 피해를 내는 예민하고 공격적인 독사로, 심한 조직 괴사와 전신 출혈을 유발합니다.",
+             "농장이나 열대 숲길에서 야간 보행을 피하세요.",
+             "발견 시 자극하지 않고 천천히 뒤로 물러납니다.",
+             "보호 장화를 착용합니다.",
+             "괴사독이므로 꽉 조이는 지혈대를 피하고 즉시 병원으로 이송합니다."],
+            ["코랄스네이크 (산호뱀)", "Eastern Coral Snake / Micrurus fulvius", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "화려한 빨강·노랑·검정 고리 무늬를 가진 코브라과 맹독사로, 물린 자국이 작고 통증이 적지만 수 시간 뒤 치명적인 호흡 마비를 일으킵니다.",
+             "화려한 줄무늬 뱀을 예쁘다고 절대 만지거나 잡지 마세요.",
+             "낙엽이나 장작을 옮길 때 장갑을 끼고 거리를 둡니다.",
+             "접촉하지 않으면 공격하지 않습니다.",
+             "물린 직후 아픔이 없더라도 즉시 응급실로 이동해 신경독 항독소와 인공호흡 준비를 받아야 합니다."],
+            ["벨처바다뱀 / 노란입술바다뱀", "Belcher's & Yellow-lipped Sea Snake", "동물", "맹독파충류·양서류", "바다/강", "🐍", 4,
+             "육상 코브라보다 수십 배 강한 신경독과 근육독을 지녔으며, 물린 자국이 모기 물린 것처럼 작아 방심하기 쉽습니다.",
+             "스노클링 중 바다뱀이 다가와도 손으로 잡거나 꼬리를 잡아당기지 마세요.",
+             "팔다리를 허우적거리지 말고 가만히 떠 있으면 호기심을 풀고 스스로 헤엄쳐 갑니다.",
+             "해변에 밀려온 바다뱀도 독니가 살아있으므로 절대 만지지 않습니다.",
+             "물린 즉시 물 밖으로 나와 압박 고정 붕대를 팔다리에 감고 즉시 응급실로 이송합니다."],
+            ["살모사 (한국 살모사)", "Gloydius brevicaudus / Korean Viper", "동물", "맹독파충류·양서류", "산/숲", "🐍", 3,
+             "한국 산과 들에 가장 흔한 독사로 혈액독(출혈독)을 지녀 심한 부종, 수포, 조직 괴사, 복시(물체가 겹쳐 보임)를 유발합니다.",
+             "입으로 독을 빨아내거나, 칼로 째거나, 얼음찜질을 하거나, 지혈대로 꽉 묶지 마세요. 2차 감염과 조직 괴사만 악화됩니다.",
+             "삼각형 머리의 뱀을 보면 2m 이상 뒤로 물러나 지나가기를 기다립니다.",
+             "등산 스틱으로 풀숲을 두드리며 걷고 발목을 덮는 등산화와 스패츠를 착용합니다.",
+             "119에 신고하고, 물린 부위를 심장보다 낮게 유지한 채 부목으로 고정하고 반지·시계를 빼고 항독소 보유 병원으로 이송합니다."],
+            ["까치살모사 (칠점사)", "Ussuri Mamushi / Gloydius intermedius", "동물", "맹독파충류·양서류", "산/숲", "🐍", 3,
+             "한국 토종 독사 중 독성이 가장 강하고 성질이 사나우며, 해발 고도가 높은 깊은 산악 지대에 주로 서식합니다.",
+             "고산 지대 바위 틈이나 계곡 돌무더기에 맨손을 넣지 마세요.",
+             "발견 시 즉시 2m 이상 뒤로 물러납니다.",
+             "스틱과 보호 장비를 착용합니다.",
+             "살모사와 동일하게 압박 지혈대·얼음찜질·독 빨기를 금하고 즉시 병원으로 이송해 항독소를 투여받습니다."],
+            ["쇠살모사 (불독사)", "Red-tongued Viper Snake / Gloydius ussuriensis", "동물", "맹독파충류·양서류", "산/숲", "🐍", 3,
+             "체구가 작지만 개체 수가 많아 한국 뱀 교상 사고의 상당수를 차지하며, 계곡과 농경지 근처에도 출몰합니다.",
+             "풀밭에 앉거나 풀을 뽑을 때 맨손으로 작업하지 마세요.",
+             "발견 시 거리를 두고 우회합니다.",
+             "장갑과 장화를 착용합니다.",
+             "물린 부위를 움직이지 않게 고정하고 즉시 응급실로 이동합니다."],
+            ["유혈목이 (꽃뱀)", "Tiger Keelback / Rhabdophis tigrinus", "동물", "맹독파충류·양서류", "산/숲", "🐍", 3,
+             "과거 독이 없는 뱀으로 잘못 알려졌으나, 안쪽 어금니 독니와 목 뒤 독샘에 치명적 혈액응고저해독을 가진 맹독사입니다.",
+             "독사가 아니라고 오해해 맨손으로 잡거나 목에 감는 행위는 절대 금지입니다.",
+             "자극하지 않으면 먼저 공격하지 않으므로 조용히 거리를 둡니다.",
+             "스틱으로 건드리지 않습니다.",
+             "물린 뒤 지혈이 안 되고 잇몸 출혈·혈뇨가 나면 즉시 항독소 및 혈액응고 인자 치료를 받아야 합니다."],
+            ["황금독화살개구리", "Golden Poison Frog / Phyllobates terribilis", "동물", "맹독파충류·양서류", "해외/오지", "🐸", 4,
+             "지구상 가장 강력한 생물독 중 하나인 바트라코톡신(신경·심장독)을 피부에서 분비해 성인 10명 이상을 사망케 할 수 있습니다.",
+             "콜롬비아 열대우림에서 화려한 황금색·주황색 개구리를 절대 만지거나 나뭇잎으로 건드리지 마세요.",
+             "접촉하지 않으면 독을 쏘지 않으므로 눈으로만 관찰하고 지나갑니다.",
+             "야영 시 개구리가 기어 들어오지 않도록 텐트 지퍼를 닫습니다.",
+             "피부에 닿았다면 즉시 다량의 물로 씻어내고, 상처나 점막에 닿았다면 즉시 응급실로 이송합니다."],
+            ["수수두꺼비 (아메리카왕두꺼비)", "Cane Toad / Rhinella marina", "동물", "맹독파충류·양서류", "해외/오지", "🐸", 3,
+             "눈 뒤 귀밑샘에서 심장 독소(부포톡신)가 든 우윳빛 독액을 분비해 반려견 사망 및 인체 중독 사고를 일으킵니다.",
+             "맨손으로 잡거나 반려동물이 입에 물지 않도록 각별히 주의하세요.",
+             "거리를 두고 접근하지 않습니다.",
+             "호주·열대 정원에서는 장갑과 집게를 사용해 격리합니다.",
+             "눈이나 입에 독액이 닿으면 15분간 물로 씻어내고 병원을 방문합니다."],
+            ["아메리카독도마뱀 (힐라몬스터)", "Gila Monster / Heloderma suspectum", "동물", "맹독파충류·양서류", "해외/오지", "🦎", 3,
+             "강력한 턱으로 문 뒤 놓지 않고 씹으면서 신경독을 주입해 극심한 통증과 저혈압, 부종을 유발합니다.",
+             "느리게 움직인다고 손을 뻗어 만지지 마세요.",
+             "2m 이상 거리를 두면 안전합니다.",
+             "물렸을 때 떼어내려면 도마뱀을 물속에 담그거나 튼튼한 막대기로 턱 사이를 벌려야 합니다.",
+             "상처를 세척하고 통증 및 혈압 관리를 위해 응급실로 이동합니다."],
+            ["멕시코독도마뱀 (구슬도마뱀)", "Mexican Beaded Lizard / Heloderma horridum", "동물", "맹독파충류·양서류", "해외/오지", "🦎", 3,
+             "힐라몬스터의 근연종으로 더 크고 독 주입량이 많으며 한 번 물면 턱을 잠그고 독을 씹어 넣습니다.",
+             "바위 밑이나 굴 속에 손을 넣지 마세요.",
+             "거리를 두고 우회합니다.",
+             "장갑과 부츠를 착용합니다.",
+             "물린 부위를 세척하고 즉시 병원으로 이송합니다."],
+            ["코모도왕도마뱀", "Komodo Dragon / Varanus komodoensis", "동물", "맹독파충류·양서류", "해외/오지", "🦎", 4,
+             "길이 3m의 세계 최대 도마뱀으로, 톱니 이빨과 혈액응고 방지 독샘·치명적 패혈증 박테리아로 사슴이나 사람도 사냥합니다.",
+             "생리 중인 여성이나 출혈 상처가 있는 상태로 서식지에 접근하지 마세요(수 km 밖 피 냄새를 감지합니다).",
+             "시속 20km로 돌진할 수 있으나 지구력이 약하므로 직선으로 빠르게 뛰거나 계단·높은 전망대로 피신하세요.",
+             "현지 레인저가 휴대하는 Y자형 긴 나무 막대기로 코모도왕도마뱀의 목을 눌러 제지합니다.",
+             "물리면 출혈이 멈추지 않고 패혈증 쇼크가 오므로 즉시 압박 지혈 후 병원으로 후송합니다."],
+            ["붉은배영원 (독영원)", "Japanese Fire-bellied Newt / Cynops pyrrhogaster", "동물", "맹독파충류·양서류", "해외/오지", "🦎", 3,
+             "피부와 내장에 복어독(테트로도톡신)을 함유해 만진 손으로 눈·입을 만지거나 섭취 시 호흡 마비를 일으킵니다.",
+             "어린이가 맨손으로 잡거나 입에 넣지 않도록 주의하세요.",
+             "관찰만 하고 접촉을 피합니다.",
+             "접촉 후에는 반드시 비눗물로 손을 씻습니다.",
+             "섭취 시 즉시 구토를 유도하고 인공호흡을 준비하며 응급실로 이송합니다."],
+            ["두꺼비 (한국 두꺼비)", "Asiatic Toad / Bufo gargarizans", "동물", "맹독파충류·양서류", "산/숲", "🐸", 2,
+             "눈 뒤 독샘에서 부포톡신 독액을 분비하며, 참개구리로 오인해 끓여 먹었다가 심정지로 사망하는 중독 사고가 발생합니다.",
+             "야생 두꺼비를 식용으로 포획하거나 만진 손으로 눈을 비비지 마세요.",
+             "건드리지 않으면 먼저 공격하지 않습니다.",
+             "자연 서식지에 그대로 둡니다.",
+             "눈에 독액이 들어갔다면 물로 15분간 세척하고, 섭취 시 즉시 119에 신고합니다."],
+            ["무당개구리", "Oriental Fire-bellied Toad / Bombina orientalis", "동물", "맹독파충류·양서류", "산/숲", "🐸", 2,
+             "위협을 느끼면 배의 붉은 경계색을 보이며 자극적인 피부 독액을 분비해 눈과 점막에 심한 통증을 줍니다.",
+             "계곡에서 화려한 개구리를 맨손으로 잡지 마세요.",
+             "관찰 후 자리를 떠납니다.",
+             "접촉 시 즉시 손을 씻습니다.",
+             "눈에 들어갔다면 생리식염수나 흐르는 물로 씻어냅니다."],
+            ["구렁이 (황구렁이·먹구렁이)", "Amur Rat Snake / Elaphe schrenckii", "동물", "맹독파충류·양서류", "산/숲", "🐍", 1,
+             "독이 없는 멸종위기 야생생물이지만 몸집이 커서 위협 시 꼬리를 떨며 방어적으로 물 수 있습니다.",
+             "보호종이므로 포획하거나 돌을 던지지 마세요.",
+             "조용히 지나갈 때까지 기다려 줍니다.",
+             "거리를 두고 우회합니다.",
+             "물려도 독은 없으나 이빨 자국을 소독하여 세균 감염을 예방합니다."],
+            ["능구렁이", "Red-banded Snake / Lycodon rufozonatus", "동물", "맹독파충류·양서류", "산/숲", "🐍", 1,
+             "독은 없으나 성질이 사나워 잡으려 하면 심하게 물고 악취 분비액을 뿜습니다.",
+             "맨손으로 잡지 마세요.",
+             "거리를 두고 지나갑니다.",
+             "스틱으로 풀숲을 두드리며 걷습니다.",
+             "물린 부위를 소독합니다."],
+            ["그린아나콘다", "Green Anaconda / Eunectes murinus", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "체중 200kg이 넘는 세계 최대 중량의 뱀으로, 늪지대 물속에서 매복하다 근육으로 휘감아 질식시키고 익사시킵니다.",
+             "탁한 아마존 늪지나 수풀 물가에 혼자 들어가지 마세요.",
+             "휘감기기 시작했다면 목 주변에 팔을 끼워 넣어 숨쉴 공간을 확보하고, 동료와 함께 꼬리 끝부터 풀어내야 합니다.",
+             "보트 이동을 원칙으로 하고 야간 물놀이를 금지합니다.",
+             "익수 처치 및 압박에 의한 늑골 골절 여부를 확인합니다."],
+            ["그물무늬비단뱀", "Reticulated Python / Malayopython reticulatus", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "길이 6~9m에 달하는 세계 최장 뱀으로, 숨을 내쉴 때마다 더 강하게 조여 혈류와 호흡을 차단합니다.",
+             "동남아 밀림이나 배수로 근처에서 대형 비단뱀을 혼자 제압하려 하지 마세요.",
+             "꼬리 끝부터 풀어야 힘이 빠지며, 코·눈을 강하게 압박하거나 알코올을 입에 부으면 입을 뗍니다.",
+             "야간 이동 시 손전등을 비추고 단독 행동을 피합니다.",
+             "질식 및 압궤 손상을 확인하고 병원에서 진료를 받습니다."],
+            ["보아뱀", "Boa Constrictor / Boa constrictor", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 3,
+             "독은 없지만 2~4m의 근육질 몸으로 먹이를 조여 혈류를 차단합니다.",
+             "목에 감기지 않도록 팔로 방어하세요.",
+             "꼬리 끝부터 풀어내며 주변에 도움을 요청합니다.",
+             "거리를 두고 우회합니다.",
+             "호흡 곤란 여부를 확인하고 안정을 취합니다."],
+            ["유럽살모사 (애더)", "Common European Viper / Vipera berus", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 3,
+             "유럽 전역과 시베리아에 서식하는 독사로 출혈독을 지녔습니다.",
+             "풀밭에서 일광욕하는 뱀을 만지지 마세요.",
+             "2m 이상 뒤로 물러납니다.",
+             "등산화를 착용합니다.",
+             "심장 아래로 고정하고 응급실로 이동합니다."],
+            ["코브라사촌 (링할스)", "Rinkhals / Hemachatus haemachatus", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "남아프리카에 서식하며 독액을 눈으로 분사한 뒤 죽은 척 눕다가 가까이 오면 기습 공격하는 지능형 독사입니다.",
+             "죽은 척 누워있는 뱀에게 가까이 다가가지 마세요.",
+             "눈을 보호하며 뒤로 물러납니다.",
+             "보안경을 착용합니다.",
+             "눈에 닿으면 다량의 물로 씻고 물렸다면 압박 고정 후 응급 이송합니다."],
+            ["아프리카나무뱀 (트위그스네이크)", "Twig Snake / Thelotornis", "동물", "맹독파충류·양서류", "해외/오지", "🐍", 4,
+             "나뭇가지와 구별이 불가능한 위장술을 쓰며, 항독소가 존재하지 않는 치명적 혈액응고저해독을 지녔습니다.",
+             "나무 가지를 잡을 때 눈으로 꼼꼼히 확인하세요.",
+             "건드리지 않고 거리를 둡니다.",
+             "장갑을 착용합니다.",
+             "항독소가 없으므로 즉시 병원에 입원해 수혈 및 응고 인자 보충 치료를 받아야 합니다."],
+            ["바다이구아나 / 그린이구아나", "Green Iguana / Iguana iguana", "동물", "맹독파충류·양서류", "해외/오지", "🦎", 2,
+             "채찍 같은 꼬리 휘두르기와 면도날 발톱, 톱니 이빨로 깊은 열상을 입힐 수 있습니다.",
+             "번식기 수컷 이구아나에게 가까이 가지 마세요.",
+             "꼬리 사거리 밖으로 물러납니다.",
+             "음식을 주지 않습니다.",
+             "열상을 소독하고 파상풍 예방 주사를 맞습니다."],
+
+            // ================= [C] 동물 - 악어·거북 (10종) =================
+            ["바다악어 (솔트워터크로커다일)", "Saltwater Crocodile / Crocodylus porosus", "동물", "악어·거북", "해외/오지", "🐊", 4,
+             "길이 6m, 체중 1톤에 달하는 지구상 최대 파충류이자 동물계 최고 치악력(3,700 PSI)을 지닌 최상위 식인 포식자입니다.",
+             "경고 표지판이 있는 호주·동남아 해변과 맹그로브 강가에는 발목 깊이 물에도 절대 들어가지 마세요.",
+             "물속에서 습격받았다면 죽은 척은 절대 금물이며 눈, 콧구멍, 입 안쪽의 목구멍 판막을 손가락으로 맹렬히 찌르세요. 육지에서는 직선으로 전력 질주합니다.",
+             "강가에서 최소 5m 이상 떨어져 걷고, 같은 시간·장소에서 반복적으로 물을 긷는 행동을 피하세요(매복 학습).",
+             "치명적 열상과 수중 세균(아에로모나스 등) 감염이 발생하므로 즉시 지혈 후 응급 헬기 구조를 요청합니다."],
+            ["나일악어", "Nile Crocodile / Crocodylus niloticus", "동물", "악어·거북", "해외/오지", "🐊", 4,
+             "아프리카 강과 호수에서 매년 수백 명의 인명 피해를 내며, 먹이를 물고 회전하는 '데스 롤(Death Roll)'로 사지를 절단합니다.",
+             "탁한 강물에서 수영하거나 보트 난간 밖으로 손발을 내밀지 마세요.",
+             "육지 추격 시 지그재그가 아닌 직선으로 전력 질주해 멀어집니다(악어는 육상에서 단거리만 뛸 수 있습니다).",
+             "야간 손전등을 비췄을 때 수면 위 붉은 눈빛이 반사되면 즉시 물가에서 벗어납니다.",
+             "대량 출혈 지혈과 광범위 항생제 치료가 가능한 병원으로 긴급 이송합니다."],
+            ["미시시피악어 (앨리게이터)", "American Alligator / Alligator mississippiensis", "동물", "악어·거북", "해외/오지", "🐊", 3,
+             "미국 남동부 습지와 골프장 연못에 흔하며, 봄철 번식기와 먹이를 받아먹어 사람을 두려워하지 않는 개체가 공격합니다.",
+             "연못가에서 4~5m 이내로 접근하거나 반려견을 물가에서 산책시키지 마세요.",
+             "쉭쉭거리는 경고음을 내면 즉시 뒷걸음질로 멀어지고, 물렸다면 눈과 코를 강하게 가격합니다.",
+             "절대 먹이를 주지 않습니다.",
+             "물린 상처를 소독·지혈하고 즉시 응급실로 이동합니다."],
+            ["검은카이만", "Black Caiman / Melanosuchus niger", "동물", "악어·거북", "해외/오지", "🐊", 4,
+             "아마존강 유역의 최상위 포식자로 길이 5m까지 자라며 야간에 소형 카누나 물가 사람을 습격합니다.",
+             "아마존강에서 야간 수영이나 얕은 물가 보행을 절대 금지합니다.",
+             "물렸을 경우 눈과 주둥이를 찌르며 저항하고 보트 안으로 피신합니다.",
+             "현지 가이드가 동승한 대형 보트를 이용합니다.",
+             "즉시 지혈 후 항생제 및 파상풍 치료를 받습니다."],
+            ["가리알 (인도가비알)", "Gharial / Gavialis gangeticus", "동물", "악어·거북", "해외/오지", "🐊", 2,
+             "주둥이가 매우 가늘어 물고기만 사냥하며 사람을 잡아먹지 않으나, 산란기 둥지 침범 시 위협적일 수 있습니다.",
+             "모래톱 산란지 근처에 접근하지 마세요.",
+             "거리를 두고 관찰합니다.",
+             "보호종이므로 자극하지 않습니다.",
+             "가벼운 열상 시 소독 후 지혈합니다."],
+            ["머거악어 (늪악어)", "Mugger Crocodile / Crocodylus palustris", "동물", "악어·거북", "해외/오지", "🐊", 4,
+             "인도와 스리랑카 내륙 하천에 서식하며 육상 이동 능력이 뛰어나 마을 근처까지 올라와 습격합니다.",
+             "서식지 표시가 있는 호수나 강가에서 빨래나 목욕을 하지 마세요.",
+             "직선으로 빠르게 달려 대피합니다.",
+             "안전 울타리가 설치된 구역만 이용합니다.",
+             "즉시 지혈 후 병원으로 이송합니다."],
+            ["오리노코악어", "Orinoco Crocodile / Crocodylus intermedius", "동물", "악어·거북", "해외/오지", "🐊", 4,
+             "남미 오리노코강에 서식하는 초대형 악어로 번식기 공격성이 매우 높습니다.",
+             "강가 수풀에 접근하지 마세요.",
+             "보트 위에서 안전거리를 유지합니다.",
+             "야간 수면 접근을 금합니다.",
+             "즉시 지혈 및 응급 이송합니다."],
+            ["악어거북", "Alligator Snapping Turtle / Macrochelys temminckii", "동물", "악어·거북", "바다/강", "🐢", 3,
+             "거대한 갈고리 부리와 강력한 치악력으로 성인의 손가락이나 발가락을 단번에 절단할 수 있습니다.",
+             "민물 낚시나 물놀이 중 발견 시 절대 물속에서 손을 대지 마세요.",
+             "등껍질 뒤쪽 양옆 가장자리를 잡아야 안전하며 앞쪽 절반에는 절대 손을 대지 않습니다.",
+             "낚싯줄을 끊어 놓아주는 것이 안전합니다.",
+             "손가락 절단 시 절단 부위를 깨끗한 거즈에 싸서 비닐봉지에 밀봉한 뒤 얼음물에 담아 즉시 병원으로 이송합니다."],
+            ["늑대거북", "Common Snapping Turtle / Chelydra serpentina", "동물", "악어·거북", "바다/강", "🐢", 2,
+             "한국 하천에도 유기·유입된 외래종으로 목이 매우 길어 등껍질 중간까지 고개를 돌려 물 수 있습니다.",
+             "육지 위에서 마주쳤을 때 맨손으로 들어 올리려 하지 마세요.",
+             "거리를 두고 우회합니다.",
+             "이동 시 삽이나 빗자루를 이용해 상자에 담습니다.",
+             "물린 부위를 소독하고 파상풍 주사를 맞습니다."],
+            ["자라", "Chinese Softshell Turtle / Pelodiscus sinensis", "동물", "악어·거북", "바다/강", "🐢", 2,
+             "부드러운 등껍질과 달리 목이 길고 턱 힘이 매우 강해 한번 물면 쉽게 놓지 않습니다.",
+             "낚시 바늘을 뺄 때 맨손을 입 근처에 대지 마세요.",
+             "물렸을 때는 자라를 물속이나 바닥에 내려놓으면 스스로 입을 열고 도망칩니다.",
+             "긴 펜치를 사용해 바늘을 제거합니다.",
+             "상처를 깨끗이 소독하고 지혈합니다."],
+
+            // ================= [D] 동물 - 치명적해양생물 (40종) =================
+            ["상자해파리 (바다말벌)", "Australian Box Jellyfish / Chironex fleckeri", "동물", "치명적해양생물", "바다/강", "🪼", 4,
+             "지구상 가장 치명적인 맹독 생물로, 3m 길이의 촉수에 수백만 개의 독침이 있어 스치면 2~5분 내 심정지와 호흡 마비로 사망합니다.",
+             "쏘였을 때 민물(수돗물), 알코올(소주), 모래 문지르기를 절대 하지 마세요. 삼투압 충격으로 남은 독침이 한꺼번에 발사됩니다.",
+             "즉시 물 밖으로 나와 움직임을 최소화하고 도움을 요청하세요.",
+             "열대 해변에서는 전신 라이크라(보호 슈트)를 착용하고 해파리 차단 그물 안에서만 수영합니다.",
+             "즉시 상처에 식초(아세트산)를 30초 이상 충분히 부어 독침 발사를 비활성화한 뒤, 핀셋으로 촉수를 제거하고 심폐소생술(CPR)을 준비하며 응급실로 이송합니다."],
+            ["이루칸지해파리", "Irukandji Jellyfish / Carukia barnesi", "동물", "치명적해양생물", "바다/강", "🪼", 4,
+             "엄지손톱만 한 투명한 해파리지만, 쏘인 후 30분 뒤 극심한 요통, 혈압 급상승, 뇌출혈, 급성 심부전(이루칸지 증후군)을 유발합니다.",
+             "호주 북부 열대 바다에서 보호 슈트 없이 입수하지 마세요.",
+             "쏘인 느낌이 들면 즉시 물 밖으로 나와 안정을 취합니다.",
+             "해파리 차단 그물도 통과할 수 있으므로 경보 발령 시 수영을 중단합니다.",
+             "식초를 부어 추가 독침 발사를 막고 즉시 병원으로 이송해 혈압 강하제 및 진통 치료를 받습니다."],
+            ["고깔해파리 (포르투갈군함)", "Portuguese Man o' War / Physalia physalis", "동물", "치명적해양생물", "바다/강", "🪼", 3,
+             "푸른 풍선 모양 부레 아래 10~30m 길이의 맹독 촉수를 늘어뜨리며, 해변에 죽어 밀려온 개체도 독침이 살아 있습니다.",
+             "해변 모래사장에 푸른 비닐봉지처럼 떠밀려온 물체를 절대 만지거나 밟지 마세요. 또한 식초를 붓지 마세요(독침 발사를 촉진할 수 있습니다).",
+             "수영 중 발견 시 촉수가 퍼진 방향을 피해 즉시 상륙합니다.",
+             "해변 경보 깃발을 확인하고 래시가드를 착용합니다.",
+             "바닷물로 촉수를 씻어낸 뒤 약 45℃의 온수에 20~40분간 담가 열에 약한 독 단백질을 파괴합니다."],
+            ["노무라입깃해파리", "Nemopilema nomurai", "동물", "치명적해양생물", "바다/강", "🪼", 3,
+             "한국 연안에 대량 출몰하는 최대 2m 크기의 거대 해파리로, 채찍 자국 같은 발진과 극심한 통증, 아나필락시스 쇼크를 유발합니다.",
+             "민물이나 소주로 씻지 말고 맨손으로 촉수를 떼어내지 마세요.",
+             "발견 즉시 물 밖으로 나옵니다.",
+             "전신 수영복(래시가드)을 착용합니다.",
+             "바닷물이나 생리식염수로 세척한 뒤 플라스틱 카드 모서리로 남은 촉수를 긁어내고 냉찜질합니다."],
+            ["사자갈기해파리", "Lion's Mane Jellyfish / Cyanea capillata", "동물", "치명적해양생물", "바다/강", "🪼", 3,
+             "촉수 길이가 30m 이상 자라는 세계 최대 해파리로, 쏘이면 극심한 통증과 근육 경련, 호흡곤란을 일으킵니다.",
+             "차가운 북반구 해역에서 거대한 붉은 갈색 해파리 덩어리에 접근하지 마세요.",
+             "즉시 물 밖으로 나와 촉수를 제거합니다.",
+             "보호 슈트를 착용합니다.",
+             "바닷물로 씻어내고 온수 침지 또는 냉찜질 후 병원을 방문합니다."],
+            ["파란고리문어", "Blue-ringed Octopus / Hapalochlaena", "동물", "치명적해양생물", "바다/강", "🐙", 4,
+             "제주도와 남해안에도 출몰하는 소형 문어로, 복어독(테트로도톡신)보다 강력한 맹독을 지녔으며 현재까지 해독제가 없습니다.",
+             "바위 틈에서 파란 고리 무늬가 빛나는 작은 문어를 보면 절대 손으로 잡거나 뜰채로 건드리지 마세요.",
+             "갯바위에서 발견 시 즉시 물러나 해경이나 수산과학원에 신고합니다.",
+             "갯바위 체험 시 장갑을 착용하고 돌 밑을 맨손으로 뒤지지 않습니다.",
+             "물린 즉시 압박 고정 붕대를 팔다리에 감고, 호흡 근육이 마비되므로 119 도착 전까지 지속적인 인공호흡(심폐소생술)을 시행합니다."],
+            ["청자고둥 (원뿔달팽이)", "Geography Cone Snail / Conus geographus", "동물", "치명적해양생물", "바다/강", "🐚", 4,
+             "아름다운 원뿔 모양 껍데기 속에 작살 형태의 맹독 침(코노톡신)을 숨기고 있어 주워 들다 찔리면 호흡 마비로 사망할 수 있습니다.",
+             "열대 해변이나 산호초에서 살아있는 원뿔 모양 조개껍데기를 절대 줍지 마세요.",
+             "바다 속에서 발견 시 접촉하지 않고 지나갑니다.",
+             "두꺼운 다이빙 장갑도 뚫을 수 있으므로 만지지 않는 것이 유일한 방어법입니다.",
+             "즉시 압박 고정 붕대를 적용하고 호흡 마비에 대비해 인공호흡을 준비하며 응급실로 이송합니다."],
+            ["백상아리", "Great White Shark / Carcharodon carcharias", "동물", "치명적해양생물", "바다/강", "🦈", 4,
+             "강력한 치악력과 톱니 모양 이빨을 가진 최상위 해양 포식자로, 서퍼나 다이버를 물개로 오인해 치명적인 교상을 입힙니다.",
+             "수면에서 물장구를 치며 허우적거리거나 등을 보이고 패닉 상태로 헤엄치지 마세요.",
+             "상어와 시선을 마주친 채 침착하게 수직 자세를 유지하며 뒤로 헤엄쳐 보트나 해안으로 빠져나옵니다.",
+             "공격당할 경우 죽은 척하지 말고 코, 눈, 아가미 부위를 주먹이나 다이빙 장비로 맹렬히 가격합니다.",
+             "즉시 물 밖으로 인양해 출혈 부위 위쪽을 지혈대나 수건으로 강하게 묶어 지혈하고 119/해경에 신고합니다."],
+            ["뱀상어 (타이거샤크)", "Tiger Shark / Galeocerdo cuvier", "동물", "치명적해양생물", "바다/강", "🦈", 4,
+             "열대 바다에서 무엇이든 삼키는 식성을 가진 대형 상어로, 수심이 얕고 탁한 연안에서도 활동합니다.",
+             "새벽과 해질녘, 강 하구 근처의 탁한 바다 수영과 반짝이는 장신구 착용을 피하세요.",
+             "상어 발견 시 시선을 유지하며 보트나 해안으로 복귀합니다.",
+             "눈과 아가미를 찌르거나 단단한 물체를 입에 밀어 넣어 방어합니다.",
+             "대량 출혈 쇼크 방지를 위해 다리를 높이고 압박 지혈한 채 긴급 이송합니다."],
+            ["황소상어 (불샤크)", "Bull Shark / Carcharhinus leucas", "동물", "치명적해양생물", "바다/강", "🦈", 4,
+             "염분 조절 능력이 있어 민물 강 상류까지 거슬러 올라오며, 테스토스테론 수치가 높아 공격성이 극도로 강합니다.",
+             "출혈 상처가 있는 상태로 수영하거나 탁한 강 하구에서 혼자 물놀이하지 마세요.",
+             "상어가 몸을 부딪치면 즉시 수직 자세로 눈과 아가미를 방어하며 물 밖으로 나옵니다.",
+             "코와 아가미를 강하게 가격해 물러나게 합니다.",
+             "즉각적인 지혈과 응급 수혈이 가능한 대형 병원으로 이송합니다."],
+            ["장완흉상어", "Oceanic Whitetip Shark / Carcharhinus longimanus", "동물", "치명적해양생물", "바다/강", "🦈", 4,
+             "원양 외해에 서식하며 난파선 생존자 등 표류하는 인간을 가장 집요하게 공격하는 상어로 악명 높습니다.",
+             "외해에서 구명보트 밖으로 손발을 내밀거나 피·음식물 찌꺼기를 버리지 마세요.",
+             "다이버는 등을 맞대고 뭉쳐서 상어의 접근 방향을 모두 주시하며 상승합니다.",
+             "눈과 아가미를 장비로 찔러 접근을 저지합니다.",
+             "지혈 후 헬기 등 해상 구조망을 호출합니다."],
+            ["청새리상어 / 청상아리", "Blue & Shortfin Mako Shark", "동물", "치명적해양생물", "바다/강", "🦈", 3,
+             "원양의 고속 포식자로, 특히 청상아리는 시속 70km로 헤엄치며 낚시에 걸렸을 때 보트 위로 뛰어오르기도 합니다.",
+             "원양 낚시 중 상어가 낚였을 때 배 난간에 가까이 서지 마세요.",
+             "물속에서 조우 시 시선을 유지하며 보트로 복귀합니다.",
+             "눈과 주둥이를 가격해 방어합니다.",
+             "심각한 열상을 지혈하고 해양경찰에 구조 요청을 합니다."],
+            ["귀상어 (홍살귀상어)", "Scalloped Hammerhead / Sphyrna lewini", "동물", "치명적해양생물", "바다/강", "🦈", 2,
+             "대부분 온순하지만 대형 개체는 영역 침범이나 낚시 포획 시 강한 힘과 이빨로 상해를 입힐 수 있습니다.",
+             "번식기 무리 다이빙 시 진로를 가로막지 마세요.",
+             "바닥 가까이 낮게 자세를 유지하며 지나가길 기다립니다.",
+             "자극하지 않으면 공격하지 않습니다.",
+             "열상 부위를 소독 및 지혈합니다."],
+            ["스톤피쉬 (돌고기)", "Reef Stonefish / Synanceia verrucosa", "동물", "치명적해양생물", "바다/강", "🐡", 4,
+             "바위·산호와 완벽히 위장해 해저에 숨어 있으며, 등지느러미의 13개 가시에 찔리면 극심한 통증과 괴사, 심장 마비를 일으킵니다.",
+             "산호초나 얕은 바위 해변에서 맨발로 걷거나 바위처럼 보이는 물체를 밟지 마세요.",
+             "밑창이 두꺼운 아쿠아슈즈를 착용하고 발을 질질 끌며 걷습니다.",
+             "맨손으로 해저 바위를 짚지 않습니다.",
+             "즉시 물 밖으로 나와 견딜 수 있는 최대 온도의 온수(약 45℃)에 30~90분간 발을 담가 단백질 독소를 파괴하고 병원에서 항독소를 투여받습니다."],
+            ["쏠배감펭 (라이언피쉬)", "Red Lionfish / Pterois volitans", "동물", "치명적해양생물", "바다/강", "🐠", 3,
+             "화려한 부채꼴 지느러미 가시에 강한 독이 있어 찔리면 극심한 통증과 부종, 호흡곤란을 유발합니다.",
+             "수중에서 느리게 헤엄치는 화려한 물고기라고 손을 뻗어 만지지 마세요.",
+             "다이빙 시 부력 조절을 잘해 산호초와 거리를 유지합니다.",
+             "낚시 포획 시 가위로 지느러미 가시를 먼저 제거합니다.",
+             "가시 조각을 제거한 뒤 45℃ 뜨거운 물에 30분 이상 담가 독을 중화하고 병원을 방문합니다."],
+            ["노랑가오리 / 독가오리", "Stingray / Dasyatis", "동물", "치명적해양생물", "바다/강", "🐟", 3,
+             "모래 속에 숨어 있다가 밟히면 꼬리의 톱니 모양 독침을 휘둘러 깊은 자상과 독을 주입합니다.",
+             "얕은 모래 해변에서 발을 높이 들고 성큼성큼 걷지 마세요.",
+             "모래 바닥을 발로 쓸듯이 걷는 '스팅레이 셔플(Stingray Shuffle)'로 가오리가 미리 도망가게 합니다.",
+             "낚시에 걸렸을 때 꼬리 쪽에 접근하지 말고 낚싯줄을 끊어 놓아줍니다.",
+             "출혈을 멈추고 상처 부위를 45℃ 뜨거운 물에 30~60분 담가 독성을 분해한 뒤 병원에서 가시 파편 제거 및 파상풍 치료를 받습니다."],
+            ["복어 (자주복·황복·졸복)", "Pufferfish / Takifugu", "동물", "치명적해양생물", "바다/강", "🐡", 4,
+             "난소, 간, 내장, 피부에 청산가리의 1,000배에 달하는 맹독(테트로도톡신)을 지녀 섭취 시 호흡 근육 마비로 사망합니다.",
+             "낚시로 잡은 복어를 전문 조리사 자격 없이 직접 손질해 끓여 먹는 행위는 절대 금지입니다(열에 파괴되지 않습니다).",
+             "바늘을 뺄 때 날카로운 부리 이빨에 물리지 않도록 펜치를 사용합니다.",
+             "식용이 불분명한 복어는 즉시 방생합니다.",
+             "섭취 후 입술·혀 저림이나 호흡곤란이 오면 즉시 구토를 유도하고 119에 신고하여 인공호흡을 유지한 채 응급실로 이송합니다."],
+            ["갯가재 (맨티스쉬림프)", "Peacock Mantis Shrimp / Odontodactylus scyllarus", "동물", "치명적해양생물", "바다/강", "🦐", 3,
+             "총알 속도에 버금가는 앞다리 타격(펀치형)이나 작살 앞다리(창형)로 사람의 손가락 살점을 깊이 베어 '엄지절단기'로 불립니다.",
+             "낚시나 갯벌 체험 중 화려한 갯가재를 맨손으로 집어 들지 마세요.",
+             "거리를 두고 관찰합니다.",
+             "집게 도구를 사용하고 두꺼운 장갑을 착용합니다.",
+             "깊은 열상과 손톱 파손이 발생하므로 압박 지혈 후 병원에서 봉합 처치를 받습니다."],
+            ["곰치", "Moray Eel / Muraenidae", "동물", "치명적해양생물", "바다/강", "🐍", 3,
+             "바위 틈에 숨어 있다가 침입자의 손을 물면 이중 턱 구조상 쉽게 놓지 않으며 심한 열상과 세균 감염을 일으킵니다.",
+             "다이빙이나 해루질 중 바위 구멍이나 산호 틈에 맨손을 집어넣지 마세요.",
+             "먹이를 주며 유인하는 행동을 삼갑니다.",
+             "장갑을 착용하고 구멍 속을 피합니다.",
+             "물린 상처를 소독·지혈한 뒤 광범위 항생제 치료를 위해 병원을 방문합니다."],
+            ["바라쿠다 (창꼬치)", "Great Barracuda / Sphyraena barracuda", "동물", "치명적해양생물", "바다/강", "🐟", 3,
+             "면도날 같은 이빨과 번개 같은 돌진력을 지녔으며, 반짝이는 물체를 작은 물고기 비늘로 오인해 공격합니다.",
+             "열대 바다 수영 시 반짝이는 시계, 반지, 목걸이를 착용하지 마세요.",
+             "바라쿠다가 턱을 벌리고 노려보면 급격한 움직임을 멈추고 천천히 물러납니다.",
+             "작살 낚시로 잡은 물고기를 몸에 매달고 헤엄치지 않습니다.",
+             "깊은 열상이 발생하므로 즉시 출수하여 지혈 후 봉합 수술을 받습니다."],
+            ["전기뱀장어", "Electric Eel / Electrophorus electricus", "동물", "치명적해양생물", "해외/오지", "⚡", 3,
+             "최대 600~800V의 고압 전기를 방전해 수중의 사람을 기절시켜 익사하게 만들 수 있습니다.",
+             "남미 탁한 늪지나 얕은 강물에 맨발로 들어가지 마세요.",
+             "감전 위험 구역에서는 즉시 물 밖으로 나옵니다.",
+             "고무장화를 착용하고 나무 막대로 먼저 수면을 확인합니다.",
+             "감전 후 익수 위험이 크므로 즉시 물 밖으로 끌어내어 호흡과 맥박을 확인하고 심폐소생술을 시행합니다."],
+            ["붉은배피라냐", "Red-bellied Piranha / Pygocentrus nattereri", "동물", "치명적해양생물", "해외/오지", "🐟", 3,
+             "건기 수위가 낮아지거나 물속에 피 냄새가 퍼질 때 무리 지어 순식간에 살점을 뜯어냅니다.",
+             "몸에 상처가 있거나 출혈이 있을 때는 남미 강물에 절대 들어가지 마세요.",
+             "물장구를 심하게 치지 말고 조용히 물 밖으로 나옵니다.",
+             "현지 가이드가 안전하다고 확인한 수역에서만 수영합니다.",
+             "상처 부위를 소독하고 지혈한 뒤 파상풍 및 감염 치료를 받습니다."],
+            ["칸디루 (흡혈메기)", "Candiru / Vandellia cirrhosa", "동물", "치명적해양생물", "해외/오지", "🐟", 2,
+             "아마존강에 사는 소형 기생 메기로, 아가미 냄새나 체액에 끌려 점막 부위로 파고들어 가시를 세울 수 있습니다.",
+             "아마존강에서 수영할 때 헐렁한 수영복을 입거나 물속에서 소변을 보지 마세요.",
+             "꽉 조이는 보호 수영복을 착용하고 강물 입수를 최소화합니다.",
+             "보호 의복 착용이 필수입니다.",
+             "체내 침입 시 절대 억지로 잡아당기지 말고 즉시 병원에서 외과적 제거 수술을 받아야 합니다."],
+            ["골리앗타이거피쉬", "Goliath Tigerfish / Hydrocynus goliath", "동물", "치명적해양생물", "해외/오지", "🐟", 3,
+             "아프리카 콩고강에 서식하며 악어와 맞먹는 면도날 같은 이빨 32개를 가진 거대 육식 담수어입니다.",
+             "콩고강 유역 탁한 강물에서 수영하거나 낚시 후 맨손으로 입을 벌리지 마세요.",
+             "강가에서 반짝이는 장신구를 착용하지 않습니다.",
+             "낚시 바늘 제거 시 긴 집게 도구를 사용합니다.",
+             "심한 열상을 압박 지혈하고 항생제 치료를 받습니다."],
+            ["아라파이마 (피라루쿠)", "Arapaima / Arapaima gigas", "동물", "치명적해양생물", "해외/오지", "🐟", 2,
+             "길이 3m, 체중 200kg에 달하는 거대 담수어로, 포획 시 강력한 머리와 꼬리 타격으로 어부의 갈비뼈를 부러뜨릴 수 있습니다.",
+             "아라파이마를 그물이나 보트 위로 끌어올릴 때 머리 정면에 서지 마세요.",
+             "거리를 두고 꼬리 타격 반경에서 벗어납니다.",
+             "숙련된 현지 어부의 통제하에 다룹니다.",
+             "타박상 및 골절 부위를 고정하고 병원으로 이송합니다."],
+            ["앨리게이터가아", "Alligator Gar / Atractosteus spatula", "동물", "치명적해양생물", "해외/오지", "🐟", 2,
+             "악어 같은 주둥이에 두 줄의 날카로운 이빨을 가진 거대 어류이며, 알에는 맹독성 단백질이 있어 절대 섭취하면 안 됩니다.",
+             "낚시 포획 시 입 근처에 손을 대지 말고 알을 절대 먹지 마세요.",
+             "장갑과 긴 펜치를 사용합니다.",
+             "방생 시 물속에서 조심스럽게 바늘을 뺍니다.",
+             "물린 상처는 소독하고 알 섭취 시 즉시 위세척을 위해 응급실로 이동합니다."],
+            ["쑤기미", "Devil Stinger / Inimicus japonicus", "동물", "치명적해양생물", "바다/강", "🐡", 3,
+             "한국 연안 바위·모래 바닥에 위장해 숨어 있으며, 등지느러미 17개 가시에 맹독이 있어 찔리면 팔 전체가 마비될 듯한 격통이 옵니다.",
+             "갯벌이나 얕은 바위 해변에서 맨발로 걷거나 맨손으로 바닥을 짚지 마세요.",
+             "아쿠아슈즈를 착용합니다.",
+             "손질 전 가위로 등지느러미와 배지느러미를 먼저 잘라냅니다.",
+             "즉시 45℃ 뜨거운 물에 30~60분 담가 독소를 파괴하고 응급실을 방문합니다."],
+            ["독가시치 (아이고)", "Rabbitfish / Siganus fuscescens", "동물", "치명적해양생물", "바다/강", "🐟", 2,
+             "제주도와 남해안 갯바위 낚시에서 흔히 잡히며, 지느러미 가시에 독이 있어 찔리면 수 시간 동안 욱신거리는 통증을 유발합니다.",
+             "낚시 바늘을 뺄 때 맨손으로 몸통을 움켜쥐지 마세요.",
+             "집게(피쉬 그립)를 사용해 턱을 잡고 바늘을 제거합니다.",
+             "두꺼운 낚시 장갑을 착용합니다.",
+             "45℃ 정도의 따뜻한 물에 30분 이상 담그면 단백질 독이 분해되어 통증이 가라앉습니다."],
+            ["미역치", "Redfin Velvetfish / Paracentropogon rubripinnis", "동물", "치명적해양생물", "바다/강", "🐡", 2,
+             "해조류 틈에 숨어 사는 소형 어류로 등지느러미 가시에 강한 독이 있어 해루질 중 찔리는 사고가 잦습니다.",
+             "맨손으로 해초 더미를 뒤지지 마세요.",
+             "아쿠아슈즈와 방수 장갑을 착용합니다.",
+             "집게를 사용합니다.",
+             "온수(45℃) 침지 요법을 시행합니다."],
+            ["가시왕관불가사리", "Crown-of-thorns Starfish / Acanthaster planci", "동물", "치명적해양생물", "바다/강", "⭐", 3,
+             "온몸을 덮은 수백 개의 긴 가시에 사포닌계 독소가 있어 찔리면 극심한 통증, 구토, 림프절 부종을 일으킵니다.",
+             "산호초 다이빙 중 절대 만지거나 부력을 잃어 접촉하지 마세요.",
+             "산호초와 안전거리를 유지합니다.",
+             "보호 슈트를 착용합니다.",
+             "뜨거운 물(45℃)에 30분 이상 담그고 부러진 가시 파편 제거를 위해 의료기관을 찾습니다."],
+            ["성게 (왕관성게·보라성게)", "Sea Urchin / Diadema setosum", "동물", "치명적해양생물", "바다/강", "🦔", 2,
+             "석회질 가시가 부러져 피부 속에 박히며, 특히 왕관성게는 독액이 있어 심한 통증과 염증을 유발합니다.",
+             "갯바위나 산호초 해변에서 맨발로 걷지 마세요.",
+             "밑창이 단단한 아쿠아슈즈를 착용합니다.",
+             "바위를 짚을 때 장갑을 낍니다.",
+             "45℃ 온수에 30분간 담가 독을 중화하고 표면에 튀어나온 가시만 핀셋으로 제거한 뒤 깊게 박힌 조각은 병원에서 제거합니다."],
+            ["불산호 (파이어코랄)", "Fire Coral / Millepora", "동물", "치명적해양생물", "바다/강", "🪸", 2,
+             "산호처럼 보이지만 히드라충류에 속하며 스치기만 해도 불에 덴 듯한 작열감과 수포성 피부염을 일으킵니다.",
+             "스노클링 시 산호초 위로 얕게 지나가지 마세요.",
+             "전신 슈트를 착용합니다.",
+             "산호와 1m 이상 거리를 유지합니다.",
+             "바닷물로 헹군 뒤 식초를 바르고 스테로이드 연고를 사용합니다."],
+            ["청새치 / 돛새치", "Marlin / Sailfish", "동물", "치명적해양생물", "바다/강", "🐟", 3,
+             "시속 100km에 육박하는 속도와 창처럼 길고 뾰족한 주둥이로 낚시 보트 위 사람을 관통시킨 사고 사례가 있습니다.",
+             "대형 새치류 낚시 중 배 위로 끌어올릴 때 주둥이 정면에 서지 마세요.",
+             "보트 난간 뒤로 몸을 피합니다.",
+             "숙련된 선원의 지시에 따릅니다.",
+             "관통상 발생 시 박힌 이물질을 함부로 뽑지 말고 주변을 고정·지혈한 채 긴급 후송합니다."],
+            ["전기가오리", "Electric Ray / Torpediniformes", "동물", "치명적해양생물", "바다/강", "🐟", 2,
+             "가슴지느러미 양쪽 발전 기관에서 50~200V의 전기를 방출해 밟거나 만진 사람을 기절시킬 수 있습니다.",
+             "모래 바닥에 숨어 있는 가오리를 밟지 않도록 발을 끌며 걷습니다.",
+             "낚시에 걸렸을 때 맨손으로 만지지 마세요.",
+             "고무 밑창 신발을 착용합니다.",
+             "물 밖으로 나와 안정을 취하고 부정맥이나 어지럼증이 있으면 병원을 방문합니다."],
+            ["쏠종개", "Striped Eel Catfish / Plotosus lineatus", "동물", "치명적해양생물", "바다/강", "🐟", 3,
+             "공처럼 뭉쳐 헤엄치는 귀여운 줄무늬 물고기지만, 등지느러미와 가슴지느러미 가시에 치명적인 독이 있습니다.",
+             "수중에서 물고기 떼가 공처럼 뭉쳐 다가오면 예쁘다고 손을 뻗지 마세요.",
+             "거리 유지만 하면 안전합니다.",
+             "낚시 포획 시 맨손 접촉을 금합니다.",
+             "45℃ 온수에 30분 이상 담그고 통증이 지속되면 의료기관을 방문합니다."],
+
+            // ================= [E] 동물 - 위험조류 (15종) =================
+            ["화식조 (카소와리)", "Southern Cassowary / Casuarius casuarius", "동물", "위험조류", "해외/오지", "🦤", 4,
+             "세계에서 가장 위험한 새로 불리며, 발가락 안쪽에 길이 12cm의 단검 같은 발톱을 지녀 점프 발차기로 복부와 목을 찢어 사망에 이르게 합니다.",
+             "절대 등을 보이고 뛰지 마세요(시속 50km로 추격합니다). 또한 음식을 주며 가까이 부르지 마세요.",
+             "배낭, 우산, 옷을 몸 앞에 방패처럼 세우고 시선을 유지한 채 천천히 뒷걸음질로 큰 나무 뒤로 숨으세요.",
+             "열대우림 경고 표지판 구역에서 음식물을 노출하지 않습니다.",
+             "발톱에 의한 심한 자상과 대량 출혈 시 즉시 압박 지혈하고 응급 구조대를 부릅니다."],
+            ["타조", "Common Ostrich / Struthio camelus", "동물", "위험조류", "해외/오지", "🦤", 3,
+             "시속 70km로 달리며 앞쪽으로 내리찍는 강력한 발차기는 사자도 쓰러뜨릴 위력을 가졌습니다.",
+             "달려서는 절대 따돌릴 수 없습니다. 쫓아올 때 계속 뛰지 마세요.",
+             "나무나 차량 뒤로 숨거나, 피할 곳이 없다면 땅에 납작 엎드려 머리를 팔로 감싸세요(타조는 아래쪽을 잘 차지 못합니다).",
+             "우산이나 긴 막대기를 머리 위로 높이 들어 타조보다 키가 크게 보이게 합니다.",
+             "복부 및 흉부 골절·열상을 확인하고 병원으로 이송합니다."],
+            ["에뮤", "Emu / Dromaius novaehollandiae", "동물", "위험조류", "해외/오지", "🦤", 2,
+             "호주에 서식하는 대형 주조류로, 위협을 느끼면 날카로운 발톱으로 발길질을 합니다.",
+             "먹이를 주려 몰려들 때 당황해 뛰지 마세요.",
+             "천천히 차량이나 울타리 밖으로 이동합니다.",
+             "팔을 높이 들어 몸집을 크게 보이게 합니다.",
+             "할퀴어진 상처를 소독하고 파상풍 예방 조치를 취합니다."],
+            ["검독수리 / 참매", "Golden Eagle & Northern Goshawk", "동물", "위험조류", "산/숲", "🦅", 3,
+             "매우 강한 발 악력과 면도날 같은 발톱을 지녔으며, 번식기 둥지 침범 시 시속 100km 이상으로 급강하해 머리를 공격합니다.",
+             "절벽이나 큰 나무 둥지 근처에 접근하지 마세요.",
+             "등산 스틱을 머리 위로 높이 세워 최고점을 높이면 머리를 직접 공격하지 못합니다.",
+             "둥지 반경에서 신속히 이탈합니다.",
+             "발톱에 의한 깊은 자상은 파상풍 및 세균 감염 위험이 있으므로 병원에서 세척과 항생제 처방을 받습니다."],
+            ["수리부엉이 / 올빼미류", "Eurasian Eagle-Owl / Bubo bubo", "동물", "위험조류", "산/숲", "🦉", 2,
+             "야간 산행 시 둥지 근처에 접근하면 날개 소리를 죽이고 날아와 날카로운 발톱으로 머리를 움켜쥘 수 있습니다.",
+             "야간에 둥지나 어린 새를 발견했을 때 플래시를 비추며 다가가지 마세요.",
+             "모자나 후드를 착용하고 즉시 자리를 피합니다.",
+             "헤드랜턴을 켜서 위치를 알립니다.",
+             "상처를 소독하고 병원에서 파상풍 및 항생제 치료를 받습니다."],
+            ["큰고니 / 혹고니 (백조)", "Mute Swan / Cygnus olor", "동물", "위험조류", "바다/강", "🦢", 2,
+             "번식기 둥지 근처에서는 매우 공격적이며, 단단한 날개뼈 타격으로 골절을 입히거나 물속에서 익사 위험을 초래합니다.",
+             "고니가 날개를 부풀리고 쉭쉭거릴 때 먹이를 주려 가까이 가지 마세요.",
+             "즉시 둥지에서 멀리 떨어지고, 카약 탑승 시 노를 젓되 고니를 때리지 말고 신속히 거리를 벌립니다.",
+             "번식기 둥지 보호 펜스 안으로 들어가지 않습니다.",
+             "날개 타격에 의한 타박상과 물린 부위를 소독·냉찜질합니다."],
+            ["캐나다기러기", "Canada Goose / Branta canadensis", "동물", "위험조류", "캠핑/도심", "🪿", 2,
+             "봄철 산란기에 공원 산책로에서 영역을 방어하며 부리로 물고 날개로 때립니다.",
+             "등을 보이고 뛰지 마세요.",
+             "시선을 유지한 채 천천히 뒷걸음질로 우회합니다.",
+             "우산을 펼치거나 팔을 벌려 크게 보이게 하면 물러납니다.",
+             "부리에 물린 상처를 비눗물로 씻고 소독합니다."],
+            ["까치", "Eurasian Magpie / Pica pica", "동물", "위험조류", "캠핑/도심", "🐦", 2,
+             "5~6월 번식기에 둥지 아래를 지나가는 보행자의 뒤통수를 급강하해 부리로 쪼아 출혈을 일으킵니다.",
+             "공격받는 구간에서 맨머리로 서성거리지 마세요.",
+             "우산이나 가방을 머리 위로 들어 보호하며 빠르게 구간을 벗어납니다.",
+             "모자 뒤쪽에 선글라스를 얹거나 눈 모양 스티커를 붙이면 시선을 의식해 급강하 공격을 멈춥니다.",
+             "두피 열상은 피가 많이 나므로 깨끗한 거즈로 압박 지혈 후 소독하고 파상풍 접종을 확인합니다."],
+            ["큰부리까마귀", "Large-billed Crow / Corvus macrorhynchos", "동물", "위험조류", "캠핑/도심", "🐦‍⬛", 2,
+             "지능이 매우 높고 번식기에는 행인의 머리를 발톱으로 차거나 음식을 빼앗기 위해 집단 공격합니다.",
+             "야외에서 음식물을 손에 들고 걷거나 둥지 나무 아래 머무르지 마세요.",
+             "우산이나 가방으로 머리를 가리고 번식지 구역을 신속히 벗어납니다.",
+             "반짝이는 물건과 음식물 봉투를 가방 안에 숨깁니다.",
+             "발톱에 긁힌 부위를 소독하고 세균 감염에 주의합니다."],
+            ["갈매기 (재갈매기·괭이갈매기)", "Seagull / Larus", "동물", "위험조류", "바다/강", "🕊️", 1,
+             "해변에서 음식물을 들고 있을 때 집단으로 급강하해 손을 부리로 쪼거나 얼굴을 칠 수 있습니다.",
+             "음식을 머리 위로 들어 올리지 마세요.",
+             "음식을 몸 쪽으로 바짝 당겨 가리고 실내나 파라솔 아래로 이동합니다.",
+             "소리를 지르거나 팔을 휘저으면 물러납니다.",
+             "부리에 쪼인 상처를 흐르는 물로 씻고 소독합니다."],
+            ["왜가리 / 백로", "Grey Heron / Ardea cinerea", "동물", "위험조류", "바다/강", "🦩", 2,
+             "작살처럼 날카롭고 긴 부리를 가졌으며, 부상당한 개체를 구조하려 할 때 사람 눈을 향해 번개처럼 부리를 찌릅니다.",
+             "부상당한 왜가리를 발견했을 때 얼굴을 가까이 대지 마세요.",
+             "구조 시 반드시 보안경과 두꺼운 수건을 사용해 머리를 먼저 덮어야 합니다.",
+             "야생동물구조센터에 신고합니다.",
+             "자상 부위를 지혈하고 병원에서 치료받습니다."],
+            ["자이언트페트렐 (큰풀마갈매기)", "Giant Petrel / Macronectes", "동물", "위험조류", "바다/강", "🦅", 2,
+             "남극 해역의 대형 바닷새로 날카로운 갈고리 부리를 가졌으며 위협 시 악취 나는 위유(기름)를 토해내 방어합니다.",
+             "둥지 근처에 접근하지 마세요.",
+             "안전거리를 유지합니다.",
+             "탐사 수칙을 준수합니다.",
+             "위유가 옷이나 피부에 닿으면 비눗물로 세척합니다."],
+            ["가면올빼미 / 수리부엉이 유조", "Barn Owl / Tyto alba", "동물", "위험조류", "산/숲", "🦉", 1,
+             "둥지에서 떨어진 어린 새를 구조하려 할 때 날카로운 발톱으로 손을 움켜쥘 수 있습니다.",
+             "맨손으로 잡지 마세요.",
+             "두꺼운 가죽 장갑과 수건을 사용합니다.",
+             "자연에 두거나 구조센터에 연락합니다.",
+             "긁힌 상처를 소독합니다."],
+            ["펠리컨 (사다새)", "Pelican / Pelecanus", "동물", "위험조류", "바다/강", "🦤", 1,
+             "거대한 부리 끝 갈고리로 먹이를 구걸하다 사람 팔을 세게 쪼아 상처를 낼 수 있습니다.",
+             "선착장에서 생선을 던져주며 가까이 부르지 마세요.",
+             "거리를 두고 물러납니다.",
+             "음식물을 숨깁니다.",
+             "쪼인 부위를 소독합니다."],
+            ["레아 (아메리카타조)", "Greater Rhea / Rhea americana", "동물", "위험조류", "해외/오지", "🦤", 2,
+             "남미 초원에 서식하는 대형 주조류로 번식기 수컷이 발길질과 부리로 공격할 수 있습니다.",
+             "새끼를 데리고 있는 수컷에게 접근하지 마세요.",
+             "천천히 뒷걸음질로 벗어납니다.",
+             "울타리나 차량 뒤로 피신합니다.",
+             "타박상 및 열상을 소독합니다."],
+
+            // ================= [F] 곤충·절지동물 - 맹독거미·전갈·지네 (30종) =================
+            ["시드니깔때기그물거미", "Sydney Funnel-web Spider / Atrax robustus", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🕷️", 4,
+             "세계에서 가장 치명적인 독거미로, 손톱도 뚫는 거대한 독니와 영장류에게 치명적인 신경독(아트라코톡신)을 지녔으며 도망치지 않고 맞서 공격합니다.",
+             "호주 시드니 반경 100km 이내에서 수영장 바닥(물속에서도 공기 방울로 수 시간 생존)에 가라앉은 거미를 맨손으로 건지지 마세요.",
+             "신발, 장갑, 정원 바닥을 입기 전 반드시 털어 확인하고 발견 시 거리를 둡니다.",
+             "맨발 보행을 금지하고 정원 작업 시 두꺼운 가죽 장갑을 착용합니다.",
+             "뱀 교상과 동일하게 즉시 압박 고정 붕대(Pressure Immobilization)를 물린 팔다리에 감고 움직임을 멈춘 채 응급실로 이송해 항독소를 투여받습니다."],
+            ["브라질방황거미 (바나나거미)", "Brazilian Wandering Spider / Phoneutria", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🕷️", 4,
+             "기네스북 등재 세계 최강 독거미 중 하나로, 앞다리를 높이 들어 붉은 턱을 보이며 달려들어 극심한 통증, 고혈압, 폐부종, 호흡 마비를 유발합니다.",
+             "수입 바나나 상자나 남미 열대 숙소의 신발·옷가지를 확인 없이 입지 마세요.",
+             "앞다리를 들고 위협할 때 급격히 움직이지 말고 천천히 뒤로 물러납니다.",
+             "야간에 불빛 없이 맨발로 바닥을 걷지 않습니다.",
+             "즉시 상처를 세척하고 항독소 보유 병원으로 신속히 이송합니다."],
+            ["검은과부거미", "Black Widow Spider / Latrodectus mactans", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🕷️", 4,
+             "배 아래 붉은 모래시계 무늬가 특징이며, 방울뱀보다 강한 신경독(라트로톡신)으로 극심한 복통, 전신 근육 경련, 호흡곤란을 일으킵니다.",
+             "어두운 창고, 장작 더미, 야외 화장실 변기 아래에 맨손을 넣지 마세요.",
+             "장작이나 상자를 옮길 때 두꺼운 가죽 장갑을 착용합니다.",
+             "거미줄을 제거할 때 빗자루 등 긴 도구를 사용합니다.",
+             "물린 부위를 비눗물로 씻고 냉찜질을 한 뒤 즉시 응급실로 이동해 항독소 및 근육이완제 치료를 받습니다."],
+            ["붉은등거미", "Redback Spider / Latrodectus hasselti", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🕷️", 4,
+             "호주 원산의 검은과부거미 근연종으로 일본과 한국 항만 컨테이너에서도 발견된 바 있으며, 심한 통증과 발한, 고혈압을 유발합니다.",
+             "검은 몸통에 붉은 줄무늬가 있는 거미를 보면 절대 맨손으로 잡지 말고 방역 당국에 신고하세요.",
+             "실외 화분, 계량기함, 야외 의자 밑을 점검할 때 장갑을 착용합니다.",
+             "살충 스프레이로 제거합니다.",
+             "압박 지혈대는 감싸지 말고(독이 국소에 머물면 통증이 악화됨) 얼음찜질 후 즉시 병원으로 이송합니다."],
+            ["갈색은둔거미 (바이올린거미)", "Brown Recluse Spider / Loxosceles reclusa", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🕷️", 4,
+             "머리가슴에 바이올린 모양 무늬가 있으며, 물릴 때는 통증이 없다가 수 시간 후 피부가 깊게 썩어 들어가는 심한 괴사독(스핑고미엘리나아제 D)을 지녔습니다.",
+             "오래 방치된 옷장 속 의류나 신발, 침구를 털지 않고 바로 착용하지 마세요.",
+             "창고나 다락방 정리 시 긴팔과 장갑을 착용합니다.",
+             "침대를 벽에서 떼어 놓고 침대 스커트를 제거합니다.",
+             "물린 부위를 높이고 냉찜질을 한 뒤 피부 괴사 진행을 막기 위해 즉시 병원을 방문합니다."],
+            ["육안모래거미", "Six-eyed Sand Spider / Hexophthalma hahni", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🕷️", 4,
+             "남부 아프리카 사막 모래 속에 몸을 파묻고 위장하며, 항독소가 없는 강력한 괴사독·출혈독을 지녔습니다.",
+             "사막 모래 위를 맨발이나 맨손으로 파헤치지 마세요.",
+             "온순해 물리는 사례는 드무나 접촉하지 않는 것이 최선입니다.",
+             "부츠를 착용합니다.",
+             "항독소가 없으므로 즉시 병원에 입원해 혈액 응고 및 괴사 집중 치료를 받아야 합니다."],
+            ["노랑주머니거미 (애기집게거미류)", "Yellow Sac Spider / Cheiracanthium", "곤충/절지동물", "맹독거미·전갈·지네", "캠핑/도심", "🕷️", 2,
+             "한국 집안과 차량 내부에도 서식하는 연노랑색 거미로, 세포독을 지녀 피부에 닿으면 방어적으로 물어 작은 궤양과 통증을 일으킵니다.",
+             "벽면이나 커튼, 옷 속에 붙은 작은 노란 거미를 맨손으로 뭉개지 마세요.",
+             "종이나 진공청소기로 제거합니다.",
+             "침구류를 털어 사용합니다.",
+             "비눗물로 씻고 소독약과 냉찜질을 합니다."],
+            ["타란툴라 (골리앗버드이터·킹바분)", "Goliath Birdeater & King Baboon Tarantula", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🕷️", 2,
+             "독성은 말벌 수준이지만, 위협 시 뒷다리로 배의 미세한 '자극모(가시털)'를 털어 날려 눈과 호흡기, 피부에 극심한 염증을 유발합니다.",
+             "야생 타란툴라를 얼굴 가까이 대고 들여다보지 마세요.",
+             "접촉을 피하고 거리를 둡니다.",
+             "보안경과 장갑을 착용합니다.",
+             "자극모가 피부에 박혔다면 테이프로 제거하고, 눈에 들어갔다면 절대 비비지 말고 흐르는 물로 15분간 씻은 뒤 안과에 갑니다."],
+            ["별늑대거미 / 늑대거미", "Wolf Spider / Lycosidae", "곤충/절지동물", "맹독거미·전갈·지네", "산/숲", "🕷️", 2,
+             "그물을 치지 않고 땅 위를 뛰어다니며 사냥하는 대형 거미로, 잡히면 큰 독니로 물려 붓고 아픈 통증을 줍니다.",
+             "캠핑 텐트 바닥이나 풀밭에서 맨손으로 잡지 마세요.",
+             "컵으로 덮어 밖으로 방생합니다.",
+             "텐트 방충망을 항상 닫아둡니다.",
+             "비눗물로 씻고 냉찜질을 하면 대부분 1~2일 내 호전됩니다."],
+            ["농발거미", "Huntsman Spider / Heteropoda venatoria", "곤충/절지동물", "맹독거미·전갈·지네", "캠핑/도심", "🕷️", 2,
+             "다리를 펴면 손바닥만 한 크기로 매우 빠르게 움직이며, 바퀴벌레를 잡아먹는 익충이나 구석에 몰리면 물 수 있습니다.",
+             "놀라서 손으로 때려잡지 말고 퇴로를 열어주세요.",
+             "큰 통으로 가두어 밖으로 내보냅니다.",
+             "창틀과 배수구 틈새를 막습니다.",
+             "물린 부위를 소독하고 냉찜질합니다."],
+            ["한국왕거미 / 무당거미 / 호랑거미", "Araneus & Trichonephila clavata", "곤충/절지동물", "맹독거미·전갈·지네", "산/숲", "🕷️", 1,
+             "화려한 무늬 때문에 맹독거미로 오해받지만 매우 온순하고 약한 독만 지녀 인체에 해가 거의 없습니다.",
+             "등산로 거미줄에 얼굴이 걸리지 않도록 등산 스틱을 앞에 세우고 걷습니다.",
+             "해충을 잡아먹는 익충이므로 해치지 않고 피해 갑니다.",
+             "자연에 그대로 둡니다.",
+             "물렸을 경우 비눗물로 씻고 소독합니다."],
+            ["데스스토커 전갈", "Deathstalker Scorpion / Leiurus quinquestriatus", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🦂", 4,
+             "중동·북아프리카 사막에 서식하는 노란 전갈로, 강력한 신경독 칵테일을 지녀 심부전, 급성 폐부종, 호흡 마비를 유발합니다.",
+             "사막 캠핑 시 바위 밑이나 마른 덤불을 맨손으로 들추지 마세요.",
+             "야간에는 자외선(UV) 랜턴을 비춰 형광빛을 내는 전갈을 확인하고 신발·침낭을 반드시 털어 신습니다.",
+             "텐트 지퍼를 바닥까지 완전히 잠급니다.",
+             "즉시 상처를 씻고 냉찜질하며 움직임을 최소화한 채 항독소 보유 병원으로 긴급 이송합니다."],
+            ["인도붉은전갈", "Indian Red Scorpion / Hottentotta tamulus", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🦂", 4,
+             "세계에서 가장 치사율이 높은 전갈 중 하나로, 쏘이면 자율신경계 폭풍과 치명적 폐부종·심근염을 일으킵니다.",
+             "인도·네팔 농촌에서 바닥 취침이나 맨발 보행을 피하세요.",
+             "모기장을 침대 매트리스 아래로 넣어 전갈의 침입을 차단합니다.",
+             "부츠와 장갑을 착용합니다.",
+             "즉시 응급실로 이송해 프라조신(혈압·폐부종 조절제) 및 항독소 치료를 받아야 합니다."],
+            ["뚱뚱꼬리전갈 (안드록토누스)", "Fat-tailed Scorpion / Androctonus", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🦂", 4,
+             "학명이 '인간 살인자'라는 뜻의 북아프리카·중동 맹독 전갈로, 두꺼운 꼬리 독침으로 매년 많은 사망 사고를 냅니다.",
+             "돌무더기나 폐허 벽 틈에 손을 넣지 마세요.",
+             "UV 랜턴 점검 및 신발 털기를 생활화합니다.",
+             "야간 캠핑 시 야전침대(코트)를 사용합니다.",
+             "즉시 움직임을 멈추고 항독소 보유 병원으로 긴급 이송합니다."],
+            ["애리조나나무껍질전갈", "Arizona Bark Scorpion / Centruroides sculpturatus", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🦂", 4,
+             "북미에서 가장 독성이 강한 전갈로, 벽면과 천장을 기어오르며 쏘이면 전기 충격 같은 격통과 근육 경련, 호흡곤란이 옵니다.",
+             "북미 사막 주택에서 맨발로 다니거나 벽에 기댄 침대에서 자지 마세요.",
+             "침대 다리를 유리병에 넣어 벽에서 떼어 놓고, 야간에 UV 손전등으로 점검합니다.",
+             "문틈 문풍지를 보강합니다.",
+             "냉찜질 후 즉시 응급실로 이동합니다."],
+            ["황제전갈 / 아시아숲전갈", "Emperor & Asian Forest Scorpion", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🦂", 2,
+             "거대한 집게발을 가졌으나 독성은 꿀벌 수준으로 약하며, 집게에 꽉 집히면 출혈과 멍이 생깁니다.",
+             "열대림에서 썩은 통나무를 맨손으로 뒤집지 마세요.",
+             "장갑을 착용합니다.",
+             "접촉하지 않고 지나갑니다.",
+             "상처를 소독하고 냉찜질합니다."],
+            ["극동전갈 (왕전갈)", "Manchurian Scorpion / Mesobuthus martensii", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🦂", 2,
+             "한반도 북부 및 중국에 서식하며 성인에게 치명적이지는 않으나 쏘이면 심한 통증과 부종이 발생합니다.",
+             "돌무더기 틈에 맨손을 넣지 마세요.",
+             "장갑과 부츠를 착용합니다.",
+             "접근하지 않습니다.",
+             "비눗물로 세척하고 냉찜질 및 진통제를 복용합니다."],
+            ["페루자이언트지네", "Amazonian Giant Centipede / Scolopendra gigantea", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🐛", 4,
+             "길이 30cm에 달하는 세계 최대 지네로, 쥐나 박쥐까지 사냥하는 강력한 독니를 지녀 고열, 심한 부종, 부정맥을 유발합니다.",
+             "남미 밀림에서 바닥 취침을 하거나 신발을 확인 없이 신지 마세요.",
+             "밀폐형 텐트나 해먹을 사용해 지면과 격리합니다.",
+             "야간에 손전등으로 바닥을 확인합니다.",
+             "즉시 상처를 세척하고 통증 및 심혈관 증상 관리를 위해 병원으로 이송합니다."],
+            ["왕지네 (붉은머리왕지네·청지네)", "Chinese Red-headed Centipede / Scolopendra mutilans", "곤충/절지동물", "맹독거미·전갈·지네", "산/숲", "🐛", 3,
+             "한국 산림과 습한 민가에 서식하며, 독니(악지)로 세로토닌·히스타민 독소를 주입해 불에 타는 듯한 격통과 림프관염을 일으킵니다.",
+             "캠핑 시 텐트 지퍼를 열어두거나 아침에 신발·침낭을 털지 않고 착용하지 마세요.",
+             "습한 돌 밑이나 낙엽 더미를 맨손으로 뒤집지 않습니다.",
+             "백반이나 지네 기피제를 텐트·현관 주변에 뿌리고 습기를 제거합니다.",
+             "비눗물로 세척한 뒤 냉찜질(또는 초기 온찜질)을 하고, 심한 부종과 알레르기 치료를 위해 병원을 방문합니다."],
+            ["그리마 (돈벌레)", "House Centipede / Scutigera coleoptrata", "곤충/절지동물", "맹독거미·전갈·지네", "캠핑/도심", "🕷️", 1,
+             "바퀴벌레를 잡아먹는 익충이며 사람을 먼저 물지 않으나, 맨손으로 꽉 잡으면 약한 독니로 물려 따가울 수 있습니다.",
+             "놀라서 맨손으로 잡지 마세요.",
+             "빗자루나 종이로 쓸어 밖으로 내보냅니다.",
+             "집안 습기를 제거하면 자연스럽게 줄어듭니다.",
+             "비눗물로 씻고 소독약을 바르면 금방 가라앉습니다."],
+            ["왕노래기 / 자이언트노래기", "Giant Millipede / Diplopoda", "곤충/절지동물", "맹독거미·전갈·지네", "산/숲", "🐛", 2,
+             "물지는 않지만 위협을 받으면 몸을 말고 옆구리에서 청산가리 성분이나 벤조퀴논 독액을 분비해 피부 화상과 변색, 실명 위험을 초래합니다.",
+             "장마철 산길에서 노래기를 밟거나 맨손으로 집어 들지 마세요.",
+             "정원이나 현관 틈새를 막아 유입을 차단합니다.",
+             "집게나 빗자루로 치웁니다.",
+             "피부에 묻으면 비눗물로 씻어내고, 눈에 들어갔다면 즉시 물로 15분간 세척 후 안과 진료를 받습니다."],
+            ["식초전갈 (채찍전갈)", "Vinegaroon / Uropygi", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🦂", 1,
+             "독침은 없지만 위협 시 꼬리 끝에서 고농도 아세트산(식초 성분)을 분사해 눈과 피부에 따가운 자극을 줍니다.",
+             "맨손으로 잡지 마세요.",
+             "관찰만 하고 지나갑니다.",
+             "장갑을 착용합니다.",
+             "식초액이 눈에 닿으면 흐르는 물로 15분간 씻어냅니다."],
+            ["낙타거미 (해거미)", "Camel Spider / Solifugae", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🕷️", 2,
+             "독은 없지만 그림자를 쫓아 사람에게 달려오는 습성이 있어 공포감을 주며, 거대한 집게턱으로 세게 물어 2차 감염을 일으킵니다.",
+             "그림자를 피해 쫓아오는 것뿐이므로 패닉 상태로 뛰지 마세요.",
+             "멈춰 서서 자리를 비켜주면 스스로 그늘로 숨습니다.",
+             "텐트 바닥을 밀폐합니다.",
+             "물린 상처를 철저히 소독합니다."],
+            ["코코넛크랩 (야자집게)", "Coconut Crab / Birgus latro", "곤충/절지동물", "맹독거미·전갈·지네", "해외/오지", "🦀", 3,
+             "육상 최대 절지동물로 사자 치악력에 맞먹는 집게발 힘(약 3,300N)을 지녀 손가락이나 발가락을 단번에 부러뜨립니다.",
+             "열대 섬 해변 야간 산책 시 절대 손으로 들어 올리지 마세요.",
+             "집게에 물렸다면 억지로 잡아당기지 말고 배 아래쪽(연약한 복부)을 간지럽히거나 담수를 부으면 집게를 놓습니다.",
+             "거리를 두고 관찰합니다.",
+             "골절 및 압궤 상처를 고정한 뒤 병원으로 이송합니다."],
+            ["톱날꽃게 (머드크랩)", "Giant Mud Crab / Scylla serrata", "곤충/절지동물", "맹독거미·전갈·지네", "바다/강", "🦀", 2,
+             "맹그로브 숲과 갯벌에 서식하며 매우 강력한 집게발로 손가락을 깊게 자를 수 있습니다.",
+             "맨손으로 갯벌 구멍 속을 뒤지지 마세요.",
+             "집게에 잡혔을 때는 물속에 담그면 스스로 집게를 놓고 도망칩니다.",
+             "집게발이 묶여 있는지 확인합니다.",
+             "상처를 지혈 후 소독합니다."],
+
+            // ================= [G] 곤충·절지동물 - 살인말벌·독개미 (17종) =================
+            ["장수말벌 (아시아거대말벌)", "Asian Giant Hornet / Vespa mandarinia", "곤충/절지동물", "살인말벌·독개미", "산/숲", "🐝", 4,
+             "세계 최대 크기의 말벌로 6mm 독침과 대량의 만다라톡신 독을 지녔으며, 여러 번 쏠 수 있고 페로몬을 분비해 벌집 전체가 집단 공격합니다.",
+             "벌집을 건드렸을 때 절대 팔을 휘젓거나 땅에 납작 엎드리지 마세요! 엎드리면 벌들이 집중적으로 수십 방을 쏩니다.",
+             "옷이나 배낭으로 머리와 목을 감싼 채 직선으로 최소 30~50m 이상 전력 질주해 벌의 공격 반경에서 즉시 벗어나야 합니다.",
+             "어두운 색 옷(곰 등 천적 색깔)을 피하고 밝은 색 모자와 긴소매를 착용하며, 단내가 나는 향수·음료를 자제합니다.",
+             "침이 박혀 있지 않으므로 찬물로 씻고 냉찜질하며, 호흡곤란·어지럼증·전신 두드러기(아나필락시스) 시 즉시 119에 신고하고 에피네프린 주사를 사용합니다."],
+            ["등검은말벌", "Yellow-legged Hornet / Vespa velutina", "곤충/절지동물", "살인말벌·독개미", "캠핑/도심", "🐝", 4,
+             "도심 가로수나 아파트 베란다 높은 곳에 집을 짓는 외래 침입종으로, 공격성이 매우 강하고 집요하게 추격합니다.",
+             "가정용 에어로졸 살충제를 뿌려 직접 제거하려 하지 마세요. 말벌을 흥분시켜 집단 공격을 유발합니다.",
+             "머리를 숙인 채 낮은 자세로 30m 이상 빠르게 이탈한 뒤 119에 신고하세요.",
+             "창문 방충망 물구멍을 막아 실내 유입을 차단합니다.",
+             "쏘인 부위를 높이고 냉찜질하며, 알레르기 쇼크 증상 시 즉시 응급실로 이동합니다."],
+            ["털보말벌", "Vespula simillima / Hairy Yellowjacket", "곤충/절지동물", "살인말벌·독개미", "산/숲", "🐝", 3,
+             "땅속이나 바위 틈, 관목 속에 집을 짓는 경우가 많아 가을철 성묘나 벌초, 등산 중 실수로 밟아 순식간에 수십 방 쏘이는 사고가 빈번합니다.",
+             "발밑에서 윙윙거리는 소리가 나면 그 자리에 멈춰 서서 털어내려 하지 마세요.",
+             "즉시 발을 떼고 30m 이상 전력 질주해 벗어납니다.",
+             "벌초나 산행 전 긴 막대기로 주변 풀숲을 두드려 땅속 벌집 유무를 미리 확인합니다.",
+             "냉찜질 및 항히스타민제 연고를 바르고, 다발성 교상 시 급성 신부전이나 쇼크 위험이 있으므로 병원을 방문합니다."],
+            ["좀말벌", "Vespa analis", "곤충/절지동물", "살인말벌·독개미", "산/숲", "🐝", 3,
+             "낮은 나뭇가지나 풀숲에 집을 짓는 경우가 많아 등산객의 머리나 어깨가 벌집에 부딪히며 쏘이는 사고가 흔합니다.",
+             "수풀을 헤치고 갈 때 앞쪽 나뭇가지를 살피지 않고 지나가지 마세요.",
+             "벌집을 건드리면 즉시 머리를 감싸고 달려 벗어납니다.",
+             "밝은 색 모자와 긴팔 의복을 착용합니다.",
+             "냉찜질 후 알레르기 반응 여부를 관찰하고 증상 시 병원으로 이송합니다."],
+            ["땅벌 (점박이땅벌 등)", "Vespula vulgaris / Common Wasp", "곤충/절지동물", "살인말벌·독개미", "산/숲", "🐝", 3,
+             "땅속 굴에 수천 마리가 집단 서식하며 진동에 극도로 민감해 예초기 작업자나 등산객을 떼로 공격합니다.",
+             "땅속 구멍으로 벌이 드나드는 곳 근처에서 진동을 일으키지 마세요.",
+             "공격받으면 즉시 30m 이상 뛰어 벗어납니다.",
+             "예초 작업 전 10분간 주변을 관찰해 벌의 출입 여부를 확인합니다.",
+             "다발성 교상 시 즉시 응급실을 방문해 해독 및 수액 치료를 받습니다."],
+            ["아프리카화꿀벌 (살인벌)", "Africanized Honey Bee", "곤충/절지동물", "살인말벌·독개미", "해외/오지", "🐝", 4,
+             "미주 대륙에 퍼진 교잡종 꿀벌로, 30m 밖 진동에도 반응해 수천 마리가 400m 이상 끝까지 추격하며 치사량까지 쏩니다.",
+             "물속에 숨어 피하려 하지 마세요! 숨을 쉬러 수면 위로 올라올 때까지 위에서 기다리다 얼굴을 집중 공격합니다.",
+             "건물, 차량, 밀폐된 텐트 안으로 전력 질주해 뛰어들어가 문을 닫아야 합니다(몇 마리 따라 들어와도 밖의 수천 마리를 막는 것이 우선입니다).",
+             "미주 지역 야외 작업 시 사전 벌집 점검을 철저히 합니다.",
+             "신용카드 모서리로 피부에 박힌 수많은 침을 긁어내듯 제거하고 즉시 응급실로 이송합니다."],
+            ["양봉꿀벌 / 토종벌", "Honey Bee / Apis mellifera", "곤충/절지동물", "살인말벌·독개미", "캠핑/도심", "🐝", 2,
+             "한 번 쏘면 톱니 모양 독침과 독주머니가 피부에 남아 계속 독액을 펌프질하며, 벌 독 알레르기 환자에게는 아나필락시스를 유발합니다.",
+             "핀셋이나 손톱으로 독주머니를 집어 뽑지 마세요. 독주머니가 눌려 남은 독이 피부 속으로 더 짜 들어갑니다.",
+             "자극하지 않고 천천히 자리를 이동합니다.",
+             "야외에서 달콤한 음료수 캔을 열어둔 채 방치하지 않습니다.",
+             "신용카드나 명함 모서리로 피부를 긁어내듯 독침을 제거한 뒤 비눗물로 씻고 냉찜질합니다."],
+            ["쌍살벌 (등검은쌍살벌 등)", "Paper Wasp / Polistes", "곤충/절지동물", "살인말벌·독개미", "캠핑/도심", "🐝", 2,
+             "처마 밑이나 나뭇가지에 연꽃 모양 집을 지으며, 말벌보다는 온순하나 집을 건드리면 날카로운 통증과 함께 쏩니다.",
+             "갑작스럽게 손을 휘두르지 마세요.",
+             "천천히 뒤로 물러납니다.",
+             "사람 통행로에 생긴 집은 야간에 전문 방역업체나 119를 통해 제거합니다.",
+             "흐르는 물에 씻고 얼음찜질을 하며 항히스타민 연고를 바릅니다."],
+            ["호박벌 / 뒤영벌", "Bumblebee / Bombus", "곤충/절지동물", "살인말벌·독개미", "산/숲", "🐝", 1,
+             "매우 온순한 화분매개곤충이지만, 밟히거나 손으로 잡히면 매끄러운 침으로 여러 번 쏠 수 있습니다.",
+             "꽃 위의 호박벌을 손으로 잡지 마세요.",
+             "자연스럽게 날아가도록 둡니다.",
+             "맨발로 꽃밭을 걷지 않습니다.",
+             "비눗물로 씻고 냉찜질합니다."],
+            ["붉은불개미", "Red Imported Fire Ant / Solenopsis invicta", "곤충/절지동물", "살인말벌·독개미", "캠핑/도심", "🐜", 3,
+             "세계 100대 악성 침입외래종으로, 턱으로 피부를 문 채 원을 그리며 꼬리 독침으로 솔레놉신 독을 여러 번 주입해 불에 덴 듯한 통증과 농포, 쇼크를 유발합니다.",
+             "흙무덤 형태의 개미집을 밟았을 때 가만히 서 있지 마세요.",
+             "즉시 뛰어내려 신발과 바지에 붙은 개미를 손으로 빠르게 털어내야 합니다(물에 씻으면 턱을 더 꽉 뭅니다).",
+             "항만, 야적장, 잔디밭에서 개미 무덤을 발견하면 접근하지 않고 방역 당국에 신고합니다.",
+             "물린 부위를 긁지 말고 비눗물로 씻은 뒤 냉찜질과 스테로이드 연고를 바르며, 호흡곤란 시 즉시 119를 호출합니다."],
+            ["총알개미", "Bullet Ant / Paraponera clavata", "곤충/절지동물", "살인말벌·독개미", "해외/오지", "🐜", 3,
+             "중남미 열대우림에 서식하며, 곤충 중 가장 극심한 통증(슈미트 통증 지수 최고 등급, 총에 맞은 듯한 격통이 24시간 지속)을 유발합니다.",
+             "나무 밑동이나 줄기에 있는 2.5cm 크기의 대형 검은 개미를 건드리지 마세요.",
+             "밀림 이동 시 나무 기둥에 함부로 기대거나 손을 짚지 않습니다.",
+             "부츠와 긴 바지를 착용합니다.",
+             "생명에 지장은 드무나 극심한 통증과 근육 경련이 오므로 냉찜질 및 진통제 처방을 받습니다."],
+            ["잭점퍼개미", "Jack Jumper Ant / Myrmecia pilosula", "곤충/절지동물", "살인말벌·독개미", "해외/오지", "🐜", 4,
+             "호주에 서식하며 시력이 뛰어나 사람을 쫓아오고 10cm씩 점프까지 하며, 독침에 의한 아나필락시스 쇼크 사망 사고를 자주 일으킵니다.",
+             "호주 산림이나 정원에서 검고 큰 개미가 점프하며 다가올 때 맨발로 서 있지 마세요.",
+             "개미굴 주변에서 발을 떼고 빠르게 걸어 벗어납니다.",
+             "양말을 바지 위로 올려 신어 피부 노출을 막습니다.",
+             "냉찜질과 항히스타민제를 투여하고 전신 알레르기 반응 시 즉시 응급실로 이송합니다."],
+            ["불독개미", "Bull Ant / Myrmecia", "곤충/절지동물", "살인말벌·독개미", "해외/오지", "🐜", 4,
+             "거대한 집게턱으로 피부를 붙잡은 채 복부 독침으로 반복해서 찌르며 치명적 알레르기 쇼크를 유발합니다.",
+             "개미 무덤 근처에 앉지 마세요.",
+             "신속히 자리를 이탈하고 붙은 개미를 털어냅니다.",
+             "보호 신발을 착용합니다.",
+             "아나필락시스 증상 시 즉시 에피네프린 자가주사기를 사용하고 응급실로 이송합니다."],
+            ["군대개미 (시와바개미)", "Army Ant / Eciton & Dorylus", "곤충/절지동물", "살인말벌·독개미", "해외/오지", "🐜", 3,
+             "수백만 마리가 거대한 대열을 이루어 행군하며 경로상의 움직이는 모든 생물을 강력한 턱으로 물어뜯습니다.",
+             "행군 대열을 가로질러 밟거나 움직이지 못하는 상태로 방치되지 마세요.",
+             "대열 옆으로 1~2m만 비켜서서 길을 내주면 공격하지 않습니다.",
+             "야영 시 텐트 주변에 재를 뿌리거나 물길을 만들어 침입을 막습니다.",
+             "개미를 떼어낼 때는 머리가 피부에 박히지 않게 조심스럽게 제거하고 소독합니다."],
+            ["왕침개미", "Asian Needle Ant / Brachyponera chinensis", "곤충/절지동물", "살인말벌·독개미", "산/숲", "🐜", 2,
+             "한국 산림과 공원 낙엽 아래 서식하는 독침 개미로, 쏘이면 따끔한 통증과 붉은 발진, 알레르기를 일으킵니다.",
+             "썩은 나무나 돌을 들췄을 때 검은 개미 무리가 나오면 맨손을 뗍니다.",
+             "야외 돗자리 사용 시 기피제를 뿌립니다.",
+             "긴 바지를 착용합니다.",
+             "비눗물로 세척하고 냉찜질을 하면 대부분 가라앉습니다."],
+            ["잎꾼개미", "Leafcutter Ant / Atta", "곤충/절지동물", "살인말벌·독개미", "해외/오지", "🐜", 2,
+             "독침은 없지만 병정개미의 가위 같은 큰턱이 매우 날카로워 가죽 부츠나 피부를 깊이 베어 피를 낼 수 있습니다.",
+             "잎을 나르는 개미 행렬 위에 발을 올리지 마세요.",
+             "행렬을 우회해 지나갑니다.",
+             "보호 부츠를 착용합니다.",
+             "베인 상처를 소독하고 지혈합니다."],
+            ["어리호박벌 / 목수벌", "Carpenter Bee / Xylocopa", "곤충/절지동물", "살인말벌·독개미", "산/숲", "🐝", 1,
+             "크고 윙윙거리는 소리가 크지만 수컷은 침이 없고 암컷도 매우 온순해 잡지 않으면 쏘지 않습니다.",
+             "겁을 먹고 손으로 휘저어 때리지 마세요.",
+             "조용히 지나가면 공격하지 않습니다.",
+             "목재 구조물 틈새를 관리합니다.",
+             "쏘였을 경우 비눗물로 씻고 냉찜질합니다."],
+
+            // ================= [H] 곤충·절지동물 - 치명적질병매개체 (20종) =================
+            ["작은소피참진드기 (살인진드기)", "Asian Longhorned Tick / Haemaphysalis longicornis", "곤충/절지동물", "치명적질병매개체", "산/숲", "🕷️", 4,
+             "치사율 10~30%에 달하는 중증열성혈소판감소증후군(SFTS) 바이러스를 매개하며, 현재까지 특효 항바이러스제나 백신이 없어 극도로 위험합니다.",
+             "진드기가 피부에 박혀 있을 때 손가락으로 잡아당기거나 불·바셀린으로 지지려 하지 마세요. 진드기 머리가 피부 속에 박혀 남고 바이러스를 역류시킵니다.",
+             "풀밭 위에 겉옷을 벗어두거나 눕지 말고, 야외 활동 후 즉시 샤워하며 귀 뒤, 겨드랑이, 사타구니, 무릎 뒤를 꼼꼼히 확인하세요.",
+             "긴팔·긴바지·양말 속에 바짓단 넣기를 실천하고, DEET 또는 이카리딘 성분의 진드기 기피제를 3~4시간마다 분사합니다.",
+             "핀셋으로 피부에 최대한 가깝게 진드기 머리 부분을 잡아 수직으로 천천히 뽑아낸 뒤 소독하고, 2주 이내 고열·구토·설사 시 즉시 병원을 방문합니다."],
+            ["털진드기 유충", "Chigger Mite / Leptotrombidium", "곤충/절지동물", "치명적질병매개체", "산/숲", "🐜", 3,
+             "가을철 성묘나 벌초 시 피부에 붙어 체액을 빨며 고열, 두통, 검은 딱지(가피)를 동반하는 '쯔쯔가무시병'을 옮깁니다.",
+             "가을철 풀밭에 맨살로 앉거나 겉옷을 풀 위에 올려두지 마세요.",
+             "반드시 돗자리를 사용하고 귀가 즉시 옷을 세탁하며 샤워합니다.",
+             "작업복에 진드기 기피제를 충분히 분사합니다.",
+             "물린 뒤 1~3주 이내에 심한 감기 몸살 증상과 몸에 검은 딱지(가피)가 보이면 즉시 병원에서 항생제(독시사이클린) 치료를 받습니다."],
+            ["사슴진드기 (검은다리진드기)", "Blacklegged Tick / Ixodes scapularis", "곤충/절지동물", "치명적질병매개체", "해외/오지", "🕷️", 3,
+             "북미와 유럽에서 과녁 모양의 홍반과 관절염, 안면 신경 마비를 일으키는 '라임병'을 전파합니다.",
+             "숲길 가장자리의 키 큰 풀숲을 스치며 걷지 마세요.",
+             "숲길 중앙으로 걷고 활동 후 전신을 점검합니다.",
+             "퍼메트린 처리된 등산복과 기피제를 사용합니다.",
+             "24시간 이내에 핀셋으로 수직 제거하면 라임병 감염 확률이 크게 줄어듭니다. 제거 후 둥근 과녁 모양 발진이 생기면 즉시 항생제 치료를 받습니다."],
+            ["체체파리", "Tsetse Fly / Glossina", "곤충/절지동물", "치명적질병매개체", "해외/오지", "🪰", 4,
+             "아프리카 사하라 이남에 서식하며 치명적인 기생충 질환인 '아프리카 수면병(트리파노소마증)'을 매개합니다.",
+             "사파리 이동 시 파란색이나 검은색 옷을 입지 마세요. 체체파리는 파랑·검정 색상에 강하게 유인됩니다.",
+             "아카시아 덤불 지대를 차량으로 지날 때 창문을 반드시 닫습니다.",
+             "일반 모기 기피제가 잘 듣지 않으므로 베이지·카키색의 두꺼운 긴팔 옷을 입어야 합니다.",
+             "물린 부위에 궤양이 생기고 발열·림프절 부종·수면 주기 이상이 나타나면 즉시 열대의학 전문 병원에서 치료받습니다."],
+            ["얼룩날개모기 (학질모기)", "Anopheles Mosquito", "곤충/절지동물", "치명적질병매개체", "캠핑/도심", "🦟", 3,
+             "열대열 및 삼일열 말라리아 원충을 전파하며, 국내 휴전선 인근 및 해외 열대 지역에서 치명적 감염병을 일으킵니다.",
+             "해질녘부터 새벽 사이 야외에서 피부 노출을 방치하지 마세요.",
+             "야간 야외 활동을 줄이고 모기장 안에서 취침합니다.",
+             "말라리아 위험 국가 여행 전 예방약을 복용하고, 퍼메트린 처리 의류와 기피제를 사용합니다.",
+             "위험 지역 방문 후 주기적인 고열과 오한, 식은땀이 나타나면 즉시 병원에서 말라리아 혈액 검사를 받습니다."],
+            ["이집트숲모기", "Yellow Fever Mosquito / Aedes aegypti", "곤충/절지동물", "치명적질병매개체", "해외/오지", "🦟", 3,
+             "황열병, 뎅기열, 지카바이러스, 치쿤구니야열의 주 매개체로 도심 실내에서도 낮 동안 활발히 흡혈합니다.",
+             "뎅기열 의심 시 아스피린이나 이부프로펜(NSAIDs)을 복용하지 마세요. 출혈성 뎅기열로 악화될 수 있습니다.",
+             "방충망과 에어컨이 가동되는 실내에 머무릅니다.",
+             "황열병 유행 지역 방문 10일 전 백신을 접종하고 DEET·이카리딘 기피제를 수시로 바릅니다.",
+             "고열과 심한 근육통, 눈 뒤쪽 통증이 나면 아세트아미노펜(타이레놀)만 복용하고 즉시 병원을 찾습니다."],
+            ["흰줄숲모기 (아디다스모기)", "Asian Tiger Mosquito / Aedes albopictus", "곤충/절지동물", "치명적질병매개체", "산/숲", "🦟", 2,
+             "한국 산림과 공원에도 흔하며 낮에도 공격적으로 흡혈하고 뎅기열·지카바이러스를 매개할 수 있습니다.",
+             "풀숲과 그늘진 숲길에 오래 서 있지 마세요.",
+             "밝은 색 긴옷을 착용합니다.",
+             "모기 기피제를 3~4시간 간격으로 피부와 옷에 뿌립니다.",
+             "긁으면 2차 세균 감염(봉와직염)이 되므로 냉찜질과 가려움 완화 연고를 바릅니다."],
+            ["작은빨간집모기", "Culex tritaeniorhynchus", "곤충/절지동물", "치명적질병매개체", "캠핑/도심", "🦟", 3,
+             "논과 웅덩이에서 번식하며 치사율이 높고 신경계 후유증을 남기는 일본뇌염 바이러스를 전파합니다.",
+             "여름철 저녁 논밭이나 축사 근처 야외 활동을 자제하세요.",
+             "방충망을 점검하고 모기장을 사용합니다.",
+             "일본뇌염 예방접종을 완료하고 모기 기피제를 사용합니다.",
+             "물린 뒤 고열, 경련, 의식 저하가 나타나면 즉시 응급실로 이송합니다."],
+            ["침노린재 (키싱버그)", "Kissing Bug / Triatominae", "곤충/절지동물", "치명적질병매개체", "해외/오지", "🪲", 3,
+             "중남미에 서식하며 밤에 자는 사람의 입술이나 눈가 주변을 흡혈한 뒤 배설물을 남겨 치명적인 심장병(샤가스병)을 전파합니다.",
+             "물린 부위가 가렵다고 손으로 긁어 배설물을 상처나 눈 점막에 문지르지 마세요.",
+             "흙벽돌집이나 야외 오두막에서 잘 때 침대 모기장을 매트리스 아래로 넣어 사용합니다.",
+             "잔류성 살충제와 방충망을 설치합니다.",
+             "물린 부위를 긁지 말고 즉시 비눗물로 씻어낸 뒤 병원에서 샤가스병 혈액 검사를 받습니다."],
+            ["쇠등에 / 말등에", "Horsefly / Tabanidae", "곤충/절지동물", "치명적질병매개체", "산/숲", "🪰", 2,
+             "바늘이 아니라 가위 같은 턱으로 피부를 찢어 피를 빨아먹기 때문에 물릴 때 극심한 통증과 출혈이 발생합니다.",
+             "계곡이나 목장 근처에서 따라올 때 물속에 잠수해도 수면 위에서 기다리므로 수풀이나 실내로 피하세요.",
+             "어두운 옷과 땀 냄새에 끌리므로 밝은 색 긴팔 옷을 입습니다.",
+             "기피제를 뿌리고 땀을 자주 닦아냅니다.",
+             "피가 날 수 있으므로 깨끗이 소독 후 밴드를 붙이고 냉찜질합니다."],
+            ["쇠파리 / 인간말파리 (보트플라이)", "Human Botfly / Dermatobia hominis", "곤충/절지동물", "치명적질병매개체", "해외/오지", "🪰", 2,
+             "중남미에 서식하며 모기 몸에 알을 붙여 사람 피부 속으로 유충이 파고들어 자라는 승저증을 유발합니다.",
+             "피부 속 유충을 손톱으로 억지로 짜내려 하지 마세요. 유충이 터지면서 심한 염증과 쇼크를 일으킵니다.",
+             "중남미 밀림에서 모기에 물리지 않도록 철저히 방어합니다.",
+             "DEET 기피제와 긴 의복을 착용합니다.",
+             "상처 입구에 바셀린을 두껍게 발라 유충의 숨구멍을 막아 스스로 기어 나오게 하거나 병원에서 외과적으로 제거합니다."],
+            ["먹파리 (블랙플라이)", "Black Fly / Simuliidae", "곤충/절지동물", "치명적질병매개체", "바다/강", "🦟", 2,
+             "계곡물 근처에서 떼로 몰려들어 피부를 물어뜯어 심한 가려움과 부종(먹파리열)을 유발하며, 열대 지역에서는 회선사상충증을 옮깁니다.",
+             "해질녘 계곡 물가에서 피부를 노출하지 마세요.",
+             "신속히 텐트나 실내로 이동합니다.",
+             "방충망(헤드넷) 모자와 기피제를 사용합니다.",
+             "얼음찜질과 스테로이드 연고로 부종을 가라앉힙니다."],
+            ["모래벼룩 (치거벼룩)", "Chigoe Flea / Tunga penetrans", "곤충/절지동물", "치명적질병매개체", "해외/오지", "🦗", 2,
+             "열대 해변과 흙바닥에서 암컷 벼룩이 발가락 피부 속으로 파고들어 알을 낳으며 퉁가증(궤양 및 파상풍 위험)을 유발합니다.",
+             "중남미·아프리카의 모래 해변이나 비포장 흙길을 맨발로 걷지 마세요.",
+             "막힌 운동화나 양말을 착용합니다.",
+             "해변에서 맨발로 눕지 않습니다.",
+             "멸균된 바늘로 안전하게 제거하거나 병원에서 처치받고 파상풍 예방접종을 확인합니다."],
+            ["쥐벼룩 / 고양이벼룩", "Oriental Rat Flea / Xenopsylla cheopis", "곤충/절지동물", "치명적질병매개체", "캠핑/도심", "🦗", 3,
+             "발목 주변을 일렬로 여러 번 물어 극심한 가려움을 일으키며 발진열과 페스트균을 매개할 수 있습니다.",
+             "야생 설치류나 길고양이가 머문 폐가·창고 출입을 피하세요.",
+             "양말을 바지 위로 올려 신습니다.",
+             "환경 살충 소독과 의류 고온 세탁을 실시합니다.",
+             "긁지 말고 소독 후 가려움 완화제를 바르며 발열 시 병원을 방문합니다."],
+            ["옴진드기 (개선충)", "Itch Mite / Sarcoptes scabiei", "곤충/절지동물", "치명적질병매개체", "캠핑/도심", "🦠", 2,
+             "피부 각질층 속에 굴을 파고 알을 낳아 밤마다 미칠 듯한 가려움증과 전염성 피부병을 일으킵니다.",
+             "야생 너구리나 길동물과의 직접 접촉을 피하세요.",
+             "위생이 불량한 침구류 사용을 피합니다.",
+             "의심 침구와 의류는 60℃ 이상 온수 세탁 후 고온 건조합니다.",
+             "피부과에서 처방받은 전용 연고(퍼메트린 크림 등)를 목 아래 전신에 바르고 동거인도 함께 치료합니다."],
+            ["이 (몸니·머릿니)", "Body & Head Louse / Pediculus humanus", "곤충/절지동물", "치명적질병매개체", "캠핑/도심", "🐜", 2,
+             "두피와 의복 솔기에 기생해 흡혈하며 심한 가려움과 발진티푸스·재귀열 등을 전파할 수 있습니다.",
+             "모자, 빗, 수건, 침낭 등 개인 위생용품을 타인과 공유하지 마세요.",
+             "개인 청결 유지 및 침구류 열탕 소독을 실시합니다.",
+             "고온 건조기로 의류를 살균합니다.",
+             "약국에서 구충 샴푸를 구입해 지침대로 세척하고 참빗으로 서캐를 제거합니다."],
+            ["빈대", "Bed Bug / Cimex lectularius", "곤충/절지동물", "치명적질병매개체", "캠핑/도심", "🐞", 2,
+             "야간에 혈관을 따라 2~3곳을 연속으로 물어 극심한 가려움과 수면 장애, 알레르기 반응을 유발합니다.",
+             "숙박업소 침대 매트리스 모서리와 틈새의 검은 배설물 흔적을 확인하기 전에 짐을 풀지 마세요.",
+             "여행 가방은 바닥이 아닌 금속 선반이나 욕실에 보관합니다.",
+             "귀가 후 의류를 50℃ 이상 건조기에 30분 이상 돌립니다.",
+             "온수 목욕 후 스테로이드 연고 및 항히스타민제를 복용합니다."],
+            ["흡혈파리 (침파리)", "Stable Fly / Stomoxys calcitrans", "곤충/절지동물", "치명적질병매개체", "캠핑/도심", "🪰", 2,
+             "집파리와 비슷하게 생겼으나 뾰족한 주둥이로 발목이나 종아리를 강하게 찔러 흡혈합니다.",
+             "가축 농장이나 해변 해초 더미 근처에서 발목을 노출하지 마세요.",
+             "긴 양말을 신어 발목 노출을 차단합니다.",
+             "기피제를 사용합니다.",
+             "비눗물로 씻고 항히스타민 연고를 바릅니다."],
+            ["모래파리 (샌드플라이)", "Sandfly / Phlebotominae", "곤충/절지동물", "치명적질병매개체", "해외/오지", "🦟", 3,
+             "열대·아열대 지역에서 치명적인 기생충 질환인 '리슈만편모충증'과 모래파리열을 매개합니다.",
+             "해질녘부터 새벽까지 열대 해변이나 흙벽 근처에서 야외 취침을 하지 마세요.",
+             "촘촘한 미세 방충망(일반 모기장보다 구멍이 작은 것)을 사용합니다.",
+             "DEET 기피제와 긴팔 옷을 착용합니다.",
+             "물린 자리가 아물지 않고 궤양으로 변하면 즉시 열대의학 병원을 방문합니다."],
+            ["바퀴벌레 (독일바퀴·미국바퀴)", "Cockroach / Blattodea", "곤충/절지동물", "치명적질병매개체", "캠핑/도심", "🪳", 1,
+             "살모넬라균, 대장균 등 식중독균과 천식·알레르기 유발 물질을 퍼뜨리며 드물게 잠자는 사람의 피부를 갉아먹기도 합니다.",
+             "음식물 부스러기와 물기를 방치하지 마세요.",
+             "밀폐 용기를 사용하고 주방 배수구를 건조하게 유지합니다.",
+             "붕산·피프로닐 성분의 독먹이 약제를 구석에 설치합니다.",
+             "물렸거나 접촉한 부위는 비눗물로 깨끗이 씻고 소독합니다."],
+
+            // ================= [I] 곤충·절지동물 - 독성애벌레·딱정벌레 (20종) =================
+            ["청딱지개미반날개 (화상벌레)", "Rove Beetle / Paederus fuscipes", "곤충/절지동물", "독성애벌레·딱정벌레", "캠핑/도심", "🪲", 3,
+             "물거나 쏘지는 않지만, 체액에 '페데린'이라는 맹독 물질이 있어 손으로 때려잡거나 문지르면 불에 덴 듯한 수포성 피부염(선상피부염)이 생깁니다.",
+             "팔이나 목에 작은 빨간 줄무늬 벌레가 앉아 있을 때 절대 손바닥으로 때려잡거나 문지르지 마세요!",
+             "입으로 후 불어서 날려 보내거나 종이·나뭇잎으로 가볍게 튕겨내야 합니다.",
+             "불빛에 강하게 끌리므로 야간에 방충망을 철저히 닫고 캠핑 랜턴 주변을 조심합니다.",
+             "체액이 묻었다면 절대 문지르지 말고 즉시 흐르는 물과 비누로 깨끗이 씻어낸 뒤 피부과에서 스테로이드 치료를 받습니다."],
+            ["청남가뢰 / 먹가뢰 (가뢰류)", "Blister Beetle / Meloidae", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🪲", 3,
+             "위협을 느끼면 다리 관절에서 강력한 독액(칸타리딘)을 분비해 피부에 거대한 물집을 만들고, 실수로 섭취 시 급성 신부전과 사망을 유발합니다.",
+             "풀밭에서 금속성 광택이 나는 딱정벌레를 맨손으로 집어 들거나 뭉개지 마세요.",
+             "장갑을 착용하고 접촉하지 않습니다.",
+             "야외 돗자리 주변을 확인합니다.",
+             "독액이 닿은 부위를 비눗물로 세척하고 물집을 터뜨리지 않은 채 병원을 방문합니다."],
+            ["노랑쐐기나방 애벌레", "Oriental Moth Caterpillar / Monema flavescens", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🐛", 3,
+             "온몸의 뾰족한 독침(자모)이 피부에 닿는 순간 불에 덴 듯한 극심한 작열감과 두드러기, 심할 경우 발열과 쇼크를 유발합니다.",
+             "감나무, 벚나무, 참나무 잎 뒷면에 붙은 화려한 가시 애벌레를 절대 만지지 마세요.",
+             "숲길 이동 시 긴소매 옷과 모자를 착용해 나뭇잎이 피부에 스치지 않도록 합니다.",
+             "정원수 전지 작업 시 보호 장갑과 보안경을 착용합니다.",
+             "절대 손으로 문지르지 말고 스카치테이프를 붙였다 떼어내 피부에 박힌 미세 독침을 제거한 뒤, 흐르는 물로 씻고 냉찜질 및 스테로이드 연고를 바릅니다."],
+            ["차독나방 / 매미나방 애벌레", "Tussock Moth Caterpillar / Euproctis", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🐛", 3,
+             "애벌레뿐만 아니라 성충 나방의 날개 가루(인분)와 고치에도 독침이 있어 바람에 날려 닿기만 해도 심한 피부염을 일으킵니다.",
+             "나무 기둥에 애벌레가 대량 발생했을 때 나무 아래에 돗자리를 펴지 마세요.",
+             "야외 건조대에 널어둔 빨래에 독침 가루가 묻지 않도록 실내 건조를 권장합니다.",
+             "긴팔 의복을 착용합니다.",
+             "테이프로 독침을 제거하고 비눗물로 씻은 뒤 항히스타민제와 스테로이드 연고를 사용합니다."],
+            ["반지불나방 애벌레 (로노미아)", "Giant Silkworm Moth Caterpillar / Lonomia obliqua", "곤충/절지동물", "독성애벌레·딱정벌레", "해외/오지", "🐛", 4,
+             "남미 열대우림에 서식하는 세계 최악의 살인 애벌레로, 나무 기둥에 위장해 있다가 스치면 치명적 항응고 독소가 주입되어 뇌출혈과 신부전으로 사망할 수 있습니다.",
+             "남미 밀림에서 나무 줄기에 맨손을 짚거나 기대지 마세요.",
+             "반드시 긴팔과 장갑을 착용하고 나무 표면을 눈으로 확인합니다.",
+             "접촉하지 않는 것이 유일한 예방법입니다.",
+             "접촉 즉시 독침을 테이프로 제거하고 상파울루 등 현지 항독소(Lonomia antivenom) 보유 병원으로 긴급 이송합니다."],
+            ["플란넬나방 애벌레 (푸스캐터필러)", "Puss Caterpillar / Megalopyge opercularis", "곤충/절지동물", "독성애벌레·딱정벌레", "해외/오지", "🐛", 3,
+             "북미에 서식하며 복슬복슬한 강아지 털처럼 귀엽게 생겼지만, 털 속에 숨겨진 독가시에 닿으면 뼈가 부러지는 듯한 격통과 구토가 발생합니다.",
+             "솜털처럼 부드러워 보이는 애벌레일수록 절대 만지지 마세요.",
+             "나무 아래 벤치에 앉기 전 위를 확인합니다.",
+             "긴소매 옷을 착용합니다.",
+             "테이프로 독침을 떼어낸 뒤 얼음찜질을 하고 통증이 심하면 병원에서 진통 치료를 받습니다."],
+            ["솔나방 애벌레 (송충이)", "Pine Caterpillar / Dendrolimus spectabilis", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🐛", 2,
+             "소나무에 서식하며 몸의 독모에 찔리면 가려움증과 수포, 결막염을 유발합니다.",
+             "소나무 숲 산책 시 떨어진 송충이를 맨손으로 만지지 마세요.",
+             "모자와 긴팔 의복을 착용합니다.",
+             "바람 부는 날 소나무 아래 휴식을 자제합니다.",
+             "테이프로 털을 제거한 뒤 흐르는 물로 씻어냅니다."],
+            ["폭탄먼지벌레", "Bombardier Beetle / Brachinus", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🪲", 2,
+             "위협을 받으면 복부 끝에서 100℃에 가까운 끓는 화학 독액(벤조퀴논)을 폭음과 함께 분사해 화상을 입힙니다.",
+             "돌 밑이나 낙엽 아래에서 발견 시 맨손으로 잡지 마세요.",
+             "핀셋이나 도구를 이용해 관찰합니다.",
+             "접근하지 않습니다.",
+             "화상 부위를 찬물로 식히고 소독 후 화상 연고를 바릅니다."],
+            ["물장군 / 장구애비 / 게아재비", "Giant Water Bug & Water Scorpion", "곤충/절지동물", "독성애벌레·딱정벌레", "바다/강", "🪲", 2,
+             "수서곤충계의 포식자로, 앞다리로 붙잡은 뒤 주둥이 침을 찔러 소화액을 주입해 극심한 통증을 유발합니다.",
+             "연못이나 논에서 채집 시 배 쪽과 입 근처를 맨손으로 만지지 마세요.",
+             "채집망을 이용합니다.",
+             "물놀이 시 수초 더미를 피합니다.",
+             "찔린 부위를 소독하고 냉찜질합니다."],
+            ["송장헤엄치게", "Backswimmer / Notonectidae", "곤충/절지동물", "독성애벌레·딱정벌레", "바다/강", "🪲", 2,
+             "수영장이나 연못에서 배를 위로 하고 헤엄치며, 맨살에 닿으면 벌에 쏘인 것처럼 따갑게 찌릅니다.",
+             "야외 수영장이나 계곡 웅덩이에 벌레가 떠 있을 때 손으로 잡지 마세요.",
+             "뜰채로 건져냅니다.",
+             "수영장 수질 관리와 방충망을 유지합니다.",
+             "비눗물로 씻고 냉찜질을 합니다."],
+            ["왕사마귀 / 사마귀", "Chinese Mantis / Tenodera sinensis", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🦗", 1,
+             "독은 없지만 가시가 돋친 앞다리로 손가락을 꽉 움켜쥐고 턱으로 살점을 뜯어낼 만큼 집요하게 물 수 있습니다.",
+             "앞다리 사거리 정면에서 손가락을 내밀지 마세요.",
+             "날개 끝부분이나 가운뎃가슴을 조심스럽게 잡습니다.",
+             "풀숲에 놓아줍니다.",
+             "상처를 소독합니다."],
+            ["사슴벌레 / 장수풍뎅이", "Stag Beetle & Rhinoceros Beetle", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🪲", 1,
+             "독은 없지만 큰 턱과 뿔, 날카로운 발톱이 매우 강해 손가락을 집히면 피가 날 정도로 아픕니다.",
+             "큰턱 사이나 가슴과 등껍질 틈새에 손가락을 넣지 마세요.",
+             "가운뎃가슴 양옆을 잡거나 나뭇가지를 대주어 올라타게 합니다.",
+             "자연에 그대로 둡니다.",
+             "집힌 상처를 소독하고 지혈합니다."],
+            ["장수하늘소 / 알락하늘소", "Longhorn Beetle / Cerambycidae", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🪲", 1,
+             "나무를 갉아먹는 강력한 큰턱으로 손가락을 물려 심한 통증과 출혈을 겪을 수 있습니다.",
+             "머리 뒤쪽 가슴 부위를 잡되 입 근처에 손을 대지 않습니다.",
+             "천연기념물(장수하늘소)인 경우 절대 포획하지 마세요.",
+             "관찰만 합니다.",
+             "상처를 소독하고 지혈합니다."],
+            ["길앞잡이", "Tiger Beetle / Cicindelinae", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🪲", 1,
+             "작지만 곤충계에서 손꼽히는 날카로운 큰턱을 가져 맨손으로 잡으면 피부를 세게 깨뭅니다.",
+             "눈으로만 관찰하고 잡지 마세요.",
+             "사람이 다가가면 먼저 날아갑니다.",
+             "접촉하지 않습니다.",
+             "물린 부위를 소독합니다."],
+            ["노린재 (썩덩나무노린재 등)", "Brown Marmorated Stink Bug", "곤충/절지동물", "독성애벌레·딱정벌레", "캠핑/도심", "🪲", 1,
+             "독은 없으나 위협을 받으면 지독한 악취액을 분사해 피부 자극이나 눈 통증을 일으킵니다.",
+             "손으로 눌러 잡지 마세요.",
+             "휴지나 빈 페트병으로 가두어 밖으로 내보냅니다.",
+             "방충망 틈새를 막고 박하유 스프레이를 뿌립니다.",
+             "악취액이 눈에 닿으면 흐르는 물로 씻어냅니다."],
+            ["여치 / 방아깨비", "Katydid / Tettigoniidae", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🦗", 1,
+             "육식성이 섞인 대형 여치는 강력한 큰턱으로 손가락을 물어 피를 낼 수 있습니다.",
+             "입 근처에 손가락을 대지 마세요.",
+             "풀숲에 놓아줍니다.",
+             "접촉을 줄입니다.",
+             "물린 부위를 소독합니다."],
+            ["집게벌레", "Earwig / Dermaptera", "곤충/절지동물", "독성애벌레·딱정벌레", "캠핑/도심", "🪲", 1,
+             "꼬리 끝의 집게로 손가락을 세게 집어 통증을 유발합니다.",
+             "축축한 화분 밑이나 낙엽 아래에서 맨손으로 잡지 마세요.",
+             "습기를 제거합니다.",
+             "도구를 사용해 치웁니다.",
+             "집힌 부위를 소독합니다."],
+            ["매미 (말매미·참매미)", "Cicada / Cicadidae", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🦗", 1,
+             "온순하나 나무껍질을 뚫는 뾰족한 주둥이로 사람 피부를 나무로 착각해 한 번씩 찌를 수 있습니다.",
+             "손바닥에 오래 올려두지 마세요.",
+             "날려 보냅니다.",
+             "방충망을 닫아 실내 유입을 막습니다.",
+             "찔린 부위를 소독합니다."],
+            ["대벌레", "Stick Insect / Phasmatodea", "곤충/절지동물", "독성애벌레·딱정벌레", "산/숲", "🦗", 1,
+             "대부분 무해하나 일부 열대 대벌레는 위협 시 눈을 향해 자극적인 방어 액체를 분사할 수 있습니다.",
+             "열대 산림에서 대형 대벌레를 얼굴 가까이 대지 마세요.",
+             "나뭇가지에 그대로 둡니다.",
+             "접촉하지 않습니다.",
+             "눈에 액체가 닿으면 물로 씻어냅니다."],
+            ["장수잠자리", "Golden-ringed Dragonfly / Anotogaster sieboldii", "곤충/절지동물", "독성애벌레·딱정벌레", "바다/강", "🪰", 1,
+             "강력한 육식 곤충으로 대형 장수잠자리는 턱 힘이 세어 손가락을 세게 깨물 수 있습니다.",
+             "날개를 잡을 때 입 근처를 피하세요.",
+             "관찰 후 놓아줍니다.",
+             "접촉하지 않습니다.",
+             "물린 부위를 소독합니다."]
+        ];
+
+        // 구조화된 객체 배열로 변환
+        const WILDLIFE_DATA = RAW_SPECIES.map((row, idx) => ({
+            id: idx + 1,
+            name: row[0],
+            subname: row[1],
+            mainCat: row[2],
+            subCat: row[3],
+            habitat: row[4],
+            emoji: row[5],
+            danger: row[6],
+            threat: row[7],
+            dontAct: row[8],
+            doAct: row[9],
+            repel: row[10],
+            firstAid: row[11]
+        }));
+
+        // 애플리케이션 상태
+        let currentState = {
+            mainCat: 'all',        // 'all' | '동물' | '곤충/절지동물'
+            subCat: 'all',
+            dangerLevel: 'all',    // 'all' | '4' | '3' | '2' | '1'
+            lethalOnly: false,     // 최고 위험군(4단계) 원클릭 토글
+            habitat: 'all',
+            searchQuery: '',
+            sortBy: 'danger-desc',
+            visibleLimit: 60       // 초기 렌더링 개수 (성능 최적화 및 더보기 지원)
+        };
+
+        // DOM 요소 참조
+        const cardsGrid = document.getElementById('cards-grid');
+        const emptyState = document.getElementById('empty-state');
+        const resultCountEl = document.getElementById('result-count');
+        const searchInput = document.getElementById('search-input');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+        const sortSelect = document.getElementById('sort-select');
+        const habitatSelect = document.getElementById('habitat-select');
+        const resetFiltersBtn = document.getElementById('reset-filters-btn');
+        const lethalOnlyBtn = document.getElementById('lethal-only-btn');
+        const subcatChipsContainer = document.getElementById('subcat-chips-container');
+        const loadMoreContainer = document.getElementById('load-more-container');
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        const mainTabBtns = document.querySelectorAll('.main-tab-btn');
+        const levelBtns = document.querySelectorAll('.level-btn');
+        const themeDarkBtn = document.getElementById('theme-dark-btn');
+        const themeLightBtn = document.getElementById('theme-light-btn');
+
+        // 모달 DOM 요소
+        const detailModal = document.getElementById('detail-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+
+        /**
+         * 흑(Dark) / 백(Light) 테마 전환 및 localStorage 저장
+         */
+        function setTheme(theme) {
+            const root = document.documentElement;
+            const isLight = theme === 'light';
+
+            if (isLight) {
+                root.classList.remove('dark');
+                root.classList.add('light-theme');
+                themeLightBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all bg-slate-900 text-white shadow-xs';
+                themeDarkBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all theme-text-muted hover:theme-text-primary';
+            } else {
+                root.classList.remove('light-theme');
+                root.classList.add('dark');
+                themeDarkBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all bg-slate-800 text-white shadow-xs';
+                themeLightBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all theme-text-muted hover:theme-text-primary';
+            }
+
+            try {
+                localStorage.setItem('wildlife_guide_theme', theme);
+            } catch (e) {
+                // 스토리지 접근 제한 환경 예외 처리
+            }
+
+            // 활성화된 칩/버튼 스타일 동기화
+            if (typeof renderSubCategoryChips === 'function') renderSubCategoryChips();
+            if (typeof updateLevelButtonsUI === 'function') updateLevelButtonsUI();
+        }
+
+        /**
+         * 초기 테마 복원 (localStorage 기반)
+         */
+        function initSavedTheme() {
+            let savedTheme = 'dark';
+            try {
+                const stored = localStorage.getItem('wildlife_guide_theme');
+                if (stored === 'light' || stored === 'dark') {
+                    savedTheme = stored;
+                }
+            } catch (e) {}
+            setTheme(savedTheme);
+        }
+
+        /**
+         * 상단 통계 대시보드 초기화
+         */
+        function initDashboardStats() {
+            const total = WILDLIFE_DATA.length;
+            const animals = WILDLIFE_DATA.filter(d => d.mainCat === '동물').length;
+            const insects = WILDLIFE_DATA.filter(d => d.mainCat === '곤충/절지동물').length;
+            const lvl4 = WILDLIFE_DATA.filter(d => d.danger === 4).length;
+            const lvl3 = WILDLIFE_DATA.filter(d => d.danger === 3).length;
+            const lvl12 = WILDLIFE_DATA.filter(d => d.danger <= 2).length;
+
+            document.getElementById('header-total-badge').textContent = `${total}종`;
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-animal').textContent = animals;
+            document.getElementById('stat-insect').textContent = insects;
+            document.getElementById('stat-lvl4').textContent = lvl4;
+            document.getElementById('stat-lvl3').textContent = lvl3;
+            document.getElementById('stat-lvl12').textContent = lvl12;
+
+            document.getElementById('tab-count-all').textContent = total;
+            document.getElementById('tab-count-animal').textContent = animals;
+            document.getElementById('tab-count-insect').textContent = insects;
+        }
+
+        /**
+         * 대분류에 따른 세부 카테고리 칩 자동 전환 렌더링
+         */
+        function renderSubCategoryChips() {
+            let categories = [];
+            if (currentState.mainCat === '동물') {
+                categories = SUB_CATEGORIES['동물'];
+            } else if (currentState.mainCat === '곤충/절지동물') {
+                categories = SUB_CATEGORIES['곤충/절지동물'];
+            } else {
+                categories = [...SUB_CATEGORIES['동물'], ...SUB_CATEGORIES['곤충/절지동물']];
+            }
+
+            if (currentState.subCat !== 'all' && !categories.includes(currentState.subCat)) {
+                currentState.subCat = 'all';
+            }
+
+            const relevantData = currentState.mainCat === 'all'
+                ? WILDLIFE_DATA
+                : WILDLIFE_DATA.filter(d => d.mainCat === currentState.mainCat);
+
+            const isLight = document.documentElement.classList.contains('light-theme');
+            const activeAllClass = isLight
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-white text-slate-950 shadow-xs';
+
+            let html = `
+                <button type="button" data-subcat="all" class="subcat-chip shrink-0 px-3 py-1 rounded-full text-xs font-extrabold transition-all ${currentState.subCat === 'all' ? activeAllClass : 'theme-chip border'}">
+                    전체 (${relevantData.length})
+                </button>
+            `;
+
+            categories.forEach(cat => {
+                const count = relevantData.filter(d => d.subCat === cat).length;
+                const isActive = currentState.subCat === cat;
+                html += `
+                    <button type="button" data-subcat="${cat}" class="subcat-chip shrink-0 px-3 py-1 rounded-full text-xs font-bold transition-all ${isActive ? 'bg-rose-600 text-white shadow-xs' : 'theme-chip border'}">
+                        ${cat} (${count})
+                    </button>
+                `;
+            });
+
+            subcatChipsContainer.innerHTML = html;
+
+            document.querySelectorAll('.subcat-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    currentState.subCat = chip.dataset.subcat;
+                    currentState.visibleLimit = 60;
+                    renderSubCategoryChips();
+                    renderCards();
+                });
+            });
+        }
+
+        /**
+         * 필터링 및 정렬된 데이터 반환
+         */
+        function getFilteredData() {
+            const query = currentState.searchQuery.trim().toLowerCase();
+
+            let filtered = WILDLIFE_DATA.filter(item => {
+                if (currentState.mainCat !== 'all' && item.mainCat !== currentState.mainCat) return false;
+                if (currentState.subCat !== 'all' && item.subCat !== currentState.subCat) return false;
+                if (currentState.lethalOnly && item.danger !== 4) return false;
+                if (!currentState.lethalOnly && currentState.dangerLevel !== 'all' && String(item.danger) !== currentState.dangerLevel) return false;
+                if (currentState.habitat !== 'all' && item.habitat !== currentState.habitat) return false;
+
+                if (query) {
+                    const searchTarget = `${item.name} ${item.subname} ${item.subCat} ${item.habitat} ${item.threat} ${item.dontAct} ${item.doAct} ${item.repel} ${item.firstAid}`.toLowerCase();
+                    if (!searchTarget.includes(query)) return false;
+                }
+                return true;
+            });
+
+            filtered.sort((a, b) => {
+                if (currentState.sortBy === 'danger-desc') {
+                    if (b.danger !== a.danger) return b.danger - a.danger;
+                    return a.name.localeCompare(b.name, 'ko');
+                } else if (currentState.sortBy === 'danger-asc') {
+                    if (a.danger !== b.danger) return a.danger - b.danger;
+                    return a.name.localeCompare(b.name, 'ko');
+                } else {
+                    return a.name.localeCompare(b.name, 'ko');
+                }
+            });
+
+            return filtered;
+        }
+
+        /**
+         * 카드 그리드 렌더링
+         */
+        function renderCards() {
+            const fullList = getFilteredData();
+            resultCountEl.textContent = fullList.length;
+
+            if (fullList.length === 0) {
+                cardsGrid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                loadMoreContainer.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            const displayList = fullList.slice(0, currentState.visibleLimit);
+            const fragment = document.createDocumentFragment();
+
+            displayList.forEach(item => {
+                const dangerMeta = DANGER_LEVELS[item.danger];
+                const isAnimal = item.mainCat === '동물';
+
+                const card = document.createElement('article');
+                card.className = `group theme-card rounded-2xl border ${dangerMeta.cardBorder} p-4 sm:p-5 cursor-pointer flex flex-col justify-between hover:-translate-y-0.5`;
+                card.setAttribute('tabindex', '0');
+                card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', `${item.name} 생존 대처법 상세 보기`);
+
+                card.innerHTML = `
+                    <div>
+                        <!-- 상단 위험도 & 대분류 배지 -->
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-extrabold border ${dangerMeta.badgeClass}">
+                                <span>${dangerMeta.icon}</span>
+                                <span>${dangerMeta.label}</span>
+                            </span>
+                            <span class="text-[11px] font-extrabold px-2 py-0.5 rounded-md border ${isAnimal ? 'badge-cat-animal bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'badge-cat-insect bg-amber-500/15 text-amber-300 border-amber-500/30'}">
+                                ${isAnimal ? '🦁 동물' : '🕷️ 곤충·절지'}
+                            </span>
+                        </div>
+
+                        <!-- 생물 이모지 & 이름 -->
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-12 h-12 rounded-xl theme-elevated border group-hover:scale-105 transition-transform flex items-center justify-center text-2xl sm:text-3xl shrink-0">
+                                ${item.emoji}
+                            </div>
+                            <div class="min-w-0">
+                                <h3 class="text-base sm:text-lg font-black theme-text-primary truncate group-hover:text-rose-500 transition-colors">
+                                    ${item.name}
+                                </h3>
+                                <div class="flex items-center gap-1.5 text-xs theme-text-muted mt-0.5">
+                                    <span class="font-semibold theme-text-secondary truncate">${item.subCat}</span>
+                                    <span>·</span>
+                                    <span class="shrink-0">${item.habitat}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 핵심 위협 & 도주법 요약 -->
+                        <div class="space-y-2 text-xs theme-text-secondary border-t theme-border pt-3">
+                            <p class="line-clamp-2 leading-relaxed">
+                                <strong class="text-rose-500 font-bold">⚠️ 위협:</strong> ${item.threat}
+                            </p>
+                            <p class="line-clamp-2 leading-relaxed">
+                                <strong class="text-emerald-500 font-bold">✅ 생존:</strong> ${item.doAct}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 하단 상세보기 유도 -->
+                    <div class="mt-4 pt-2.5 border-t theme-border flex items-center justify-between text-xs font-bold theme-text-muted group-hover:text-rose-500 transition-colors">
+                        <span>금지행동 · 도주법 · 응급처치</span>
+                        <span class="group-hover:translate-x-1 transition-transform">상세보기 →</span>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => openDetailModal(item));
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openDetailModal(item);
+                    }
+                });
+
+                fragment.appendChild(card);
+            });
+
+            cardsGrid.innerHTML = '';
+            cardsGrid.appendChild(fragment);
+
+            // 더 보기 버튼 표시 여부 업데이트
+            if (fullList.length > currentState.visibleLimit) {
+                const remaining = fullList.length - currentState.visibleLimit;
+                loadMoreBtn.textContent = `더 많은 생물 보기 (+${Math.min(60, remaining)}종 / 남은 생물 ${remaining}종)`;
+                loadMoreContainer.classList.remove('hidden');
+            } else {
+                loadMoreContainer.classList.add('hidden');
+            }
+        }
+
+        /**
+         * 상세 생존 모달 열기
+         */
+        function openDetailModal(item) {
+            const dangerMeta = DANGER_LEVELS[item.danger];
+
+            document.getElementById('modal-header-bg').className = `p-5 sm:p-6 text-white relative ${dangerMeta.headerBg}`;
+            document.getElementById('modal-emoji').textContent = item.emoji;
+            document.getElementById('modal-danger-badge').textContent = `${dangerMeta.icon} ${dangerMeta.label}`;
+            document.getElementById('modal-category-badge').textContent = `${item.mainCat} · ${item.subCat}`;
+            document.getElementById('modal-habitat-badge').textContent = `📍 ${item.habitat}`;
+            document.getElementById('modal-name').textContent = item.name;
+            document.getElementById('modal-subname').textContent = item.subname;
+
+            // 4칸 위험도 시각 게이지 바 생성
+            const gaugeContainer = document.getElementById('modal-gauge-bars');
+            let barsHtml = '';
+            for (let i = 1; i <= 4; i++) {
+                const active = i <= item.danger;
+                barsHtml += `<div class="flex-1 h-full rounded-xs ${active ? dangerMeta.barColor : 'bg-white/15'}"></div>`;
+            }
+            gaugeContainer.innerHTML = barsHtml;
+
+            document.getElementById('modal-threat').textContent = item.threat;
+            document.getElementById('modal-dont').textContent = item.dontAct;
+            document.getElementById('modal-do').textContent = item.doAct;
+            document.getElementById('modal-repel').textContent = item.repel;
+            document.getElementById('modal-firstaid').textContent = item.firstAid;
+
+            detailModal.classList.remove('hidden');
+            detailModal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        /**
+         * 상세 생존 모달 닫기
+         */
+        function closeDetailModal() {
+            detailModal.classList.add('hidden');
+            detailModal.classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+
+        /**
+         * 상황별 빠른 검색 시뮬레이터 버튼 동작
+         */
+        function setQuickSituation(habitat) {
+            currentState.habitat = habitat;
+            currentState.visibleLimit = 60;
+            habitatSelect.value = habitat;
+
+            const situationGuides = {
+                '산/숲': {
+                    title: '⛰️ 산·숲 긴급 조우 생존 수칙',
+                    text: '곰·멧돼지·맹수는 <strong>절대 등을 보이고 뛰지 말고</strong> 시선을 유지한 채 뒷걸음질치세요. 반대로 <strong>장수말벌·땅벌집</strong>을 건드렸을 때만 엎드리지 말고 머리를 감싼 채 30m 이상 전력 질주해야 합니다.'
+                },
+                '바다/강': {
+                    title: '🌊 바다·계곡·강 긴급 생존 수칙',
+                    text: '해파리·독가시 어류는 응급처치가 정반대입니다! <strong>상자해파리는 식초, 고깔해파리·스톤피쉬·노랑가오리는 45℃ 온수</strong>로 처치하며, <strong>파란고리문어</strong>는 절대 만지지 마세요.'
+                },
+                '캠핑/도심': {
+                    title: '⛺ 캠핑·야영장·도심 긴급 생존 수칙',
+                    text: '텐트 지퍼를 항상 바닥까지 잠그고 음식물을 외부에 두지 마세요. <strong>화상벌레(청딱지개미반날개)</strong>는 절대 손으로 문질러 잡지 말고 입으로 불어 떼어낸 뒤 비눗물로 씻으세요.'
+                },
+                '해외/오지': {
+                    title: '🌍 해외 오지·열대우림·사파리 생존 수칙',
+                    text: '신발·침낭을 입기 전 반드시 털어 전갈·독거미를 확인하고, <strong>블랙맘바·깔때기그물거미(신경독)</strong>는 압박 고정 붕대를 감되 <strong>살모사·갈색은둔거미(출혈·괴사독)</strong>는 꽉 묶지 마세요.'
+                }
+            };
+
+            if (situationGuides[habitat]) {
+                document.getElementById('situation-title').textContent = situationGuides[habitat].title;
+                document.getElementById('survival-tip-text').innerHTML = situationGuides[habitat].text;
+            }
+            renderCards();
+        }
+
+        /**
+         * 최고 위험군(4단계) 토글 UI 업데이트
+         */
+        function updateLethalBtnUI() {
+            if (currentState.lethalOnly) {
+                lethalOnlyBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black border border-rose-400 bg-rose-600 text-white shadow-lg shadow-rose-600/30 transition-all flex items-center gap-1.5 shrink-0';
+            } else {
+                lethalOnlyBtn.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold border border-rose-500/50 bg-rose-500/15 text-rose-500 hover:bg-rose-500/25 transition-all flex items-center gap-1.5 shrink-0';
+            }
+        }
+
+        /**
+         * 위험 등급 버튼 UI 업데이트
+         */
+        function updateLevelButtonsUI() {
+            const activeLvl = currentState.lethalOnly ? '4' : currentState.dangerLevel;
+            const isLight = document.documentElement.classList.contains('light-theme');
+
+            levelBtns.forEach(btn => {
+                const lvl = btn.dataset.level;
+                const isSelected = activeLvl === lvl;
+
+                if (lvl === 'all') {
+                    btn.className = isSelected
+                        ? (isLight
+                            ? 'level-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-slate-900 text-white transition-all'
+                            : 'level-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-slate-200 text-slate-900 transition-all')
+                        : 'level-btn px-2.5 py-1 rounded-lg text-xs font-bold theme-chip border transition-all';
+                } else if (lvl === '4') {
+                    btn.className = isSelected
+                        ? 'level-btn px-2.5 py-1 rounded-lg text-xs font-black bg-rose-600 text-white border border-rose-400 shadow-xs transition-all'
+                        : 'level-btn px-2.5 py-1 rounded-lg text-xs font-extrabold badge-danger-4 bg-rose-950/70 text-rose-300 border border-rose-700/60 hover:opacity-90 transition-all';
+                } else if (lvl === '3') {
+                    btn.className = isSelected
+                        ? 'level-btn px-2.5 py-1 rounded-lg text-xs font-black bg-orange-600 text-white border border-orange-400 shadow-xs transition-all'
+                        : 'level-btn px-2.5 py-1 rounded-lg text-xs font-extrabold badge-danger-3 bg-orange-950/70 text-orange-300 border border-orange-700/60 hover:opacity-90 transition-all';
+                } else if (lvl === '2') {
+                    btn.className = isSelected
+                        ? 'level-btn px-2.5 py-1 rounded-lg text-xs font-black bg-amber-500 text-slate-950 border border-amber-300 shadow-xs transition-all'
+                        : 'level-btn px-2.5 py-1 rounded-lg text-xs font-extrabold badge-danger-2 bg-amber-950/70 text-amber-300 border border-amber-700/60 hover:opacity-90 transition-all';
+                } else if (lvl === '1') {
+                    btn.className = isSelected
+                        ? 'level-btn px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-500 text-slate-950 border border-emerald-300 shadow-xs transition-all'
+                        : 'level-btn px-2.5 py-1 rounded-lg text-xs font-extrabold badge-danger-1 bg-emerald-950/70 text-emerald-300 border border-emerald-700/60 hover:opacity-90 transition-all';
+                }
+            });
+        }
+
+        /**
+         * 전체 필터 초기화
+         */
+        function resetAllFilters() {
+            currentState = {
+                mainCat: 'all',
+                subCat: 'all',
+                dangerLevel: 'all',
+                lethalOnly: false,
+                habitat: 'all',
+                searchQuery: '',
+                sortBy: 'danger-desc',
+                visibleLimit: 60
+            };
+
+            searchInput.value = '';
+            clearSearchBtn.classList.add('hidden');
+            sortSelect.value = 'danger-desc';
+            habitatSelect.value = 'all';
+
+            mainTabBtns.forEach(btn => {
+                if (btn.dataset.main === 'all') {
+                    btn.className = 'main-tab-btn flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs sm:text-sm font-extrabold transition-all bg-rose-600 text-white shadow-md';
+                } else {
+                    btn.className = 'main-tab-btn flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs sm:text-sm font-extrabold transition-all theme-text-muted hover:theme-text-primary';
+                }
+            });
+
+            document.getElementById('situation-title').textContent = '상황별 긴급 생존 수칙';
+            document.getElementById('survival-tip-text').innerHTML = '아래 상황 버튼을 누르면 해당 장소에서 조우할 수 있는 치명적 생물만 즉시 필터링하고 핵심 생존 원칙을 안내합니다.';
+
+            updateLethalBtnUI();
+            updateLevelButtonsUI();
+            renderSubCategoryChips();
+            renderCards();
+        }
+
+        // 이벤트 바인딩
+        mainTabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentState.mainCat = btn.dataset.main;
+                currentState.visibleLimit = 60;
+
+                mainTabBtns.forEach(b => {
+                    b.className = 'main-tab-btn flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs sm:text-sm font-extrabold transition-all theme-text-muted hover:theme-text-primary';
+                });
+                btn.className = 'main-tab-btn flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs sm:text-sm font-extrabold transition-all bg-rose-600 text-white shadow-md';
+
+                renderSubCategoryChips();
+                renderCards();
+            });
+        });
+
+        lethalOnlyBtn.addEventListener('click', () => {
+            currentState.lethalOnly = !currentState.lethalOnly;
+            if (currentState.lethalOnly) {
+                currentState.dangerLevel = '4';
+            } else {
+                currentState.dangerLevel = 'all';
+            }
+            currentState.visibleLimit = 60;
+            updateLethalBtnUI();
+            updateLevelButtonsUI();
+            renderCards();
+        });
+
+        levelBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lvl = btn.dataset.level;
+                currentState.dangerLevel = lvl;
+                currentState.lethalOnly = (lvl === '4');
+                currentState.visibleLimit = 60;
+                updateLethalBtnUI();
+                updateLevelButtonsUI();
+                renderCards();
+            });
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            currentState.searchQuery = e.target.value;
+            currentState.visibleLimit = 60;
+            clearSearchBtn.classList.toggle('hidden', currentState.searchQuery.length === 0);
+            renderCards();
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            currentState.searchQuery = '';
+            currentState.visibleLimit = 60;
+            clearSearchBtn.classList.add('hidden');
+            searchInput.focus();
+            renderCards();
+        });
+
+        sortSelect.addEventListener('change', (e) => {
+            currentState.sortBy = e.target.value;
+            renderCards();
+        });
+
+        habitatSelect.addEventListener('change', (e) => {
+            currentState.habitat = e.target.value;
+            currentState.visibleLimit = 60;
+            renderCards();
+        });
+
+        loadMoreBtn.addEventListener('click', () => {
+            currentState.visibleLimit += 60;
+            renderCards();
+        });
+
+        resetFiltersBtn.addEventListener('click', resetAllFilters);
+
+        closeModalBtn.addEventListener('click', closeDetailModal);
+        modalConfirmBtn.addEventListener('click', closeDetailModal);
+        detailModal.addEventListener('click', (e) => {
+            if (e.target === detailModal) closeDetailModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !detailModal.classList.contains('hidden')) {
+                closeDetailModal();
+            }
+        });
+
+        // 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            initSavedTheme();
+            initDashboardStats();
+            updateLevelButtonsUI();
+            renderSubCategoryChips();
+            renderCards();
+        });
+    </script>
+</body>
+</html>
