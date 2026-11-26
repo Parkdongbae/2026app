@@ -1,0 +1,2779 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한능검 마스터 v3.1 - 실전 OMR 채점기 & 회차별 독립 50문항 모의고사</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Tone.js for Sound Effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        :root {
+            --hanji-bg: #F8F5EE;
+            --royal-navy: #1B2A4A;
+            --royal-gold: #D4A338;
+            --dancheong-red: #C84B31;
+            --celadon-green: #2E6F65;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--hanji-bg);
+            background-image: radial-gradient(#E5DEC9 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: #1E293B;
+            overflow-x: hidden;
+        }
+
+        .font-history {
+            font-family: 'Gowun Batang', serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 7px; height: 7px; }
+        ::-webkit-scrollbar-track { background: #EFECE4; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+
+        /* 3D Card Flip for Memory Game */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 { transform: rotateY(180deg); }
+
+        .game-btn { transition: all 0.15s ease; }
+        .game-btn:active { transform: translateY(2px) scale(0.98); }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(212, 163, 56, 0.45); }
+            50% { box-shadow: 0 0 0 7px rgba(212, 163, 56, 0); }
+        }
+        .dday-pulse { animation: pulseGlow 2.4s infinite; }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.95) translateY(6px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-pop { animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .animate-shake { animation: shake 0.3s ease-in-out; }
+
+        /* Blank Quiz Mask in Concept Notes */
+        .blank-mode .concept-keyword {
+            background-color: #1B2A4A;
+            color: transparent;
+            border-radius: 4px;
+            padding: 0 6px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        .blank-mode .concept-keyword.revealed,
+        .blank-mode .concept-keyword:hover {
+            background-color: #FEF3C7;
+            color: #B45309;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 9px;
+            height: 9px;
+            top: -10px;
+            z-index: 9999;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(105vh) rotate(720deg); }
+        }
+
+        /* OMR Bubble Styling */
+        .omr-bubble {
+            width: 28px;
+            height: 28px;
+            border-radius: 9999px;
+            border: 1.5px solid #94A3B8;
+            font-size: 11px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.12s ease;
+            cursor: pointer;
+            user-select: none;
+            background-color: #FFFFFF;
+            color: #475569;
+        }
+        .omr-bubble:hover {
+            border-color: #1B2A4A;
+            background-color: #F1F5F9;
+        }
+        .omr-bubble.marked {
+            background-color: #1B2A4A;
+            border-color: #1B2A4A;
+            color: #FDE68A;
+            transform: scale(1.06);
+            box-shadow: 0 2px 5px rgba(27, 42, 74, 0.35);
+        }
+        .omr-bubble.correct-ans {
+            background-color: #2E6F65 !important;
+            border-color: #2E6F65 !important;
+            color: #FFFFFF !important;
+        }
+        .omr-bubble.wrong-ans {
+            background-color: #C84B31 !important;
+            border-color: #C84B31 !important;
+            color: #FFFFFF !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- 1. TOP STICKY HEADER & D-DAY BAR -->
+    <header class="bg-[#1B2A4A] text-white shadow-lg sticky top-0 z-40 border-b-4 border-[#D4A338]">
+        <div class="max-w-6xl mx-auto px-4 py-3">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                <!-- Brand & Quick Actions -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchMainTab('games')">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4A338] to-[#B6821E] flex items-center justify-center text-[#1B2A4A] font-black text-xl shadow-md">
+                            史
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="font-history text-lg sm:text-xl font-bold tracking-tight text-white">한능검 마스터</h1>
+                                <span class="text-[11px] bg-[#D4A338]/20 text-[#FDE68A] border border-[#D4A338]/40 px-2 py-0.5 rounded-full font-bold">v3.1 실전 합격판</span>
+                            </div>
+                            <p class="text-xs text-slate-300 hidden sm:block">실전 OMR 채점기 · 회차별 독립 50문항 모의고사 · 개념 노트 · 시대별 게임</p>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Utility Buttons -->
+                    <div class="flex items-center gap-2 lg:hidden">
+                        <button onclick="toggleSound()" id="soundBtnMobile" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200" title="효과음 토글">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                        </button>
+                        <button onclick="openWrongNotes()" class="relative px-3 py-1.5 rounded-lg bg-[#C84B31] hover:bg-[#b03e26] text-white text-xs font-bold flex items-center gap-1.5 shadow">
+                            <span>오답노트</span>
+                            <span id="wrongBadgeMobile" class="bg-white text-[#C84B31] rounded-full px-1.5 text-[10px] font-black">0</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- D-Day Widget & Desktop Utilities -->
+                <div class="flex flex-wrap items-center justify-between lg:justify-end gap-2.5 bg-[#131F38] px-3.5 py-2 rounded-xl border border-white/10">
+                    <div class="flex items-center gap-2.5">
+                        <div id="ddayBadge" class="dday-pulse px-3 py-1 rounded-lg bg-gradient-to-r from-[#D4A338] to-[#EAB308] text-[#1B2A4A] font-black text-sm sm:text-base tracking-tight shadow">
+                            D-2
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span id="examLabelDisplay" class="text-xs sm:text-sm font-bold text-white">제81회 한능검</span>
+                                <button onclick="openDdayModal()" class="text-[11px] text-[#FDE68A] hover:bg-white/20 bg-white/10 px-2 py-0.5 rounded-md transition flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    일정/목표 설정
+                                </button>
+                            </div>
+                            <p id="ddayMotivation" class="text-[11px] text-slate-300 truncate max-w-[230px] sm:max-w-[300px]">
+                                시험 직전! 개념 노트와 모의고사로 최종 점검!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="hidden lg:flex items-center gap-2 pl-3 border-l border-white/15">
+                        <button onclick="toggleSound()" id="soundBtnDesktop" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 transition" title="효과음 토글">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                        </button>
+                        <button onclick="openWrongNotes()" class="relative px-3.5 py-1.5 rounded-lg bg-[#C84B31] hover:bg-[#b03e26] text-white text-xs font-bold flex items-center gap-1.5 shadow transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                            <span>오답노트</span>
+                            <span id="wrongBadgeDesktop" class="bg-white text-[#C84B31] rounded-full px-1.5 text-[10px] font-black">0</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-5">
+
+        <!-- 2. DASHBOARD STATUS & PRIMARY NAVIGATION TABS -->
+        <section class="bg-white rounded-2xl p-4 shadow-sm border border-[#E5DEC9] mb-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <!-- Student Progress -->
+                <div class="flex items-center gap-3.5">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F8F5EE] to-[#EFE9D8] border-2 border-[#D4A338] flex flex-col items-center justify-center shrink-0">
+                        <span class="text-[10px] font-bold text-slate-500">예상등급</span>
+                        <span id="currentGradeText" class="text-base font-black text-[#1B2A4A]">도전중</span>
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2 mb-1">
+                            <span id="targetGoalTag" class="text-xs font-bold px-2.5 py-0.5 rounded-md bg-[#1B2A4A] text-[#FDE68A]">목표: 심화 1급</span>
+                            <span class="text-xs text-slate-600">푼 문제: <strong id="totalAnsweredDisplay" class="text-[#1B2A4A]">0</strong>문항</span>
+                            <span class="text-xs text-slate-600">정답률: <strong id="accuracyDisplay" class="text-[#2E6F65]">0%</strong></span>
+                        </div>
+                        <div class="w-full max-w-sm bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div id="xpProgressBar" class="bg-gradient-to-r from-[#2E6F65] via-[#D4A338] to-[#C84B31] h-full rounded-full transition-all duration-500" style="width: 5%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4 Main Mode Tabs -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 bg-[#F3EFE6] p-1.5 rounded-xl shrink-0">
+                    <button onclick="switchMainTab('games')" id="tabBtn-games" class="main-tab-btn px-3 py-2.5 rounded-lg text-xs font-black bg-[#1B2A4A] text-white shadow transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>학습 게임</span>
+                    </button>
+                    <button onclick="switchMainTab('concepts')" id="tabBtn-concepts" class="main-tab-btn px-3 py-2.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-white/60 transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                        <span>핵심 개념 노트</span>
+                    </button>
+                    <button onclick="switchMainTab('mock')" id="tabBtn-mock" class="main-tab-btn px-3 py-2.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-white/60 transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>50문항 모의고사</span>
+                    </button>
+                    <button onclick="switchMainTab('omr')" id="tabBtn-omr" class="main-tab-btn px-3 py-2.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-white/60 transition flex items-center justify-center gap-1.5">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        <span>실전 OMR 채점기</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. 7-ERA GRANULAR FILTER BAR -->
+            <div id="eraFilterSection" class="pt-3.5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <span class="text-xs font-extrabold text-[#1B2A4A] flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-[#D4A338]"></span>
+                        7대 시대별 집중 선택 (중복 방지 출제 적용 중)
+                    </span>
+                    <div class="flex items-center gap-2 text-[11px] text-slate-500">
+                        <span id="poolRemainingText">남은 새 문제: 100 / 100문제</span>
+                        <button onclick="resetSeenPools()" class="text-[#C84B31] hover:underline font-bold">출제 기록 초기화</button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-1.5" id="eraFilterGroup">
+                    <button onclick="setEraFilter('ALL')" data-era="ALL" class="era-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-[#1B2A4A] text-white shadow-xs transition">
+                        전체 시대
+                    </button>
+                    <button onclick="setEraFilter('PRE_GOJOSEON')" data-era="PRE_GOJOSEON" class="era-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-[#F3EFE6] text-slate-700 hover:bg-[#E5DEC9] transition">
+                        선사시대 · 고조선
+                    </button>
+                    <button onclick="setEraFilter('THREE_KINGDOMS')" data-era="THREE_KINGDOMS" class="era-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-[#F3EFE6] text-slate-700 hover:bg-[#E5DEC9] transition">
+                        삼국시대
+                    </button>
+                    <button onclick="setEraFilter('NORTH_SOUTH')" data-era="NORTH_SOUTH" class="era-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-[#F3EFE6] text-slate-700 hover:bg-[#E5DEC9] transition">
+                        남북국시대
+                    </button>
+                    <button onclick="setEraFilter('GORYEO')" data-era="GORYEO" class="era-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-[#F3EFE6] text-slate-700 hover:bg-[#E5DEC9] transition">
+                        고려시대
+                    </button>
+                    <button onclick="setEraFilter('JOSEON')" data-era="JOSEON" class="era-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-[#F3EFE6] text-slate-700 hover:bg-[#E5DEC9] transition">
+                        조선시대
+                    </button>
+                    <button onclick="setEraFilter('MODERN')" data-era="MODERN" class="era-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-[#F3EFE6] text-slate-700 hover:bg-[#E5DEC9] transition">
+                        근현대사
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================================
+             TAB 1: LEARNING GAMES HOME & ACTIVE GAME VIEWS
+             ====================================================================== -->
+        <div id="section-games">
+            <!-- GAMES MENU -->
+            <section id="view-home" class="animate-pop">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <!-- Game 1: Keyword Speed Quiz -->
+                    <div class="bg-white rounded-2xl border-2 border-[#E5DEC9] hover:border-[#1B2A4A] p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 text-xs font-extrabold">5지선다 기출 공략</span>
+                                <span id="kwPoolBadge" class="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">100문항 대기중</span>
+                            </div>
+                            <h3 class="text-lg font-black text-[#1B2A4A] mb-1.5">사료·키워드 스피드 퀴즈</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                                실제 한능검과 동일한 <strong>5지선다형</strong> 기출 사료·키워드를 보고 15초 안에 정답을 맞히세요! 한 사이클 내 중복 없이 출제됩니다.
+                            </p>
+                        </div>
+                        <div>
+                            <div class="text-[11px] text-slate-400 mb-3">5지선다형 • 제한시간 15초 • 1세트 8문제</div>
+                            <button onclick="startKeywordGame()" class="game-btn w-full py-3 rounded-xl bg-[#1B2A4A] hover:bg-[#273c69] text-white font-bold text-sm shadow flex items-center justify-center gap-2">
+                                <span>퀴즈 시작하기</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Game 2: Chronological Timeline -->
+                    <div class="bg-white rounded-2xl border-2 border-[#E5DEC9] hover:border-[#2E6F65] p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="px-2.5 py-1 rounded-lg bg-teal-100 text-teal-900 text-xs font-extrabold">고득점 킬러 문항</span>
+                                <span id="tlPoolBadge" class="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">12세트 대기중</span>
+                            </div>
+                            <h3 class="text-lg font-black text-[#1B2A4A] mb-1.5">시대순 연표 배열 퀴즈</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                                선사·고조선부터 근현대사까지, 제시된 4개의 역사적 사건을 <strong>가장 먼저 일어난 순서대로</strong> 차례차례 클릭하세요!
+                            </p>
+                        </div>
+                        <div>
+                            <div class="text-[11px] text-slate-400 mb-3">4단계 연표 순서 배열 • 1세트 5라운드</div>
+                            <button onclick="startTimelineGame()" class="game-btn w-full py-3 rounded-xl bg-[#2E6F65] hover:bg-[#23564e] text-white font-bold text-sm shadow flex items-center justify-center gap-2">
+                                <span>연표 정복하기</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Game 3: Card Matching -->
+                    <div class="bg-white rounded-2xl border-2 border-[#E5DEC9] hover:border-[#C84B31] p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-900 text-xs font-extrabold">인물·문화유산 암기</span>
+                                <span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">36쌍 카드풀</span>
+                            </div>
+                            <h3 class="text-lg font-black text-[#1B2A4A] mb-1.5">인물·유산 카드 짝맞추기</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                                카드를 뒤집어 <strong>왕·독립운동가·승려·국가</strong>와 그에 해당하는 <strong>업적·문화유산</strong> 짝을 최소 횟수로 찾아내세요!
+                            </p>
+                        </div>
+                        <div>
+                            <div class="text-[11px] text-slate-400 mb-3">12장 (6쌍) 카드 매칭 • 스피드 기록 측정</div>
+                            <button onclick="startMatchingGame()" class="game-btn w-full py-3 rounded-xl bg-[#C84B31] hover:bg-[#ad3d25] text-white font-bold text-sm shadow flex items-center justify-center gap-2">
+                                <span>짝맞추기 시작</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ACTIVE GAME 1: KEYWORD SPEED QUIZ -->
+            <section id="view-keyword" class="hidden animate-pop">
+                <div class="bg-white rounded-2xl border border-[#E5DEC9] shadow-md overflow-hidden">
+                    <div class="bg-[#1B2A4A] text-white px-5 py-3.5 flex items-center justify-between">
+                        <button onclick="confirmExitGame()" class="text-xs bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg font-bold">
+                            ← 나가기
+                        </button>
+                        <div class="flex items-center gap-2.5">
+                            <span id="kwProgress" class="text-xs font-bold bg-white/10 px-2.5 py-1 rounded-full">1 / 8</span>
+                            <span id="kwComboBadge" class="hidden text-xs font-black bg-[#D4A338] text-[#1B2A4A] px-2.5 py-1 rounded-full">🔥 2 COMBO!</span>
+                        </div>
+                        <div class="text-sm font-black text-[#FDE68A]">+<span id="kwSessionScore">0</span>점</div>
+                    </div>
+                    <div class="w-full h-2 bg-slate-200">
+                        <div id="kwTimerBar" class="h-full bg-[#D4A338] transition-all duration-100" style="width: 100%"></div>
+                    </div>
+                    <div class="p-5 sm:p-7">
+                        <div class="flex items-center justify-between mb-3">
+                            <span id="kwEraTag" class="px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-xs font-extrabold">삼국시대</span>
+                            <span class="text-xs text-slate-500 font-bold"><span id="kwTimeText">15</span>초 남음</span>
+                        </div>
+                        <div class="bg-[#F8F5EE] border-2 border-[#E5DEC9] rounded-2xl p-4 sm:p-5 mb-5">
+                            <p class="text-xs font-bold text-[#2E6F65] mb-1.5">다음 사료·설명이 나타내는 인물, 국가, 사건은?</p>
+                            <p id="kwQuestionText" class="font-history text-base sm:text-lg font-bold text-[#1B2A4A] leading-relaxed"></p>
+                            <div id="kwKeywordsWrap" class="flex flex-wrap gap-1.5 mt-3"></div>
+                        </div>
+                        <div id="kwOptionsGrid" class="grid grid-cols-1 gap-2.5"></div>
+                        <div id="kwFeedbackBox" class="hidden mt-5 rounded-2xl p-4 border-2 animate-pop">
+                            <div class="flex items-start gap-3">
+                                <div id="kwFeedbackIcon" class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shrink-0 mt-0.5"></div>
+                                <div class="flex-1">
+                                    <h4 id="kwFeedbackTitle" class="font-black text-sm sm:text-base mb-1"></h4>
+                                    <p id="kwFeedbackExp" class="text-xs sm:text-sm text-slate-700 leading-relaxed"></p>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex justify-end">
+                                <button onclick="nextKeywordQuestion()" class="game-btn px-5 py-2.5 rounded-xl bg-[#1B2A4A] text-white text-xs sm:text-sm font-bold shadow">
+                                    다음 문제 →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ACTIVE GAME 2: CHRONOLOGICAL TIMELINE -->
+            <section id="view-timeline" class="hidden animate-pop">
+                <div class="bg-white rounded-2xl border border-[#E5DEC9] shadow-md overflow-hidden">
+                    <div class="bg-[#2E6F65] text-white px-5 py-3.5 flex items-center justify-between">
+                        <button onclick="confirmExitGame()" class="text-xs bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg font-bold">← 나가기</button>
+                        <span id="tlProgress" class="text-xs font-bold bg-white/15 px-3 py-1 rounded-full">라운드 1 / 5</span>
+                        <div class="text-sm font-black text-[#FDE68A]">+<span id="tlSessionScore">0</span>점</div>
+                    </div>
+                    <div class="p-5 sm:p-7">
+                        <div class="mb-4">
+                            <span id="tlTopicBadge" class="px-2.5 py-1 rounded-md bg-teal-50 text-[#2E6F65] text-xs font-extrabold"></span>
+                            <h3 class="text-base sm:text-lg font-black text-[#1B2A4A] mt-1.5">
+                                가장 <span class="text-[#C84B31] underline decoration-2">먼저 일어난 사건</span>부터 순서대로 클릭하세요!
+                            </h3>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5 bg-[#F8F5EE] p-3 rounded-2xl border border-[#E5DEC9]">
+                            <div id="tlSlot0" onclick="unselectTimelineSlot(0)" class="min-h-[76px] rounded-xl border-2 border-dashed border-slate-300 bg-white/70 p-2.5 flex flex-col justify-center items-center text-center cursor-pointer"></div>
+                            <div id="tlSlot1" onclick="unselectTimelineSlot(1)" class="min-h-[76px] rounded-xl border-2 border-dashed border-slate-300 bg-white/70 p-2.5 flex flex-col justify-center items-center text-center cursor-pointer"></div>
+                            <div id="tlSlot2" onclick="unselectTimelineSlot(2)" class="min-h-[76px] rounded-xl border-2 border-dashed border-slate-300 bg-white/70 p-2.5 flex flex-col justify-center items-center text-center cursor-pointer"></div>
+                            <div id="tlSlot3" onclick="unselectTimelineSlot(3)" class="min-h-[76px] rounded-xl border-2 border-dashed border-slate-300 bg-white/70 p-2.5 flex flex-col justify-center items-center text-center cursor-pointer"></div>
+                        </div>
+                        <div id="tlPoolGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5"></div>
+                        <div id="tlSubmitWrap" class="flex justify-center">
+                            <button id="tlCheckBtn" onclick="checkTimelineAnswer()" disabled class="game-btn px-8 py-3 rounded-xl bg-slate-300 text-slate-500 font-bold text-sm cursor-not-allowed">
+                                4개 사건을 모두 순서대로 선택하세요 (0/4)
+                            </button>
+                        </div>
+                        <div id="tlFeedbackBox" class="hidden mt-5 rounded-2xl p-4 border-2 animate-pop">
+                            <h4 id="tlFeedbackTitle" class="font-black text-base mb-2"></h4>
+                            <div id="tlYearList" class="space-y-1.5 mb-3"></div>
+                            <p id="tlTipNote" class="text-xs text-slate-700 bg-white/80 p-3 rounded-xl border border-slate-200"></p>
+                            <div class="mt-4 flex justify-end">
+                                <button onclick="nextTimelineRound()" class="game-btn px-5 py-2.5 rounded-xl bg-[#2E6F65] text-white text-xs sm:text-sm font-bold shadow">
+                                    다음 연표 문제 →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ACTIVE GAME 3: CARD MATCHING -->
+            <section id="view-matching" class="hidden animate-pop">
+                <div class="bg-white rounded-2xl border border-[#E5DEC9] shadow-md overflow-hidden">
+                    <div class="bg-[#C84B31] text-white px-5 py-3.5 flex items-center justify-between">
+                        <button onclick="confirmExitGame()" class="text-xs bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg font-bold">← 나가기</button>
+                        <div class="flex items-center gap-4 text-xs sm:text-sm font-bold">
+                            <span>시도: <strong id="matchMoves">0</strong>회</span>
+                            <span>짝 맞춤: <strong id="matchPairsCount">0</strong> / 6</span>
+                        </div>
+                        <button onclick="startMatchingGame()" class="text-xs bg-white/15 hover:bg-white/25 px-2.5 py-1.5 rounded-lg font-bold">새 판</button>
+                    </div>
+                    <div class="p-4 sm:p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-xs sm:text-sm font-bold text-[#1B2A4A]">인물/국가 카드와 업적/유산 카드를 짝지어 보세요!</p>
+                            <span class="text-xs font-mono font-bold text-slate-500" id="matchTimerDisplay">00:00</span>
+                        </div>
+                        <div id="matchingGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5 sm:gap-3.5"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GAME RESULT SUMMARY -->
+            <section id="view-result" class="hidden animate-pop">
+                <div class="bg-white rounded-3xl border-2 border-[#D4A338] p-6 sm:p-8 shadow-xl text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-amber-100 text-[#D4A338] flex items-center justify-center mx-auto mb-3 text-3xl font-black">
+                        ★
+                    </div>
+                    <h3 id="resultGameTitle" class="font-history text-2xl font-bold text-[#1B2A4A] mb-1">게임 클리어!</h3>
+                    <p class="text-xs text-slate-500 mb-6">수고하셨습니다! 누적 점수와 예상 급수가 업데이트되었습니다.</p>
+                    <div class="grid grid-cols-3 gap-3 max-w-md mx-auto mb-6">
+                        <div class="bg-[#F8F5EE] p-3.5 rounded-2xl border border-[#E5DEC9]">
+                            <span class="text-[11px] text-slate-500 block">획득 점수</span>
+                            <span id="resScore" class="text-lg sm:text-xl font-black text-[#2E6F65]">+0점</span>
+                        </div>
+                        <div class="bg-[#F8F5EE] p-3.5 rounded-2xl border border-[#E5DEC9]">
+                            <span class="text-[11px] text-slate-500 block">기록/정답</span>
+                            <span id="resAccuracy" class="text-lg sm:text-xl font-black text-[#1B2A4A]">-</span>
+                        </div>
+                        <div class="bg-[#F8F5EE] p-3.5 rounded-2xl border border-[#E5DEC9]">
+                            <span class="text-[11px] text-slate-500 block">현재 등급</span>
+                            <span id="resGrade" class="text-lg sm:text-xl font-black text-[#C84B31]">도전중</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button id="resReplayBtn" class="game-btn flex-1 py-3.5 px-5 rounded-xl bg-[#1B2A4A] hover:bg-[#273c69] text-white font-bold text-sm shadow">
+                            새로운 문제로 한 판 더!
+                        </button>
+                        <button onclick="openWrongNotes()" class="game-btn flex-1 py-3.5 px-5 rounded-xl bg-[#C84B31] hover:bg-[#ad3d25] text-white font-bold text-sm shadow">
+                            오답노트 복습
+                        </button>
+                        <button onclick="switchView('home')" class="game-btn py-3.5 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm">
+                            메인으로
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ======================================================================
+             TAB 2: CORE CONCEPT STUDY NOTES (핵심 개념 노트 & 빈칸 암기 모드)
+             ====================================================================== -->
+        <div id="section-concepts" class="hidden animate-pop">
+            <div class="bg-white rounded-2xl border border-[#E5DEC9] p-5 sm:p-6 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-100">
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded-full bg-teal-50 text-[#2E6F65] text-xs font-extrabold">한능검 필수 요약집</span>
+                        <h2 class="font-history text-xl sm:text-2xl font-bold text-[#1B2A4A] mt-1">시대별 핵심 개념 노트</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">상단 시대 필터를 누르면 해당 시대 개념만 모아볼 수 있으며, 빈칸 암기 모드로 셀프 테스트가 가능합니다.</p>
+                    </div>
+                    <button onclick="toggleBlankMode()" id="blankModeBtn" class="game-btn px-3.5 py-2 rounded-xl border-2 border-[#1B2A4A] text-[#1B2A4A] hover:bg-[#1B2A4A] hover:text-white text-xs font-black transition flex items-center gap-1.5 self-start sm:self-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span>빈칸 암기 모드 OFF</span>
+                    </button>
+                </div>
+
+                <div id="conceptCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Rendered dynamically by renderConceptNotes() -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================================================================
+             TAB 3: EXAM ROUND 50-QUESTION MOCK TESTS (기출 변형 50문항 5지선다 모의고사)
+             ====================================================================== -->
+        <div id="section-mock" class="hidden animate-pop">
+            <!-- Mock Exam Selector -->
+            <div id="mock-selector" class="bg-white rounded-2xl border border-[#E5DEC9] p-5 sm:p-6 shadow-sm">
+                <div class="mb-5">
+                    <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                        <span class="px-2.5 py-1 rounded-md bg-rose-100 text-[#C84B31] text-xs font-extrabold">회차별 100% 독립 문제 출제</span>
+                        <span class="px-2.5 py-1 rounded-md bg-[#1B2A4A] text-[#FDE68A] text-xs font-bold">50문항 5지선다 • 80분 • 100점 만점</span>
+                    </div>
+                    <h2 class="font-history text-xl sm:text-2xl font-bold text-[#1B2A4A]">기출 변형 50문항 실전 모의고사</h2>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-1">
+                        실제 한능검 심화 시험과 동일하게 <strong>전근대사 30문항(60%) + 근현대사 20문항(40%)</strong> 비율과 <strong>1점·2점·3점 차등 배점(총 100점 만점)</strong>을 적용했으며, 각 회차마다 독립된 문제 세트로 출제됩니다.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Exam Round 81 -->
+                    <div class="border-2 border-[#D4A338] bg-[#FFFDF7] rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="px-2.5 py-0.5 rounded-full bg-[#C84B31] text-white text-[11px] font-black">제81회 대비 파이널</span>
+                                <span class="text-xs font-bold text-slate-500">50문항 · 80분 · 100점</span>
+                            </div>
+                            <h3 class="text-lg font-black text-[#1B2A4A]">제81회 한능검 대비 50문항 파이널 모의고사</h3>
+                            <p class="text-xs text-slate-600 mt-1.5 mb-4">최신 출제 경향과 사료 분석형·함정 선지 패턴을 총망라한 50문항 풀세트</p>
+                        </div>
+                        <button onclick="startMockExam('제81회 대비 파이널 모의고사', 0)" class="game-btn w-full py-3 rounded-xl bg-[#1B2A4A] hover:bg-[#273c69] text-white font-bold text-sm shadow">
+                            50문항 실전 응시하기
+                        </button>
+                    </div>
+
+                    <!-- Exam Round 80 -->
+                    <div class="border-2 border-[#E5DEC9] hover:border-[#1B2A4A] bg-white rounded-2xl p-5 flex flex-col justify-between transition">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold">기출 유형 세트 A</span>
+                                <span class="text-xs font-bold text-slate-500">50문항 · 80분 · 100점</span>
+                            </div>
+                            <h3 class="text-lg font-black text-[#1B2A4A]">제80회 출제 경향 반영 50문항 모의고사</h3>
+                            <p class="text-xs text-slate-600 mt-1.5 mb-4">삼국·남북국 문화유산, 고려·조선 제도사 및 개항기·일제강점기 핵심 기출 변형 50문항</p>
+                        </div>
+                        <button onclick="startMockExam('제80회 경향 반영 모의고사', 1)" class="game-btn w-full py-3 rounded-xl bg-[#2E6F65] hover:bg-[#23564e] text-white font-bold text-sm shadow">
+                            50문항 실전 응시하기
+                        </button>
+                    </div>
+
+                    <!-- Exam Round 79 -->
+                    <div class="border-2 border-[#E5DEC9] hover:border-[#1B2A4A] bg-white rounded-2xl p-5 flex flex-col justify-between transition">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold">기출 유형 세트 B</span>
+                                <span class="text-xs font-bold text-slate-500">50문항 · 80분 · 100점</span>
+                            </div>
+                            <h3 class="text-lg font-black text-[#1B2A4A]">제79회 출제 경향 반영 50문항 모의고사</h3>
+                            <p class="text-xs text-slate-600 mt-1.5 mb-4">왕의 업적 비교 사료, 무장 독립 전쟁과 현대사 민주화 운동 집중 점검 50문항</p>
+                        </div>
+                        <button onclick="startMockExam('제79회 경향 반영 모의고사', 2)" class="game-btn w-full py-3 rounded-xl bg-[#2E6F65] hover:bg-[#23564e] text-white font-bold text-sm shadow">
+                            50문항 실전 응시하기
+                        </button>
+                    </div>
+
+                    <!-- Exam Round 78 -->
+                    <div class="border-2 border-[#E5DEC9] hover:border-[#1B2A4A] bg-white rounded-2xl p-5 flex flex-col justify-between transition">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold">기출 유형 세트 C</span>
+                                <span class="text-xs font-bold text-slate-500">50문항 · 80분 · 100점</span>
+                            </div>
+                            <h3 class="text-lg font-black text-[#1B2A4A]">제78회 출제 경향 반영 50문항 모의고사</h3>
+                            <p class="text-xs text-slate-600 mt-1.5 mb-4">선사·여러 나라의 성장, 조선 후기 실학과 경제 변동, 통일 노력 중심 50문항</p>
+                        </div>
+                        <button onclick="startMockExam('제78회 경향 반영 모의고사', 3)" class="game-btn w-full py-3 rounded-xl bg-[#2E6F65] hover:bg-[#23564e] text-white font-bold text-sm shadow">
+                            50문항 실전 응시하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Mock Exam Paper (50 Questions) -->
+            <div id="mock-paper" class="hidden bg-white rounded-2xl border-2 border-[#1B2A4A] shadow-lg overflow-hidden">
+                <div class="bg-[#1B2A4A] text-white px-4 sm:px-5 py-3.5 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span id="mockRoundTitle" class="font-bold text-xs sm:text-base text-[#FDE68A]">제81회 대비 파이널</span>
+                        <span id="mockQNumber" class="text-xs bg-white/15 px-2.5 py-0.5 rounded-full font-bold">1 / 50번</span>
+                        <span id="mockAnsweredCounter" class="text-xs bg-[#2E6F65] px-2.5 py-0.5 rounded-full font-bold">마킹: 0/50</span>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <span id="mockTimerText" class="font-mono text-sm font-black text-amber-300 bg-black/30 px-2.5 py-1 rounded-lg">80:00</span>
+                        <button onclick="confirmFinishMockExam()" class="text-xs bg-[#C84B31] hover:bg-[#b03e26] px-3 py-1.5 rounded-lg font-bold shadow">
+                            최종 답안 제출
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 50 Question Navigator Grid -->
+                <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-200">
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1.5">
+                        <span>문항 번호 바로가기 (초록색: 선택 완료 / 남색: 현재 문항)</span>
+                        <span>전근대 1~30번 · 근현대 31~50번</span>
+                    </div>
+                    <div id="mockNavDots" class="grid grid-cols-10 sm:grid-cols-25 gap-1"></div>
+                </div>
+
+                <div class="p-5 sm:p-7">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span id="mockEraBadge" class="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-bold"></span>
+                        <span id="mockPointBadge" class="text-xs font-extrabold text-[#2E6F65] bg-teal-50 px-2 py-0.5 rounded-md">[배점 2점]</span>
+                    </div>
+                    <div class="bg-[#F8F5EE] border border-[#E5DEC9] rounded-2xl p-4 sm:p-5 mb-5">
+                        <p id="mockQuestionClue" class="font-history text-base sm:text-lg font-bold text-[#1B2A4A] leading-relaxed"></p>
+                        <div id="mockKeywords" class="flex flex-wrap gap-1.5 mt-3"></div>
+                    </div>
+                    <div id="mockOptions" class="space-y-2.5"></div>
+
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
+                        <button onclick="moveMockQuestion(-1)" id="mockPrevBtn" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
+                            ← 이전 문항
+                        </button>
+                        <button onclick="moveMockQuestion(1)" id="mockNextBtn" class="px-5 py-2.5 rounded-xl bg-[#1B2A4A] hover:bg-[#273c69] text-white text-xs font-bold">
+                            다음 문항 →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mock Exam Score Report & Era Breakdown -->
+            <div id="mock-report" class="hidden bg-white rounded-3xl border-2 border-[#D4A338] p-6 sm:p-8 shadow-xl animate-pop">
+                <div class="text-center border-b border-slate-100 pb-6 mb-6">
+                    <span id="mockReportRound" class="text-xs font-extrabold text-[#2E6F65] bg-teal-50 px-3 py-1 rounded-full"></span>
+                    <h3 class="font-history text-2xl sm:text-3xl font-bold text-[#1B2A4A] mt-2">50문항 모의고사 성적 분석표</h3>
+                    <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-5">
+                        <div class="bg-[#F8F5EE] px-6 py-4 rounded-2xl border border-[#E5DEC9]">
+                            <span class="text-xs text-slate-500 block">총점 (100점 만점)</span>
+                            <span id="mockFinalScore" class="text-3xl font-black text-[#1B2A4A]">86점</span>
+                        </div>
+                        <div class="bg-[#FFF8F6] px-6 py-4 rounded-2xl border border-[#C84B31]/30">
+                            <span class="text-xs text-slate-500 block">판정 급수</span>
+                            <span id="mockFinalGrade" class="text-3xl font-black text-[#C84B31]">심화 1급 합격</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6-Era Performance Breakdown -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-black text-[#1B2A4A] mb-3">시대별 정답률 분석 (취약 단원 확인)</h4>
+                    <div id="mockEraBreakdown" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+                </div>
+
+                <!-- Wrong Questions Review inside Mock Report -->
+                <div id="mockReviewList" class="space-y-3 mb-6"></div>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button onclick="resetMockView()" class="game-btn px-6 py-3 rounded-xl bg-[#1B2A4A] text-white font-bold text-sm shadow">
+                        다른 회차 모의고사 선택
+                    </button>
+                    <button onclick="openWrongNotes()" class="game-btn px-6 py-3 rounded-xl bg-[#C84B31] text-white font-bold text-sm shadow">
+                        오답노트에서 복습하기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================================================================
+             TAB 4: REAL OMR MARKING & AUTO-GRADER (실전 OMR 마킹 & 자동 채점기)
+             ====================================================================== -->
+        <div id="section-omr" class="hidden animate-pop">
+            <div class="bg-white rounded-2xl border-2 border-[#1B2A4A] shadow-md overflow-hidden">
+                <!-- OMR Top Control Bar -->
+                <div class="bg-[#1B2A4A] text-white p-4 sm:p-5 border-b-4 border-[#D4A338]">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="px-2.5 py-0.5 rounded-full bg-[#D4A338] text-[#1B2A4A] text-[11px] font-black">공식 기출 PDF 병행 학습용</span>
+                                <a href="https://www.historyexam.go.kr" target="_blank" rel="noopener noreferrer" class="text-[11px] text-[#FDE68A] underline hover:text-white">
+                                    국사편찬위원회 기출문제 다운로드(historyexam.go.kr) ↗
+                                </a>
+                            </div>
+                            <h2 class="font-history text-xl sm:text-2xl font-bold">실전 OMR 답안지 & 자동 채점기 (1~50번)</h2>
+                            <p class="text-xs text-slate-300 mt-0.5">출력하거나 화면에 띄운 실제 기출 시험지를 풀면서 아래 OMR 카드에 1~5번을 마킹하고 즉시 채점하세요!</p>
+                        </div>
+
+                        <!-- Exam Round Preset & 80-Min Timer -->
+                        <div class="flex flex-wrap items-center gap-2.5 bg-[#131F38] p-3 rounded-xl border border-white/10">
+                            <div>
+                                <label class="block text-[10px] text-slate-400 font-bold mb-0.5">회차 선택 (정답표 연동)</label>
+                                <select id="omrRoundSelect" onchange="changeOmrPreset()" class="bg-[#1B2A4A] text-white border border-white/20 rounded-lg px-2.5 py-1.5 text-xs font-bold">
+                                    <option value="CUSTOM_81">제81회 실전 연습 (직접 정답 입력/채점)</option>
+                                    <option value="ROUND_80">제80회 한능검 심화 (공식 정답/배점 내장)</option>
+                                    <option value="ROUND_79">제79회 한능검 심화 (공식 정답/배점 내장)</option>
+                                    <option value="ROUND_78">제78회 한능검 심화 (공식 정답/배점 내장)</option>
+                                </select>
+                            </div>
+
+                            <div class="pl-2 border-l border-white/15">
+                                <label class="block text-[10px] text-slate-400 font-bold mb-0.5">실전 타이머 (80분)</label>
+                                <div class="flex items-center gap-1.5">
+                                    <span id="omrTimerDisplay" class="font-mono text-base font-black text-[#FDE68A] bg-black/40 px-2.5 py-1 rounded-lg">80:00</span>
+                                    <button onclick="toggleOmrTimer()" id="omrTimerToggleBtn" class="px-2.5 py-1.5 rounded-lg bg-[#2E6F65] hover:bg-[#23564e] text-white text-xs font-bold">
+                                        시작
+                                    </button>
+                                    <button onclick="resetOmrTimer()" class="px-2 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-bold" title="타이머 초기화">
+                                        ↺
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OMR Status & Action Toolbar -->
+                <div class="bg-[#F8F5EE] px-4 sm:px-6 py-3 border-b border-[#E5DEC9] flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-3 text-xs font-bold">
+                        <span class="text-[#1B2A4A]">마킹 완료: <strong id="omrMarkedCount" class="text-[#2E6F65] text-sm">0</strong> / 50문항</span>
+                        <span class="text-slate-500">미마킹: <strong id="omrUnmarkedCount" class="text-[#C84B31]">50</strong>문항</span>
+                        <button onclick="highlightUnmarkedOmr()" class="px-2.5 py-1 rounded-lg bg-white border border-slate-300 hover:border-[#C84B31] text-slate-700 text-[11px] font-bold">
+                            미마킹 문항 강조
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="toggleOmrAnswerKeyEditor()" id="omrEditKeyBtn" class="px-3 py-1.5 rounded-xl border border-[#1B2A4A] text-[#1B2A4A] hover:bg-[#1B2A4A] hover:text-white text-xs font-bold transition">
+                            정답지 직접 입력/수정
+                        </button>
+                        <button onclick="clearOmrSheet()" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 text-xs font-bold">
+                            OMR 초기화
+                        </button>
+                        <button onclick="gradeOmrSheet()" class="game-btn px-5 py-2 rounded-xl bg-[#C84B31] hover:bg-[#ad3d25] text-white text-xs sm:text-sm font-black shadow">
+                            채점하기 ✓
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Optional Answer Key Editor Drawer -->
+                <div id="omrKeyEditorBox" class="hidden bg-amber-50/80 border-b-2 border-[#D4A338] p-4 sm:p-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <div>
+                            <h4 class="text-sm font-black text-[#1B2A4A]">정답지 & 배점(1~3점) 직접 설정</h4>
+                            <p class="text-xs text-slate-600">공식 정답표 PDF를 보고 각 문항의 정답(1~5)과 배점을 클릭해 설정한 뒤 채점할 수 있습니다. (자동 저장됨)</p>
+                        </div>
+                        <button onclick="toggleOmrAnswerKeyEditor()" class="px-3 py-1.5 rounded-lg bg-[#1B2A4A] text-white text-xs font-bold self-start">
+                            설정 닫기
+                        </button>
+                    </div>
+                    <div id="omrKeyEditorGrid" class="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2 max-h-60 overflow-y-auto p-1"></div>
+                </div>
+
+                <!-- OMR Grading Result Banner -->
+                <div id="omrResultBox" class="hidden bg-gradient-to-r from-[#FFFDF7] to-[#FFF8F6] border-b-2 border-[#D4A338] p-5 sm:p-6 animate-pop">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-5 pb-5 border-b border-slate-200">
+                        <div>
+                            <span id="omrGradedTitle" class="px-2.5 py-0.5 rounded-full bg-[#1B2A4A] text-[#FDE68A] text-xs font-bold">제80회 심화 채점 결과</span>
+                            <h3 class="font-history text-2xl font-bold text-[#1B2A4A] mt-1.5">실전 OMR 자동 채점 리포트</h3>
+                            <p id="omrWrongNumbersText" class="text-xs text-[#C84B31] font-bold mt-1"></p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="bg-white px-5 py-3 rounded-2xl border border-[#E5DEC9] text-center shadow-xs">
+                                <span class="text-[11px] text-slate-500 block">총점 (100점 만점)</span>
+                                <span id="omrTotalScoreText" class="text-2xl sm:text-3xl font-black text-[#1B2A4A]">88점</span>
+                            </div>
+                            <div class="bg-white px-5 py-3 rounded-2xl border border-[#C84B31]/40 text-center shadow-xs">
+                                <span class="text-[11px] text-slate-500 block">취득 예상 급수</span>
+                                <span id="omrGradeResultText" class="text-2xl sm:text-3xl font-black text-[#C84B31]">심화 1급</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h4 class="text-xs font-black text-[#1B2A4A] mb-2.5">문항 번호대별(시대별) 정답률 분석</h4>
+                        <div id="omrEraBreakdownGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2"></div>
+                    </div>
+                </div>
+
+                <!-- 5-Column Interactive OMR Sheet (1~50) -->
+                <div class="p-4 sm:p-6 bg-[#FDFBF7]">
+                    <div id="omrColumnsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-5 text-xs text-slate-500 border-t border-[#E5DEC9] bg-white/60 mt-8">
+        <p>중3 한국사능력검정시험 합격을 응원합니다! • 7대 시대별 집중 학습 & 회차별 독립 50문항 모의고사</p>
+    </footer>
+
+    <!-- MODAL 1: D-DAY SETTINGS -->
+    <div id="ddayModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-[#D4A338] animate-pop">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-black text-[#1B2A4A]">시험 D-Day & 목표 등급 설정</h3>
+                <button onclick="closeDdayModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600">✕</button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">빠른 시험 일정 선택</label>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="applyExamPreset('제81회 한능검', '2026-11-28')" class="text-left px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-[#1B2A4A] hover:bg-slate-50 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-black text-[#1B2A4A]">제81회 한국사능력검정시험</span>
+                                <span class="block text-[11px] text-slate-500">2026년 11월 28일 (토)</span>
+                            </div>
+                            <span class="text-xs font-bold text-[#C84B31]">임박!</span>
+                        </button>
+                        <button onclick="applyExamPreset('2027년 첫 한능검 목표', '2027-02-06')" class="text-left px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-[#1B2A4A] hover:bg-slate-50 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-black text-[#1B2A4A]">2027년 겨울방학 정기시험 목표</span>
+                                <span class="block text-[11px] text-slate-500">2027년 2월 6일 (예정일 기준)</span>
+                            </div>
+                            <span class="text-xs font-bold text-[#2E6F65]">겨울방학 대비</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">시험 이름</label>
+                        <input type="text" id="customExamName" value="제81회 한능검" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">시험 날짜</label>
+                        <input type="date" id="customExamDate" value="2026-11-28" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">목표 등급</label>
+                    <select id="targetGradeSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold">
+                        <option value="심화 1급 (80점 이상)">심화 1급 (80점 이상 - 만점 도전!)</option>
+                        <option value="심화 2급 (70~79점)">심화 2급 (70~79점)</option>
+                        <option value="심화 3급 (60~69점)">심화 3급 (60~69점)</option>
+                        <option value="기본 4급 (80점 이상)">기본 4급 (80점 이상)</option>
+                    </select>
+                </div>
+                <button onclick="saveDdaySettings()" class="game-btn w-full py-3 rounded-xl bg-[#1B2A4A] text-white font-bold text-sm shadow">
+                    설정 저장하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: WRONG ANSWER NOTEBOOK -->
+    <div id="wrongModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border-2 border-[#C84B31] animate-pop">
+            <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-[#FFF8F6] rounded-t-3xl">
+                <div>
+                    <h3 class="text-lg font-black text-[#C84B31]">나만의 한능검 오답노트</h3>
+                    <p class="text-xs text-slate-500">틀린 문제를 시험장 가기 직전에 꼭 다시 복습하세요!</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="startWrongNoteRetry()" id="retryWrongBtn" class="text-xs bg-[#C84B31] text-white font-bold px-3 py-1.5 rounded-lg shadow">
+                        오답만 다시 풀기
+                    </button>
+                    <button onclick="clearWrongNotes()" class="text-xs text-slate-500 hover:text-rose-600 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white">
+                        비우기
+                    </button>
+                    <button onclick="closeWrongNotes()" class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600">✕</button>
+                </div>
+            </div>
+            <div id="wrongNotesList" class="p-5 overflow-y-auto space-y-3 flex-1"></div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toastBox" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#1B2A4A] text-white px-5 py-3 rounded-2xl shadow-xl border border-[#D4A338] text-xs sm:text-sm font-bold flex items-center gap-3 animate-pop">
+        <span id="toastMsg"></span>
+        <div id="toastActions" class="hidden flex items-center gap-2">
+            <button id="toastConfirmBtn" class="px-3 py-1 rounded-lg bg-[#C84B31] text-white text-xs font-bold">나가기</button>
+            <button onclick="hideToast()" class="px-3 py-1 rounded-lg bg-white/20 text-white text-xs font-bold">계속 풀기</button>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           1. ERA METADATA & CORE CONCEPT STUDY NOTES
+           ========================================================================== */
+        const ERA_META = {
+            ALL: { label: '전체 시대', badge: 'bg-slate-200 text-slate-800' },
+            PRE_GOJOSEON: { label: '선사시대 · 고조선', badge: 'bg-stone-200 text-stone-800' },
+            THREE_KINGDOMS: { label: '삼국시대', badge: 'bg-amber-100 text-amber-900' },
+            NORTH_SOUTH: { label: '남북국시대', badge: 'bg-emerald-100 text-emerald-900' },
+            GORYEO: { label: '고려시대', badge: 'bg-teal-100 text-teal-900' },
+            JOSEON: { label: '조선시대', badge: 'bg-indigo-100 text-indigo-900' },
+            MODERN: { label: '근현대사', badge: 'bg-rose-100 text-rose-900' }
+        };
+
+        const CONCEPT_NOTES = [
+            {
+                era: 'PRE_GOJOSEON',
+                title: '1. 선사 시대의 전개와 고조선·여러 나라의 성장',
+                points: [
+                    '<strong>구석기 시대:</strong> 뗀석기(<span class="concept-keyword" onclick="revealBlank(this)">주먹도끼</span>, 슴베찌르개), 동굴·막집 거주, 사냥과 채집 위주의 이동 생활 (연천 전곡리).',
+                    '<strong>신석기 시대:</strong> 간석기와 <span class="concept-keyword" onclick="revealBlank(this)">빗살무늬 토기</span> 사용, 농경·목축 시작으로 강가·바닷가 움집 정착 생활 (서울 암사동).',
+                    '<strong>청동기 시대:</strong> <span class="concept-keyword" onclick="revealBlank(this)">비파형 동검</span>, 반달 돌칼(벼 수확), 민무늬 토기, 사유 재산과 계급 발생 → <span class="concept-keyword" onclick="revealBlank(this)">고인돌</span> 축조.',
+                    '<strong>고조선:</strong> 단군왕검 건국(제정일치), 사회 질서 유지를 위한 <span class="concept-keyword" onclick="revealBlank(this)">8조법</span> 시행, 위만 집권 후 중계 무역으로 번성.',
+                    '<strong>여러 나라의 성장:</strong> 부여(사출도·12월 영고), 고구려(서옥제·10월 동맹), 옥저(민며느리제·가족 공동묘), 동예(책화·10월 무천), 삼한(천군과 신성 지역 <span class="concept-keyword" onclick="revealBlank(this)">소도</span>).'
+                ]
+            },
+            {
+                era: 'THREE_KINGDOMS',
+                title: '2. 삼국 시대 중앙 집권화와 전성기 왕의 업적',
+                points: [
+                    '<strong>고구려:</strong> <span class="concept-keyword" onclick="revealBlank(this)">소수림왕</span>(불교 공인·태학 설립·율령 반포) → <span class="concept-keyword" onclick="revealBlank(this)">광개토대왕</span>(영락 연호·신라 내물왕 구원) → <span class="concept-keyword" onclick="revealBlank(this)">장수왕</span>(평양 천도·한성 함락·충주 고구려비).',
+                    '<strong>백제:</strong> <span class="concept-keyword" onclick="revealBlank(this)">근초고왕</span>(마한 정복·평양성 공격·칠지도) → <span class="concept-keyword" onclick="revealBlank(this)">무령왕</span>(22담로 파견·벽돌무덤) → <span class="concept-keyword" onclick="revealBlank(this)">성왕</span>(사비 천도·국호 남부여·관산성 전투 전사).',
+                    '<strong>신라:</strong> <span class="concept-keyword" onclick="revealBlank(this)">지증왕</span>(국호 신라·우산국 복속) → <span class="concept-keyword" onclick="revealBlank(this)">법흥왕</span>(불교 공인·율령 반포·금관가야 병합) → <span class="concept-keyword" onclick="revealBlank(this)">진흥왕</span>(화랑도 개편·한강 유역 장악·4개 순수비).',
+                    '<strong>가야 연맹:</strong> 김수로왕의 <span class="concept-keyword" onclick="revealBlank(this)">금관가야</span>가 전기 연맹을 주도(철 생산·덩이쇠)하였고, 후기에는 고령의 <span class="concept-keyword" onclick="revealBlank(this)">대가야</span>가 주도함.'
+                ]
+            },
+            {
+                era: 'NORTH_SOUTH',
+                title: '3. 남북국 시대 (통일 신라와 발해의 발전)',
+                points: [
+                    '<strong>통일 신라 왕권 강화:</strong> <span class="concept-keyword" onclick="revealBlank(this)">신문왕</span>이 김흠돌의 난 진압 후 국학 설립, 9주 5소경 정비, <span class="concept-keyword" onclick="revealBlank(this)">관료전 지급 및 녹읍 폐지</span> 단행.',
+                    '<strong>통일 신라 불교와 대외 교류:</strong> <span class="concept-keyword" onclick="revealBlank(this)">원효</span>(화쟁 사상·아미타 신앙), <span class="concept-keyword" onclick="revealBlank(this)">의상</span>(화엄종 개창·영주 부석사), 혜초(왕오천축국전), <span class="concept-keyword" onclick="revealBlank(this)">장보고</span>(완도 청해진 설치).',
+                    '<strong>발해의 건국과 발전:</strong> 대조영(동모산 건국·고구려 계승) → 무왕(인안 연호·장문휴의 당 등주 공격) → 문왕(3성 6부제·상경성 천도) → <span class="concept-keyword" onclick="revealBlank(this)">선왕</span>(5경 15부 62주·<span class="concept-keyword" onclick="revealBlank(this)">해동성국</span>).'
+                ]
+            },
+            {
+                era: 'GORYEO',
+                title: '4. 고려 시대의 통치 체제, 대외 항쟁, 반원 개혁',
+                points: [
+                    '<strong>기틀 확립:</strong> 태조(사심관·기인 제도·훈요 10조) → <span class="concept-keyword" onclick="revealBlank(this)">광종</span>(노비안검법·과거제 도입) → <span class="concept-keyword" onclick="revealBlank(this)">성종</span>(최승로 시무 28조 수용·12목 지방관 파견).',
+                    '<strong>대외 항쟁:</strong> 거란 1차 침입(<span class="concept-keyword" onclick="revealBlank(this)">서희</span>의 외교 담판으로 강동 6주 확보) → 거란 3차 침입(<span class="concept-keyword" onclick="revealBlank(this)">강감찬</span>의 귀주 대첩) → 여진 정벌(<span class="concept-keyword" onclick="revealBlank(this)">윤관</span>의 별무반·동북 9성).',
+                    '<strong>불교 통합과 문화유산:</strong> 의천(해동 천태종·교관겸수), <span class="concept-keyword" onclick="revealBlank(this)">지눌</span>(수선사 결사·정혜쌍수·돈오점수), 팔만대장경, <span class="concept-keyword" onclick="revealBlank(this)">직지심체요절</span>(현존 최고 금속 활자본).',
+                    '<strong>공민왕의 반원 자주 개혁:</strong> 쌍성총관부 무력 수복, 정동행성 이문소 폐지, 신돈 등용 및 <span class="concept-keyword" onclick="revealBlank(this)">전민변정도감</span> 설치.'
+                ]
+            },
+            {
+                era: 'JOSEON',
+                title: '5. 조선 전기 통치 완성 & 조선 후기 탕평·실학',
+                points: [
+                    '<strong>조선 전기:</strong> <span class="concept-keyword" onclick="revealBlank(this)">태종</span>(6조 직계제·호패법) → <span class="concept-keyword" onclick="revealBlank(this)">세종</span>(집현전·훈민정음·4군 6진·쓰시마섬 정벌) → <span class="concept-keyword" onclick="revealBlank(this)">성종</span>(홍문관 설치·경국대전 완성 반포).',
+                    '<strong>양난과 대동법:</strong> 임진왜란(이순신의 한산도 대첩 등) → 광해군(중립 외교·경기도 <span class="concept-keyword" onclick="revealBlank(this)">대동법</span> 최초 시행) → 병자호란(남한산성 항전·삼전도의 굴욕).',
+                    '<strong>탕평 정치:</strong> <span class="concept-keyword" onclick="revealBlank(this)">영조</span>(탕평비 건립·서원 정리·<span class="concept-keyword" onclick="revealBlank(this)">균역법</span> 시행) → <span class="concept-keyword" onclick="revealBlank(this)">정조</span>(규장각·장용영·수원 화성·금난전권 폐지 <span class="concept-keyword" onclick="revealBlank(this)">신해통공</span>).',
+                    '<strong>실학과 흥선대원군:</strong> 정약용(거중기·목민심서), 박지원(열하일기), <span class="concept-keyword" onclick="revealBlank(this)">흥선대원군</span>(경복궁 중건·서원 47개소 외 철폐·호포제·병인양요·신미양요).'
+                ]
+            },
+            {
+                era: 'MODERN',
+                title: '6. 개항기, 일제 강점기 독립운동, 현대사 민주화',
+                points: [
+                    '<strong>개항기 주요 사건:</strong> <span class="concept-keyword" onclick="revealBlank(this)">강화도 조약</span>(1876, 최초 근대적 불평등 조약) → 갑신정변(1884) → <span class="concept-keyword" onclick="revealBlank(this)">동학 농민 운동</span>(1894, 전주 화약·집강소) → 독립협회(만민 공동회) → 대한 제국(광무개혁).',
+                    '<strong>애국 계몽·항일 의병:</strong> 보안회(황무지 개간권 저지), <span class="concept-keyword" onclick="revealBlank(this)">신민회</span>(대성·오산학교, 신흥무관학교), 정미의병(13도 창의군 서울 진공 작전), 안중근(하얼빈 의거).',
+                    '<strong>일제 강점기 투쟁:</strong> <span class="concept-keyword" onclick="revealBlank(this)">3·1 운동</span>(1919, 대한민국 임시 정부 수립 계기) → 봉오동·청산리 대첩(1920) → <span class="concept-keyword" onclick="revealBlank(this)">신간회</span>(1927, 광주 학생 항일 운동 지원) → 윤봉길 훙커우 공원 의거(1932) → 한국 광복군(1940).',
+                    '<strong>현대사 민주화·통일:</strong> <span class="concept-keyword" onclick="revealBlank(this)">4·19 혁명</span>(1960) → 7·4 남북 공동 성명(1972) → <span class="concept-keyword" onclick="revealBlank(this)">5·18 민주화 운동</span>(1980) → <span class="concept-keyword" onclick="revealBlank(this)">6월 민주 항쟁</span>(1987, 대통령 직선제) → 6·15 남북 공동 선언(2000).'
+                ]
+            }
+        ];
+
+        /* ==========================================================================
+           2. EXTENSIVE 100-QUESTION 5-CHOICE BANK (60 PRE-MODERN + 40 MODERN)
+           ========================================================================== */
+        const QUESTION_BANK = [
+            // --- 1. PRE_GOJOSEON (선사시대 · 고조선) [12문항] ---
+            { id: 'pg1', era: 'PRE_GOJOSEON', clue: '연천 전곡리 유적에서 아슐리안형 주먹도끼가 발견된 시대의 생활 모습으로 옳은 것은?', keywords: ['연천 전곡리', '주먹도끼·슴베찌르개', '동굴·막집 거주', '이동 생활'], options: ['사냥과 채집을 하며 무리 지어 이동 생활을 하였다.', '빗살무늬 토기를 제작하여 곡식을 저장하였다.', '반달 돌칼을 이용하여 벼를 수확하였다.', '지배층의 권력을 상징하는 고인돌을 축조하였다.', '철제 농기구를 사용하여 깊이갈이를 시작하였다.'], answer: 0, explanation: '구석기 시대에는 뗀석기(주먹도끼, 슴베찌르개)를 사용하며 사냥과 채집을 위해 이동 생활을 했습니다.' },
+            { id: 'pg2', era: 'PRE_GOJOSEON', clue: '서울 암사동 유적을 대표하는 이 시대에 농경과 목축이 시작되면서 나타난 변화는?', keywords: ['서울 암사동', '빗살무늬 토기', '간석기·가락바퀴', '강가·바닷가 움집'], options: ['강가나 바닷가에 움집을 짓고 정착 생활을 하였다.', '비파형 동검과 거친무늬 거울을 제작하였다.', '사유 재산과 계급이 발생하여 군장이 등장하였다.', '명도전과 반량전 등 중국 화폐를 사용하였다.', '철제 무기를 앞세워 정복 전쟁을 벌였다.'], answer: 0, explanation: '신석기 시대에는 농경과 목축(신석기 혁명)이 시작되면서 강가나 바닷가에 움집을 짓고 정착 생활을 했습니다.' },
+            { id: 'pg3', era: 'PRE_GOJOSEON', clue: '부여 송국리 유적에서 출토된 비파형 동검과 반달 돌칼이 사용된 시대의 사회 모습은?', keywords: ['비파형 동검', '반달 돌칼', '민무늬 토기', '고인돌·돌널무덤'], options: ['계급이 발생하고 지배층의 무덤으로 고인돌을 만들었다.', '동굴이나 바위 그늘에서 막집을 짓고 살았다.', '조개껍데기 가면과 흙으로 빚은 얼굴상을 만들었다.', '창원 다호리 유적에서 출토된 붓으로 한자를 썼다.', '우경을 장려하여 농업 생산력을 크게 높였다.'], answer: 0, explanation: '청동기 시대에는 사유 재산과 계급이 발생하여 권력을 가진 군장이 등장하고 고인돌이 축조되었습니다.' },
+            { id: 'pg4', era: 'PRE_GOJOSEON', clue: '세형 동검과 잔무늬 거울이 제작되고, 창원 다호리 유적에서 붓이 출토된 시대의 특징은?', keywords: ['세형 동검', '잔무늬 거울', '창원 다호리 붓', '명도전·반량전'], options: ['중국과 활발히 교류하며 명도전 등의 화폐를 사용하였다.', '처음으로 농경과 목축을 시작하여 식량을 생산하였다.', '주먹도끼와 찍개 등 뗀석기를 주로 사용하였다.', '화백 회의에서 만장일치로 국가 중대사를 결정하였다.', '불교를 공인하고 율령을 반포하여 체제를 정비하였다.'], answer: 0, explanation: '철기 시대에는 한반도 독자적 청동기인 세형 동검이 제작되었고, 중국 화폐(명도전·반량전)와 붓이 출토되었습니다.' },
+            { id: 'pg5', era: 'PRE_GOJOSEON', clue: '단군왕검이 건국하였으며, 사람을 죽인 자는 즉시 죽이고 남에게 상처를 입힌 자는 곡식으로 갚는다는 법률이 있던 나라는?', keywords: ['단군왕검 건국', '8조법', '위만 집권', '왕검성 항전'], options: ['고조선', '부여', '옥저', '동예', '진국'], answer: 0, explanation: '고조선은 단군왕검이 건국(제정일치)하였으며, 사회 질서를 유지하기 위해 8조법을 시행했습니다.' },
+            { id: 'pg6', era: 'PRE_GOJOSEON', clue: '왕 아래 마가·우가·저가·구가 등의 가(加)들이 사출도를 별도로 다스렸던 나라의 풍습은?', keywords: ['마가·우가·저가·구가', '사출도', '1책 12법', '순장 풍습'], options: ['12월에 영고라는 제천 행사를 열었다.', '혼인 풍습으로 서옥제(데릴사위제)가 있었다.', '가족 공동묘인 골장제를 풍습으로 삼았다.', '다른 부족의 영역을 침범하면 책화로 배상하였다.', '제사장 천군이 다스리는 신성 지역 소도가 있었다.'], answer: 0, explanation: '부여는 5부족 연맹체로 사출도가 있었으며, 수렵 사회의 전통이 남아 12월에 영고라는 제천 행사를 열었습니다.' },
+            { id: 'pg7', era: 'PRE_GOJOSEON', clue: '혼인할 때 신부 집 뒤편에 작은 집(서옥)을 짓고 자식이 장성하면 아내를 데리고 신랑 집으로 돌아가는 풍습이 있던 나라는?', keywords: ['서옥제', '제가 회의', '10월 동맹', '국동대혈 제사'], options: ['고구려', '옥저', '동예', '마한', '변한'], answer: 0, explanation: '고구려는 혼인 풍습으로 서옥제(데릴사위제)가 있었으며, 10월에 동맹이라는 제천 행사를 열었습니다.' },
+            { id: 'pg8', era: 'PRE_GOJOSEON', clue: '어린 여자아이를 신랑 집에 미리 데려다 키운 뒤 성인이 되면 혼인시키는 민며느리제가 있던 나라는?', keywords: ['민며느리제', '가족 공동묘(골장제)', '해산물·소금 풍부', '읍군·삼로 지배'], options: ['옥저', '부여', '고구려', '동예', '진한'], answer: 0, explanation: '함경도 동해안에 위치한 옥저는 민며느리제와 가족 공동묘(골장제)의 풍습이 있었습니다.' },
+            { id: 'pg9', era: 'PRE_GOJOSEON', clue: '부족 간의 경계를 엄격히 구분하여 다른 부족의 생활권을 침범하면 노비나 소·말로 변상하게 하는 책화가 있던 나라는?', keywords: ['책화', '10월 무천', '단궁·과하마·반어피', '철(鐵)자형·여(呂)자형 집터'], options: ['동예', '부여', '옥저', '삼한', '가야'], answer: 0, explanation: '동예는 족외혼을 엄격히 지켰으며, 다른 부족의 영역 침범 시 배상하는 책화와 10월 제천 행사 무천이 있었습니다.' },
+            { id: 'pg10', era: 'PRE_GOJOSEON', clue: '제사장인 천군이 다스리는 신성 지역 소도가 존재하여 죄인이 도망쳐 들어가도 잡아가지 못했던 사회는?', keywords: ['천군', '소도 (제정 분리)', '5월 수릿날·10월 계절제', '벼농사 발달·저수지 축조'], options: ['삼한 (마한·진한·변한)', '고조선', '부여', '고구려', '옥저'], answer: 0, explanation: '삼한은 정치 지배자(신지·읍차)와 제사장(천군)이 분리된 제정 분리 사회였으며, 소도라는 신성 지역이 있었습니다.' },
+            { id: 'pg11', era: 'PRE_GOJOSEON', clue: '기원전 194년 고조선의 준왕을 몰아내고 왕위를 차지한 뒤, 철기 문화를 본격적으로 수용하고 한과 진국 사이의 중계 무역으로 번성한 인물은?', keywords: ['기원전 194년', '준왕 축출', '중계 무역 독점', '한 무제 침략 대비'], options: ['위만', '단군왕검', '부왕', '우거왕', '주몽'], answer: 0, explanation: '위만은 고조선의 왕위를 차지한 뒤 본격적으로 철기 문화를 받아들이고 한나라와 남방의 진국 사이 중계 무역을 독점했습니다.' },
+            { id: 'pg12', era: 'PRE_GOJOSEON', clue: '삼한 중 낙동강 하류에 위치하여 질 좋은 철이 많이 생산되었으며, 낙랑군과 왜에 철을 수출하고 덩이쇠를 화폐처럼 사용한 연맹체는?', keywords: ['낙동강 하류', '철 생산 풍부', '낙랑·왜에 철 수출', '덩이쇠 화폐 사용'], options: ['변한', '마한', '진한', '옥저', '동예'], answer: 0, explanation: '삼한 중 변한(훗날 가야 연맹으로 발전)은 철이 풍부하게 생산되어 낙랑과 왜에 수출하였으며, 덩이쇠를 화폐처럼 사용했습니다.' },
+
+            // --- 2. THREE_KINGDOMS (삼국시대) [12문항] ---
+            { id: 'tk1', era: 'THREE_KINGDOMS', clue: '태학을 설립하여 인재를 양성하고, 율령을 반포하였으며, 전진으로부터 불교를 수용하여 중앙 집권 체제를 확립한 고구려 왕은?', keywords: ['태학 설립', '율령 반포', '전진으로부터 불교 수용', '4세기 후반 고구려'], options: ['소수림왕', '고국원왕', '광개토대왕', '장수왕', '문자명왕'], answer: 0, explanation: '고구려 소수림왕은 전진의 순도를 통해 불교를 수용하고, 태학 설립 및 율령 반포로 국가 체제를 정비했습니다.' },
+            { id: 'tk2', era: 'THREE_KINGDOMS', clue: '‘영락’이라는 독자적 연호를 사용하고, 왜의 침입을 받은 신라 내물왕을 도와 보병과 기병 5만을 파견하여 격퇴한 고구려 왕은?', keywords: ['영락 연호', '신라 내물왕 구원', '호우명 그릇', '만주 요동 장악'], options: ['광개토대왕', '장수왕', '소수림왕', '미천왕', '동천왕'], answer: 0, explanation: '광개토대왕은 신라에 침입한 왜를 격퇴하였으며, 이 사실은 경주 호우총에서 출토된 호우명 그릇과 광개토대왕릉비에 기록되어 있습니다.' },
+            { id: 'tk3', era: 'THREE_KINGDOMS', clue: '남진 정책을 추진하여 수도를 국내성에서 평양으로 옮기고, 백제의 수도 한성을 함락하여 한강 유역을 차지한 고구려 왕은?', keywords: ['평양 천도 (427년)', '백제 한성 함락', '충주 고구려비', '남진 정책'], options: ['장수왕', '광개토대왕', '고국천왕', '미천왕', '영양왕'], answer: 0, explanation: '장수왕은 평양 천도 후 백제 한성을 함락하고 개로왕을 전사시켰으며, 남한강 유역 진출 기념으로 충주 고구려비를 세웠습니다.' },
+            { id: 'tk4', era: 'THREE_KINGDOMS', clue: '마한의 남은 세력을 정복하고, 고구려 평양성을 공격하여 고국원왕을 전사시켰으며, 동진·왜와 교류한 4세기 백제 전성기의 왕은?', keywords: ['마한 정복', '평양성 공격·고국원왕 전사', '부자 상속 확립', '칠지도 제작'], options: ['근초고왕', '고이왕', '침류왕', '무령왕', '성왕'], answer: 0, explanation: '4세기 백제 근초고왕은 마한 정복과 고구려 평양성 공격으로 최대 영토를 확보하였으며, 왜에 칠지도를 하사했습니다.' },
+            { id: 'tk5', era: 'THREE_KINGDOMS', clue: '지방의 22담로에 왕족을 파견하여 지방 통제를 강화하고, 중국 남조 양나라와 교류하여 벽돌무덤 양식의 왕릉을 남긴 백제 왕은?', keywords: ['22담로 왕족 파견', '중국 양나라 교류', '공주 송산리 벽돌무덤', '지석 출토'], options: ['무령왕', '동성왕', '성왕', '무왕', '의자왕'], answer: 0, explanation: '웅진 시대 백제 무령왕은 22담로에 왕족을 파견해 지방 통제를 강화했으며, 무령왕릉은 중국 남조의 영향을 받은 벽돌무덤입니다.' },
+            { id: 'tk6', era: 'THREE_KINGDOMS', clue: '수도를 웅진에서 사비로 옮기고 국호를 ‘남부여’로 고쳤으며, 신라와 연합해 한강 하류를 일시 수복했으나 관산성 전투에서 전사한 백제 왕은?', keywords: ['사비 천도', '국호 남부여', '22부 중앙 관청', '관산성 전투 전사'], options: ['성왕', '무령왕', '근초고왕', '무왕', '의자왕'], answer: 0, explanation: '백제 성왕은 사비 천도 후 중흥을 꾀했으나, 신라 진흥왕의 배신으로 한강 유역을 빼앗기고 관산성 전투에서 전사했습니다.' },
+            { id: 'tk7', era: 'THREE_KINGDOMS', clue: '국호를 ‘신라’로 확정하고 왕의 칭호를 마립간에서 ‘왕’으로 바꿨으며, 이사부를 파견하여 우산국(울릉도)을 복속시킨 신라 왕은?', keywords: ['국호 신라 확정', '왕 칭호 사용', '우산국 복속', '우경 장려'], options: ['지증왕', '내물왕', '법흥왕', '진흥왕', '진평왕'], answer: 0, explanation: '6세기 초 신라 지증왕은 국호와 왕호를 정비하고, 이사부를 보내 우산국을 복속시켰으며 우경을 장려했습니다.' },
+            { id: 'tk8', era: 'THREE_KINGDOMS', clue: '이차돈의 순교를 계기로 불교를 공인하고, 율령을 반포하였으며, 병부를 설치하고 금관가야를 병합한 신라 왕은?', keywords: ['이차돈의 순교·불교 공인', '율령 반포·병부 설치', '건원 연호', '금관가야 병합'], options: ['법흥왕', '지증왕', '진흥왕', '선덕여왕', '무열왕'], answer: 0, explanation: '신라 법흥왕은 율령 반포, 불교 공인(이차돈 순교), 상대등 설치, 금관가야 병합을 통해 중앙 집권 국가 체제를 완성했습니다.' },
+            { id: 'tk9', era: 'THREE_KINGDOMS', clue: '화랑도를 국가적 조직으로 개편하고, 한강 유역을 장악한 뒤 단양 신라 적성비와 4개의 순수비를 세운 신라 전성기의 왕은?', keywords: ['화랑도 국가 조직 개편', '한강 유역 장악', '대가야 병합', '북한산·황초령·마운령·창녕 순수비'], options: ['진흥왕', '법흥왕', '지증왕', '진평왕', '문무왕'], answer: 0, explanation: '신라 진흥왕은 한강 유역과 대가야를 차지하며 영토를 크게 확장하고, 정복지에 순수비를 건립했습니다.' },
+            { id: 'tk10', era: 'THREE_KINGDOMS', clue: '612년 수나라 양제가 113만 대군을 이끌고 침략했을 때, 청천강(살수)에서 수나라 별동대를 크게 물리친 고구려 장군은?', keywords: ['612년 수나라 침입', '청천강(살수) 대첩', '여수 전쟁', '우중문에게 보낸 시'], options: ['을지문덕', '연개소문', '양만춘', '온달', '강이식'], answer: 0, explanation: '을지문덕은 612년 수나라의 침입에 맞서 유인 작전으로 살수 대첩의 대승을 거두었습니다.' },
+            { id: 'tk11', era: 'THREE_KINGDOMS', clue: '김해 지역을 중심으로 성장하여 풍부한 철을 바탕으로 낙랑·왜와 중계 무역을 전개하며 전기 가야 연맹을 주도한 나라는?', keywords: ['김해 지역 중심', '전기 가야 연맹 주도', '철기 수출·덩이쇠', '법흥왕 때 신라에 병합'], options: ['금관가야', '대가야', '아라가야', '소금가야', '성산가야'], answer: 0, explanation: '김수로왕이 건국한 금관가야는 전기 가야 연맹을 주도했으나, 5세기 고구려의 공격으로 약화된 뒤 신라 법흥왕에게 병합되었습니다.' },
+            { id: 'tk12', era: 'THREE_KINGDOMS', clue: '금동대향로, 산수무늬 벽돌, 익산 미륵사지 석탑, 서산 용현리 마애여래삼존상 등 세련되고 온화한 불교 예술을 남긴 나라는?', keywords: ['백제 금동대향로', '익산 미륵사지 석탑', '서산 마애여래삼존상', '부여 정림사지 오층 석탑'], options: ['백제', '고구려', '신라', '가야', '발해'], answer: 0, explanation: '백제 금동대향로(부여 능산리 출토), 익산 미륵사지 석탑, 서산 마애여래삼존상은 모두 백제의 대표적 문화유산입니다.' },
+
+            // --- 3. NORTH_SOUTH (남북국시대) [12문항] ---
+            { id: 'ns1', era: 'NORTH_SOUTH', clue: '김흠돌의 난을 진압하여 진골 귀족을 숙청하고, 국학을 설립하였으며, 관료전을 지급하고 녹읍을 폐지한 통일 신라의 왕은?', keywords: ['김흠돌의 난 진압', '국학 설립', '관료전 지급·녹읍 폐지', '9주 5소경 정비'], options: ['신문왕', '문무왕', '성덕왕', '경덕왕', '혜공왕'], answer: 0, explanation: '통일 신라 신문왕은 진골 귀족의 경제적 기반인 녹읍을 폐지하고 관료전을 지급하여 전제 왕권을 확립했습니다.' },
+            { id: 'ns2', era: 'NORTH_SOUTH', clue: '‘일심(一心)’과 ‘화쟁(和諍)’ 사상을 바탕으로 종파 간의 대립을 조화시키려 했으며, 나무아미타불만 외우면 극락에 갈 수 있다는 아미타 신앙을 전파한 승려는?', keywords: ['일심·화쟁 사상', '십문화쟁론', '아미타 신앙 전파', '불교 대중화'], options: ['원효', '의상', '혜초', '지눌', '의천'], answer: 0, explanation: '통일 신라의 원효는 화쟁 사상을 주장하고, 아미타 신앙을 전파하여 불교 대중화에 크게 기여했습니다.' },
+            { id: 'ns3', era: 'NORTH_SOUTH', clue: '당나라에 유학하여 화엄 사상을 공부하고 돌아온 뒤, 영주 부석사를 창건하고 『화엄일승법계도』를 저술한 통일 신라 승려는?', keywords: ['화엄종 개창', '영주 부석사 창건', '화엄일승법계도', '관음 신앙'], options: ['의상', '원효', '자장', '혜초', '도선'], answer: 0, explanation: '의상은 해동 화엄종의 개창자로 영주 부석사를 세웠으며, 모든 존재가 조화를 이룬다는 화엄 사상을 전파했습니다.' },
+            { id: 'ns4', era: 'NORTH_SOUTH', clue: '당과 인도를 순례한 뒤 당시 서역과 인도의 풍습·지리를 생생하게 기록한 기행문 『왕오천축국전』을 남긴 통일 신라 승려는?', keywords: ['인도·서역 순례', '왕오천축국전 저술', '돈황 석굴에서 발견', '8세기 통일 신라'], options: ['혜초', '원효', '의상', '원측', '김대문'], answer: 0, explanation: '통일 신라 승려 혜초는 인도와 중앙아시아를 여행하고 『왕오천축국전』을 저술했습니다.' },
+            { id: 'ns5', era: 'NORTH_SOUTH', clue: '완도에 청해진을 설치하여 해적을 소탕하고, 신라·당·일본을 잇는 해상 무역을 장악한 통일 신라 말의 인물은?', keywords: ['완도 청해진 설치', '해적 소탕', '신라·당·일본 해상 무역', '신라방·법화원'], options: ['장보고', '최치원', '김헌창', '궁예', '견훤'], answer: 0, explanation: '장보고는 흥덕왕 때 완도에 청해진을 설치하고 동아시아 해상 무역권을 장악했습니다.' },
+            { id: 'ns6', era: 'NORTH_SOUTH', clue: '당나라 빈공과에 합격하여 「토황소격문」으로 이름을 떨쳤으며, 귀국 후 진성 여왕에게 개혁안인 시무 10여 조를 올린 6두품 지식인은?', keywords: ['당 빈공과 합격', '토황소격문', '진성 여왕에게 시무 10여 조 건의', '6두품 출신'], options: ['최치원', '설총', '강수', '김대문', '최승로'], answer: 0, explanation: '6두품 출신 최치원은 진성 여왕에게 시무 10여 조를 건의했으나, 진골 귀족들의 반발로 좌절되자 은거했습니다.' },
+            { id: 'ns7', era: 'NORTH_SOUTH', clue: '고구려 유민과 말갈족을 이끌고 동모산에서 발해를 건국하였으며, 고구려 계승 의식을 표방한 인물은?', keywords: ['동모산 건국 (698년)', '고구려 유민·말갈족 통합', '진국(발해) 건국', '천통 연호'], options: ['대조영 (고왕)', '무왕', '문왕', '선왕', '대인선'], answer: 0, explanation: '대조영(고왕)은 698년 길림성 돈화시 동모산 부근에서 고구려 유민과 말갈인을 규합하여 발해를 건국했습니다.' },
+            { id: 'ns8', era: 'NORTH_SOUTH', clue: '‘인안’ 연호를 사용하고, 당나라가 흑수말갈을 통해 발해를 견제하자 장문휴의 수군을 보내 당의 산둥 지방(등주)을 선제공격한 발해 왕은?', keywords: ['인안 연호', '장문휴 수군 파견', '당 산둥(등주) 공격', '당·신라와 대립'], options: ['무왕', '고왕', '문왕', '선왕', '성왕'], answer: 0, explanation: '발해 무왕은 당나라와 신라의 포위망에 맞서 장문휴를 보내 당의 등주를 공격하는 등 강경 대외 정책을 펼쳤습니다.' },
+            { id: 'ns9', era: 'NORTH_SOUTH', clue: '당과 친선 관계를 맺고 3성 6부제와 주자감을 정비하였으며, 수도를 상경 용천부로 옮기고 신라도를 개설한 발해 왕은?', keywords: ['대흥 연호', '상경 용천부 천도', '주자감 설치·3성 6부 정비', '신라도 개설'], options: ['문왕', '고왕', '무왕', '선왕', '희왕'], answer: 0, explanation: '발해 문왕은 당과 친선 관계를 맺고 문물을 수용했으며, 상경성 천도와 신라도 개설을 통해 국가 제도를 정비했습니다.' },
+            { id: 'ns10', era: 'NORTH_SOUTH', clue: '말갈의 대부분을 복속시키고 요동 지역까지 영토를 넓혀 지방 행정을 5경 15부 62주로 정비하여 중국으로부터 ‘해동성국’이라 불린 발해 왕은?', keywords: ['건흥 연호', '5경 15부 62주 완성', '최대 영토 확보', '해동성국 칭호'], options: ['선왕', '고왕', '무왕', '문왕', '애왕'], answer: 0, explanation: '9세기 전반 발해 선왕 때 최대 영토를 확보하고 5경 15부 62주를 완성하여 중국으로부터 해동성국이라 불렸습니다.' },
+            { id: 'ns11', era: 'NORTH_SOUTH', clue: '불국사와 석굴암을 창건하였으며, 정전(丁田)을 백성에게 지급하고 성덕대왕신종(에밀레종) 주조를 시작한 통일 신라 전성기 시기의 왕들은?', keywords: ['정전 지급 (성덕왕)', '불국사·석굴암 창건 (경덕왕)', '성덕대왕신종 주조', '통일 신라 전성기'], options: ['성덕왕 · 경덕왕', '무열왕 · 문무왕', '진덕여왕 · 신문왕', '원성왕 · 흥덕왕', '진성여왕 · 경순왕'], answer: 0, explanation: '통일 신라 중대 전성기인 성덕왕 때 정전이 지급되었고, 경덕왕 때 김대성의 발원으로 불국사와 석굴암이 창건되었습니다.' },
+            { id: 'ns12', era: 'NORTH_SOUTH', clue: '발해가 고구려를 계승한 국가임을 보여주는 문화적·제도적 근거로 옳지 않은 것은?', keywords: ['고구려 계승 의식', '온돌 장치·모줄임 천장', '정혜 공주 묘·이불병좌상', '일본에 보낸 국서(고려국왕)'], options: ['중앙 관제로 2성 6부제와 중추원·삼사를 운영하였다.', '상경성 궁궐터에서 고구려식 온돌 장치가 발견되었다.', '정혜 공주 묘는 고구려의 모줄임 천장 구조를 계승하였다.', '연꽃무늬 수막새와 치미 양식이 고구려와 유사하다.', '일본에 보낸 외교 문서에서 스스로 고려 국왕이라 칭하였다.'], answer: 0, explanation: '2성 6부제와 중추원·삼사는 고려의 중앙 통치 체제입니다. 발해는 3성 6부제(정당성 중심)를 운영했습니다.' },
+
+            // --- 4. GORYEO (고려시대) [12문항] ---
+            { id: 'gy1', era: 'GORYEO', clue: '후삼국을 통일한 뒤 호족을 포섭하기 위해 사심관 제도와 기인 제도를 시행하고, 후대 왕들에게 『훈요 10조』를 남긴 고려의 왕은?', keywords: ['후삼국 통일', '사심관·기인 제도', '훈요 10조', '흑창 설치·취민유도'], options: ['태조 (왕건)', '혜종', '정종', '광종', '성종'], answer: 0, explanation: '고려 태조 왕건은 사심관 제도와 기인 제도로 호족을 견제하고, 빈민 구제를 위한 흑창과 후대 지침서인 훈요 10조를 남겼습니다.' },
+            { id: 'gy2', era: 'GORYEO', clue: '호족의 경제·군사적 기반을 약화하기 위해 노비안검법을 실시하고, 쌍기의 건의를 받아들여 과거제를 처음 시행한 고려 왕은?', keywords: ['노비안검법 실시', '쌍기 건의·과거제 도입', '광덕·준풍 연호', '공복 제정'], options: ['광종', '태조', '성종', '현종', '문종'], answer: 0, explanation: '고려 광종은 노비안검법으로 호족 세력을 약화시키고, 과거제 도입을 통해 유교적 소양을 갖춘 신진 관료를 등용했습니다.' },
+            { id: 'gy3', era: 'GORYEO', clue: '최승로의 시무 28조를 수용하여 유교 정치 이념을 확립하고, 전국 주요 지역에 12목을 설치하여 지방관을 처음 파견한 고려 왕은?', keywords: ['최승로 시무 28조', '12목 설치·지방관 파견', '국자감 정비', '향리 제도 마련'], options: ['성종', '광종', '경종', '현종', '예종'], answer: 0, explanation: '고려 성종은 최승로의 시무 28조를 받아들여 2성 6부제와 12목을 정비하고 유교 정치의 기틀을 세웠습니다.' },
+            { id: 'gy4', era: 'GORYEO', clue: '993년 거란의 1차 침입 당시 적장 소손녕과 외교 담판을 벌여 송과의 단교를 약속하는 대신 압록강 동쪽의 강동 6주를 확보한 인물은?', keywords: ['거란 1차 침입 (993년)', '소손녕과 외교 담판', '강동 6주 확보', '고려의 고구려 계승 주장'], options: ['서희', '강감찬', '양규', '윤관', '김부식'], answer: 0, explanation: '서희는 거란의 1차 침입 당시 소손녕과의 외교 담판으로 강동 6주를 획득하여 압록강까지 영토를 넓혔습니다.' },
+            { id: 'gy5', era: 'GORYEO', clue: '1019년 거란의 3차 침입 때 철수하던 소배압의 10만 거란군을 귀주에서 크게 격파하여 대승을 거둔 고려의 명장은?', keywords: ['거란 3차 침입 (1019년)', '소배압 격파', '귀주 대첩', '개경 나성 축조 건의'], options: ['강감찬', '서희', '윤관', '김윤후', '최영'], answer: 0, explanation: '강감찬은 1019년 귀주 대첩에서 거란군을 대파하였으며, 이후 고려는 개경에 나성과 국경에 천리장성을 축조했습니다.' },
+            { id: 'gy6', era: 'GORYEO', clue: '여진족의 기병에 맞서기 위해 신기군·신보군·항마군으로 구성된 별무반을 편성하고, 여진을 정벌한 뒤 동북 9성을 축조한 인물은?', keywords: ['별무반 편성', '신기군·신보군·항마군', '여진 정벌', '동북 9성 축조'], options: ['윤관', '강감찬', '서희', '김부식', '척준경'], answer: 0, explanation: '윤관은 숙종·예종 때 별무반을 조직해 여진을 정벌하고 동북 9성을 쌓았습니다.' },
+            { id: 'gy7', era: 'GORYEO', clue: '고려 후기 불교계의 타락을 비판하며 순천 송광사에서 수선사 결사를 제창하고, 정혜쌍수와 돈오점수를 주장한 승려는?', keywords: ['수선사 결사 (송광사)', '정혜쌍수·돈오점수', '조계종 중흥', '무신 정권기 승려'], options: ['지눌', '의천', '요세', '혜심', '보우'], answer: 0, explanation: '지눌은 선종을 중심으로 교종을 포용하며 정혜쌍수와 돈오점수를 수행 방법으로 제시하고 수선사 결사를 이끌었습니다.' },
+            { id: 'gy8', era: 'GORYEO', clue: '원 간섭기 왕권을 회복하기 위해 쌍성총관부를 무력으로 수복하고, 정동행성 이문소를 폐지하였으며, 신돈을 등용해 전민변정도감을 설치한 고려 왕은?', keywords: ['쌍성총관부 수복', '정동행성 이문소 폐지', '신돈 등용·전민변정도감', '친원파 기철 숙청'], options: ['공민왕', '충렬왕', '충선왕', '우왕', '창왕'], answer: 0, explanation: '공민왕은 반원 자주 정책과 함께 권문세족이 불법으로 빼앗은 토지와 노비를 되돌려주는 전민변정도감을 설치했습니다.' },
+            { id: 'gy9', era: 'GORYEO', clue: '세계에서 가장 오래된 금속 활자본으로 유네스코 세계 기록 유산에 등재되었으며, 청주 흥덕사에서 간행된 불교 서적은?', keywords: ['현존 세계 최고 금속 활자본', '1377년 청주 흥덕사 간행', '백운 화상 경한 편찬', '유네스코 세계 기록 유산'], options: ['직지심체요절', '팔만대장경', '삼국사기', '삼국유사', '상정고금예문'], answer: 0, explanation: '『백운화상초록불조직지심체요절』은 1377년 청주 흥덕사에서 인쇄된 현존 세계 최고의 금속 활자본입니다.' },
+            { id: 'gy10', era: 'GORYEO', clue: '원 간섭기에 승려 일연이 단군 신화를 비롯한 우리 고유의 설화와 불교사를 중심으로 편찬한 역사서는?', keywords: ['승려 일연 저술', '단군 신화 수록', '불교사·민간 설화 중심', '원 간섭기 자주 의식'], options: ['삼국유사', '삼국사기', '제왕운기', '동명왕편', '해동고승전'], answer: 0, explanation: '승려 일연이 저술한 『삼국유사』는 단군 조선을 우리 역사의 시작으로 서술하고 고유 설화와 불교사를 담았습니다.' },
+            { id: 'gy11', era: 'GORYEO', clue: '교종과 선종의 대립을 극복하고자 해동 천태종을 개창하고, 교관겸수(敎觀兼修)를 주장하며 『신편제종교장총록』을 간행한 고려 왕자 출신 승려는?', keywords: ['해동 천태종 개창', '교관겸수 주장', '국청사 창건', '속장경(교장) 편찬'], options: ['의천', '지눌', '요세', '균여', '혜심'], answer: 0, explanation: '문종의 아들인 대각국사 의천은 교종 입장에서 선종을 통합하려 해동 천태종을 개창하고 교관겸수를 주장했습니다.' },
+            { id: 'gy12', era: 'GORYEO', clue: '몽골의 침략에 맞서 최우가 수도를 강화도로 천도하자, 부처의 힘으로 외적을 물리치기 위해 강화도에서 조판하여 완성한 문화유산은?', keywords: ['대몽 항쟁기 조판', '강화도 대장도감', '합천 해인사 보관', '유네스코 세계 기록 유산'], options: ['팔만대장경 (재조대장경)', '직지심체요절', '초조대장경', '무구정광대다라니경', '화엄경'], answer: 0, explanation: '팔만대장경(재조대장경)은 몽골 침략 당시 강화도에서 16년간 정교하게 새겨 완성한 목판 대장경입니다.' },
+
+            // --- 5. JOSEON (조선시대) [12문항] ---
+            { id: 'js1', era: 'JOSEON', clue: '왕권을 강화하기 위해 의정부 서사제를 폐지하고 6조 직계제를 실시하였으며, 사병을 혁파하고 호패법을 시행한 조선의 왕은?', keywords: ['6조 직계제 실시', '사병 혁파', '호패법 시행', '신문고 설치'], options: ['태종', '태조', '세종', '세조', '성종'], answer: 0, explanation: '조선 태종은 왕권 강화를 위해 사병을 없애고 6조 직계제를 실시했으며, 인구 파악을 위해 호패법을 시행했습니다.' },
+            { id: 'js2', era: 'JOSEON', clue: '집현전을 설치하고 훈민정음을 창제하였으며, 최윤덕·김종서를 파견해 4군 6진을 개척하고 쓰시마섬을 정벌한 조선의 왕은?', keywords: ['집현전 설치·훈민정음 창제', '4군 6진 개척', '이종무 쓰시마섬 정벌', '농사직설·칠정산 편찬'], options: ['세종', '태종', '문종', '세조', '성종'], answer: 0, explanation: '세종 대왕은 민족 문화의 황금기를 이끌었으며, 북방 4군 6진 개척과 쓰시마섬 정벌, 훈민정음 창제를 이루었습니다.' },
+            { id: 'js3', era: 'JOSEON', clue: '세조 때 편찬을 시작하여 이 왕 때 완성·반포함으로써 조선의 유교적 통치 체제와 법전을 완비한 기본 법전과 왕은?', keywords: ['홍문관 설치', '경국대전 완성 반포', '관수관급제 실시', '15세기 후반 조선'], options: ['성종 - 경국대전', '태종 - 경제육전', '세조 - 대전통편', '영조 - 속대전', '정조 - 대전회통'], answer: 0, explanation: '조선 성종 때 『경국대전』이 최종 완성·반포되어 조선 왕조 통치 규범의 기틀이 확립되었습니다.' },
+            { id: 'js4', era: 'JOSEON', clue: '1592년 임진왜란 당시 학익진 전술을 구사하여 일본 수군을 크게 격파하고 남해의 제해권을 장악한 해전은?', keywords: ['1592년 임진왜란', '이순신 장군', '학익진 전술', '제해권 장악'], options: ['한산도 대첩', '행주 대첩', '진주 대첩', '명량 해전', '노량 해전'], answer: 0, explanation: '이순신은 1592년 한산도 대첩에서 학익진 전술로 일본 수군을 대파하여 남해 제해권과 전라도 곡창 지대를 지켜냈습니다.' },
+            { id: 'js5', era: 'JOSEON', clue: '명과 후금 사이에서 실리적 중립 외교를 펼치고, 전후 복구를 위해 토지 대장을 정비하였으며 경기도에 대동법을 처음 실시한 조선 왕은?', keywords: ['명·후금 사이 중립 외교', '강홍립 파견', '경기도 대동법 최초 실시', '동의보감 편찬'], options: ['광해군', '선조', '인조', '효종', '숙종'], answer: 0, explanation: '광해군은 명과 후금 사이에서 중립 외교를 펼쳤으며, 공납의 폐단을 시정하기 위해 경기도에 대동법을 처음 실시했습니다.' },
+            { id: 'js6', era: 'JOSEON', clue: '1636년 청나라의 침입(병자호란) 당시 남한산성으로 피신하여 항전했으나, 결국 삼전도에서 청 태종에게 굴욕적인 화의를 맺은 조선 왕은?', keywords: ['병자호란 (1636년)', '남한산성 항전', '주화론 vs 척화론', '삼전도의 굴욕'], options: ['인조', '광해군', '효종', '현종', '숙종'], answer: 0, explanation: '인조는 친명배금 정책을 추진하다 병자호란을 겪었으며, 남한산성 항전 끝에 삼전도에서 청 태종에게 항복했습니다.' },
+            { id: 'js7', era: 'JOSEON', clue: '붕당의 폐해를 줄이기 위해 성균관 앞에 탕평비를 세우고, 백성의 군포 부담을 1년 2필에서 1필로 줄여주는 균역법을 시행한 조선 왕은?', keywords: ['탕평비 건립', '균역법 시행 (군포 1필)', '서원 대폭 정리', '속대전 편찬'], options: ['영조', '숙종', '정조', '순조', '헌종'], answer: 0, explanation: '영조는 완론 탕평책을 추진하고 탕평비를 세웠으며, 백성의 군역 부담을 절반으로 줄이는 균역법을 시행했습니다.' },
+            { id: 'js8', era: 'JOSEON', clue: '규장각을 육성하고 초계문신제를 실시하였으며, 장용영을 설치하고 수원 화성을 축조하였으며 금난전권을 폐지한 신해통공을 단행한 왕은?', keywords: ['규장각·초계문신제', '장용영·수원 화성', '신해통공 (금난전권 폐지)', '대전통편 편찬'], options: ['정조', '영조', '숙종', '순조', '고종'], answer: 0, explanation: '정조는 규장각, 장용영, 수원 화성 축조, 신해통공(육의전 제외 시전 상인의 금난전권 폐지)을 통해 왕권과 상공업을 진흥했습니다.' },
+            { id: 'js9', era: 'JOSEON', clue: '조선 후기 실학자로 청나라를 다녀온 뒤 『열하일기』를 저술하고, 수레와 선박의 이용 및 화폐 유통의 필요성을 강조한 북학파 학자는?', keywords: ['북학파 실학자', '열하일기 저술', '양반전·허생전', '수레·선박 이용 강조'], options: ['박지원', '박제가', '홍대용', '정약용', '이익'], answer: 0, explanation: '연암 박지원은 청나라 열하를 다녀온 기행문 『열하일기』를 쓰고, 상공업 진흥과 기술 혁신을 주장했습니다.' },
+            { id: 'js10', era: 'JOSEON', clue: '조선 후기 실학 집대성자로 거중기를 설계하여 수원 화성 축조에 기여했으며, 지방 수령의 도리를 밝힌 『목민심서』 등을 저술한 인물은?', keywords: ['거중기 설계', '목민심서·경세유표·흠흠신서', '여전론·정전론', '강진 유배 생활'], options: ['정약용', '유형원', '이익', '박제가', '김정희'], answer: 0, explanation: '다산 정약용은 실학을 집대성한 학자로 『목민심서』, 『경세유표』 등을 저술하고 거중기를 설계했습니다.' },
+            { id: 'js11', era: 'JOSEON', clue: '왕실의 권위를 세우기 위해 경복궁을 중건하고, 붕당의 근거지인 서원을 47개소만 남기고 철폐하였으며, 양반에게도 군포를 징수하는 호포제를 시행한 인물은?', keywords: ['경복궁 중건·당백전', '서원 47개소 외 철폐', '호포제 실시 (양반 군포 징수)', '비변사 축소·의정부 부활'], options: ['흥선대원군', '고종', '명성황후', '김홍집', '박규수'], answer: 0, explanation: '흥선대원군은 왕권 강화와 민생 안정을 위해 서원 철폐, 경복궁 중건, 호포제, 사창제 등 대대적인 내정 개혁을 단행했습니다.' },
+            { id: 'js12', era: 'JOSEON', clue: '병인박해를 구실로 강화도를 침략한 프랑스군을 문수산성과 정족산성에서 격퇴하였으며, 이 과정에서 외규장각 도서가 약탈당한 사건은?', keywords: ['1866년 프랑스 침략', '문수산성·정족산성 (양헌수)', '외규장각 도서 약탈', '병인박해 구실'], options: ['병인양요', '신미양요', '제너럴 셔먼호 사건', '오페르트 도굴 사건', '운요호 사건'], answer: 0, explanation: '1866년 병인양요 당시 한성근과 양헌수 부대가 문수산성과 정족산성에서 프랑스군을 물리쳤으나, 프랑스군은 철수하며 외규장각 의궤를 약탈했습니다.' },
+
+            // --- 6. MODERN (근현대사) [40문항 - 회차별 20문항씩 100% 독립 출제 보장] ---
+            { id: 'md1', era: 'MODERN', clue: '1876년 일본의 운요호 사건을 계기로 체결된 우리나라 최초의 근대적 조약이자, 치외법권과 해안 측량권을 허용한 불평등 조약은?', keywords: ['1876년 체결', '최초의 근대적·불평등 조약', '부산 외 2개 항구 개항', '치외법권(영사 재판권) 허용'], options: ['강화도 조약 (조일 수호 조규)', '제물포 조약', '한성 조약', '조미 수호 통상 조약', '을사늑약'], answer: 0, explanation: '1876년 체결된 강화도 조약은 최초의 근대적 조약이지만, 영사 재판권과 해안 측량권 등을 인정한 불평등 조약입니다.' },
+            { id: 'md2', era: 'MODERN', clue: '1884년 김옥균·박영효 등 급진 개화파가 우정총국 개국 축하연을 계기로 일으킨 근대화 운동으로, 청군의 개입으로 3일 만에 실패한 사건은?', keywords: ['1884년', '김옥균·박영효 등 급진 개화파', '우정총국 개국 축하연', '개혁 정강 14개조'], options: ['갑신정변', '임오군란', '동학 농민 운동', '갑오개혁', '아관파천'], answer: 0, explanation: '1884년 급진 개화파가 청의 간섭에서 벗어나 근대 국가를 세우고자 일으킨 갑신정변은 청군의 개입으로 3일 천하로 끝났습니다.' },
+            { id: 'md3', era: 'MODERN', clue: '1894년 전봉준을 중심으로 반봉건·반외세를 내걸고 일어났으며, 황토현·황룡촌 전투에서 승리한 뒤 전주 화약을 맺고 집강소를 설치한 운동은?', keywords: ['1894년 전봉준', '황토현·황룡촌 전투', '전주 화약·집강소 설치', '우금치 전투'], options: ['동학 농민 운동', '갑신정변', '임술 농민 봉기', '을미의병', '활빈당 활동'], answer: 0, explanation: '동학 농민 운동은 전주 화약 이후 전라도 각지에 집강소를 설치하여 폐정 개혁안을 실천했으나, 일본군의 경복궁 점령에 맞서 재봉기했다가 우금치에서 패배했습니다.' },
+            { id: 'md4', era: 'MODERN', clue: '1896년 서재필 등이 창립하였으며, 독립문을 건립하고 만민 공동회를 개최하여 러시아의 이권 침탈 저지와 의회 설립 운동을 전개한 단체는?', keywords: ['서재필 창립 (1896년)', '독립신문·독립문 건립', '만민 공동회·관민 공동회', '헌의 6조 채택'], options: ['독립협회', '신민회', '대한 자강회', '보안회', '헌정 연구회'], answer: 0, explanation: '독립협회는 만민 공동회와 관민 공동회를 열어 자주 국권 수호와 의회 설립 운동(중추원 개편)을 추진했습니다.' },
+            { id: 'md5', era: 'MODERN', clue: '1897년 고종이 환구단에서 황제에 즉위하며 선포한 국가로, ‘구본신참’의 원칙 아래 양전 사업과 지계 발급 등 광무개혁을 추진한 나라는?', keywords: ['1897년 환구단 황제 즉위', '구본신참 원칙', '양전 사업·지계 발급', '대한 국 국제 반포'], options: ['대한 제국', '조선 왕조', '대한민국 임시 정부', '대한 광복회', '신한 청년당'], answer: 0, explanation: '1897년 고종은 대한 제국을 선포하고 구본신참(옛것을 근본으로 삼고 새것을 참작함)을 내세워 광무개혁을 추진했습니다.' },
+            { id: 'md6', era: 'MODERN', clue: '1907년 안창호·양기탁 등이 조직한 비밀 결사로, 대성학교·오산학교를 세우고 남만주 삼원보에 신흥 강습소(신흥무관학교)를 설립한 단체는?', keywords: ['1907년 비밀 결사', '안창호·양기탁 주도', '대성학교·오산학교 설립', '남만주 삼원보 독립운동 기지'], options: ['신민회', '독립협회', '보안회', '신간회', '의열단'], answer: 0, explanation: '신민회는 실력 양성과 무장 독립 전쟁 준비를 병행한 비밀 결사로, 105인 사건으로 일제에 의해 와해되었습니다.' },
+            { id: 'md7', era: 'MODERN', clue: '1919년 고종의 인산일을 계기로 민족 대표 33인과 학생·시민이 참여한 최대 규모의 항일 운동으로, 일제의 통치 방식을 문화 통치로 바꾸게 한 사건은?', keywords: ['1919년 3월 1일', '민족 대표 33인·기미 독립 선언서', '대한민국 임시 정부 수립 계기', '무단 통치 → 문화 통치 전환'], options: ['3·1 운동', '6·10 만세 운동', '광주 학생 항일 운동', '물산 장려 운동', '민립 대학 설립 운동'], answer: 0, explanation: '3·1 운동은 전 계층이 참여한 비폭력 만세 운동으로, 대한민국 임시 정부 수립과 일제의 문화 통치 전환을 이끌어냈습니다.' },
+            { id: 'md8', era: 'MODERN', clue: '1920년 10월 김좌진이 이끄는 북로군정서군과 홍범도의 대한 독립군이 연합하여 일본군 대부대를 크게 격파한 독립군 최대의 승전은?', keywords: ['1920년 10월', '김좌진 북로군정서군', '홍범도 대한 독립군 연합', '백운평·어랑촌 전투'], options: ['청산리 대첩', '봉오동 전투', '쌍성보 전투', '대전자령 전투', '보천보 전투'], answer: 0, explanation: '1920년 10월 김좌진·홍범도 연합 부대는 만주 화룡현 청산리 일대에서 일본군을 대파하는 청산리 대첩의 승리를 거두었습니다.' },
+            { id: 'md9', era: 'MODERN', clue: '1927년 비타협적 민족주의 세력과 사회주의 세력이 연대하여 창립한 최대 규모의 항일 민족 유일당으로, 광주 학생 항일 운동을 지원한 단체는?', keywords: ['1927년 창립', '비타협적 민족주의 + 사회주의', '정우회 선언 계기', '광주 학생 항일 운동 진상 조사단'], options: ['신간회', '신민회', '독립협회', '조선 형평사', '근우회'], answer: 0, explanation: '신간회는 1927년 조직된 좌우 합작 항일 단체로 전국 지회를 통해 대중 운동과 광주 학생 항일 운동을 적극 지원했습니다.' },
+            { id: 'md10', era: 'MODERN', clue: '1932년 4월 김구가 조직한 한인 애국단 소속으로, 상하이 훙커우 공원에서 열린 일본군 전승 기념식장에 물통 폭탄을 투척한 독립운동가는?', keywords: ['1932년 4월 29일', '한인 애국단 소속', '상하이 훙커우 공원 의거', '중국 국민당의 임시 정부 지원 계기'], options: ['윤봉길', '이봉창', '안중근', '나석주', '강우규'], answer: 0, explanation: '윤봉길 의사의 상하이 훙커우 공원 의거는 중국 장제스 정부의 대한민국 임시 정부 지원을 이끌어내는 결정적 계기가 되었습니다.' },
+            { id: 'md11', era: 'MODERN', clue: '1960년 3·15 부정 선거와 마산에서 발견된 김주열 학생의 시신을 계기로 전국적인 시위가 일어나 이승만 대통령의 하야를 이끌어낸 민주화 운동은?', keywords: ['1960년 4월', '3·15 부정 선거 규탄', '김주열 학생 시신 발견', '이승만 대통령 하야'], options: ['4·19 혁명', '5·18 민주화 운동', '6월 민주 항쟁', '부마 민주 항쟁', '6·3 시위'], answer: 0, explanation: '4·19 혁명은 학생과 시민의 힘으로 독재 정권을 무너뜨린 우리나라 최초의 성공한 민주주의 혁명입니다.' },
+            { id: 'md12', era: 'MODERN', clue: '1987년 6월 박종철 고문치사 사건 은폐 조작과 4·13 호헌 조치에 맞서 ‘호헌 철폐, 독재 타도’를 외치며 대통령 직선제 개헌을 쟁취한 사건은?', keywords: ['1987년 6월', '박종철·이한열 열사', '4·13 호헌 조치 반대', '6·29 민주화 선언·대통령 직선제'], options: ['6월 민주 항쟁', '4·19 혁명', '5·18 민주화 운동', 'YH 무역 사건', '신탁 통치 반대 운동'], answer: 0, explanation: '1987년 6월 민주 항쟁의 결과 6·29 민주화 선언이 발표되고 5년 단임 대통령 직선제 개헌이 이루어졌습니다.' },
+            { id: 'md13', era: 'MODERN', clue: '2000년 6월 평양에서 김대중 대통령과 김정일 국방위원장이 분단 이후 최초로 남북 정상 회담을 개최하고 채택한 공동 선언은?', keywords: ['2000년 최초 남북 정상 회담', '김대중·김정일', '개성 공단 건설 합의', '이산가족 상봉'], options: ['6·15 남북 공동 선언', '7·4 남북 공동 성명', '남북 기본 합의서', '10·4 남북 정상 선언', '판문점 선언'], answer: 0, explanation: '6·15 남북 공동 선언을 계기로 이산가족 상봉, 경의선 철도 연결, 개성 공단 조성 등 남북 교류 협력이 활발히 추진되었습니다.' },
+            { id: 'md14', era: 'MODERN', clue: '1882년 구식 군인에 대한 차별 대우와 밀린 급료 지급 문제로 발생하여 흥선대원군이 일시 재집권하고 제물포 조약이 체결된 사건은?', keywords: ['1882년', '구식 군인 차별 대우', '흥선대원군 일시 재집권', '제물포 조약·조청 상민 수륙 무역 장정'], options: ['임오군란', '갑신정변', '동학 농민 운동', '을미사변', '아관파천'], answer: 0, explanation: '임오군란 이후 청군의 개입으로 흥선대원군이 청으로 압송되었으며, 조청 상민 수륙 무역 장정이 체결되어 청의 내정 간섭이 심화되었습니다.' },
+            { id: 'md15', era: 'MODERN', clue: '1894년 7월 일본군의 경복궁 무단 점령 이후 설치된 군국기무처가 주도하였으며, 신분제 폐지·과거제 폐지·조혼 금지 등을 단행한 개혁은?', keywords: ['1894년 7월', '군국기무처 설치', '신분제·과거제 폐지', '은본위제·조세 금납화'], options: ['제1차 갑오개혁', '을미개혁', '광무개혁', '갑신정변 개혁 정강', '홍범 14조 반포'], answer: 0, explanation: '제1차 갑오개혁에서는 군국기무처를 중심으로 갑신정변과 동학 농민군의 요구가 일부 반영되어 신분제와 과거제가 폐지되었습니다.' },
+            { id: 'md16', era: 'MODERN', clue: '1895년 명성황후 시해 사건(을미사변) 이후 친일 내각이 주도하여 단발령과 태양력 사용, ‘건양’ 연호 제정 등을 실시하여 을미의병의 원인이 된 개혁은?', keywords: ['1895년 을미사변 직후', '단발령 실시', '태양력·건양 연호 사용', '을미의병 발생 배경'], options: ['을미개혁', '제1차 갑오개혁', '제2차 갑오개혁', '광무개혁', '신해통공'], answer: 0, explanation: '을미개혁 때 단행된 단발령과 명성황후 시해 사건에 분노한 유생들과 농민들이 전국 각지에서 을미의병을 일으켰습니다.' },
+            { id: 'md17', era: 'MODERN', clue: '1896년 일본의 신변 위협을 느낀 고종이 왕세자와 함께 러시아 공사관으로 거처를 옮긴 사건으로, 열강의 이권 침탈이 심화된 계기는?', keywords: ['1896년 2월', '고종의 러시아 공사관 피신', '친일 내각 붕괴·단발령 철회', '열강의 이권 침탈 가속화'], options: ['아관파천', '을미사변', '한일 의정서 체결', '헤이그 특사 파견', '경술국치'], answer: 0, explanation: '아관파천으로 고종이 러시아 공사관에 약 1년간 머무르면서 러시아·미국·프랑스 등 열강에게 광산·산림·철도 부설권 등 각종 이권이 넘어갔습니다.' },
+            { id: 'md18', era: 'MODERN', clue: '1904년 러일 전쟁 중 일본이 황무지 개간권을 요구하자, 이를 저지하기 위해 조직되어 반대 운동을 전개한 결과 일본의 요구를 철회시킨 단체는?', keywords: ['1904년 조직', '일제의 황무지 개간권 요구 저지', '최초의 근대적 애국 계몽 단체', '일본의 요구 철회 성공'], options: ['보안회', '헌정 연구회', '대한 자강회', '신민회', '독립협회'], answer: 0, explanation: '보안회는 1904년 일제의 황무지 개간권 요구에 맞서 전국적인 반대 운동을 전개하여 이를 철회시키는 성과를 거두었습니다.' },
+            { id: 'md19', era: 'MODERN', clue: '1905년 일제가 대한 제국의 외교권을 박탈하고 통감부를 설치하기 위해 강제로 체결한 조약으로, 고종이 헤이그 특사를 파견하는 계기가 된 조약은?', keywords: ['1905년 11월', '대한 제국 외교권 박탈', '통감부 설치 (초대 통감 이토 히로부미)', '고종의 헤이그 특사 파견'], options: ['을사늑약', '한일 의정서', '제1차 한일 협약', '한일 신협약 (정미7조약)', '기유각서'], answer: 0, explanation: '1905년 을사늑약으로 외교권을 빼앗긴 고종은 조약의 무효를 알리기 위해 1907년 네덜란드 헤이그에 이준·이상설·이위종을 특사로 파견했습니다.' },
+            { id: 'md20', era: 'MODERN', clue: '1907년 대구에서 서상돈·김광제 등의 발의로 시작되어, 일제가 강요한 차관 1,300만 원을 국민의 성금으로 갚아 국권을 지키려 했던 경제 구국 운동은?', keywords: ['1907년 대구에서 시작', '서상돈·김광제 발의', '대한매일신보 등 언론 지원', '금연·금주·패물 헌납'], options: ['국채 보상 운동', '물산 장려 운동', '브나로드 운동', '방곡령 선포', '형평 운동'], answer: 0, explanation: '국채 보상 운동은 대한매일신보·황성신문 등 언론의 적극적인 홍보 속에 전국적으로 확산되었으나, 통감부의 탄압으로 좌절되었습니다.' },
+            { id: 'md21', era: 'MODERN', clue: '1907년 정미7조약 체결 및 대한 제국 군대 해산 이후 해산된 군인들이 의병에 합류하면서 조직되었으며, 이인영·허위 등이 서울 진공 작전을 전개한 의병은?', keywords: ['1907년 군대 해산 계기', '13도 창의군 결성', '이인영·허위 주도', '서울 진공 작전 전개'], options: ['정미의병', '을미의병', '을사의병', '동학 농민군', '독립 의군부'], answer: 0, explanation: '정미의병 시기에는 해산 군인이 가담하여 화력과 조직력이 크게 강화되었으며, 13도 창의군을 결성해 서울 진공 작전을 전개했습니다.' },
+            { id: 'md22', era: 'MODERN', clue: '1909년 10월 만주 하얼빈 역에서 대한 제국 침략의 원흉인 이토 히로부미를 사살하고, 뤼순 감옥에서 『동양평화론』을 집필한 독립운동가는?', keywords: ['1909년 10월 26일', '만주 하얼빈 역 의거', '이토 히로부미 사살', '동양평화론 집필'], options: ['안중근', '윤봉길', '이봉창', '이재명', '장인환·전명운'], answer: 0, explanation: '안중근 의사는 1909년 하얼빈 역에서 이토 히로부미를 처단하였으며, 순국 직전까지 동양의 평화를 역설한 『동양평화론』을 집필했습니다.' },
+            { id: 'md23', era: 'MODERN', clue: '1910년대 일제가 근대적 토지 소유권 확립을 명분으로 실시하였으나, 기한 내 신고주의를 악용하여 농민의 토지를 약탈하고 지세를 늘린 식민지 경제 정책은?', keywords: ['1910~1918년 실시', '기한 내 신고주의 원칙', '조선 총독부 소유 토지 급증', '지주제 강화·농민 몰락'], options: ['토지 조사 사업', '산미 증식 계획', '회사령 공포', '남면북양 정책', '병참 기지화 정책'], answer: 0, explanation: '1910년대 토지 조사 사업으로 황실·국유지와 미신고 토지가 총독부 소유로 넘어갔으며, 다수의 농민이 소작농으로 전락했습니다.' },
+            { id: 'md24', era: 'MODERN', clue: '1919년 4월 중국 상하이에서 수립되었으며, 국내외 연락망인 연통제와 교통국을 운영하고 독립 공채 발행 및 『독립신문』을 간행한 기관은?', keywords: ['1919년 4월 상하이 수립', '삼권 분립 민주 공화제', '연통제·교통국 운영', '구미 위원부 설치'], options: ['대한민국 임시 정부', '대한 광복회', '조선 건국 동맹', '조선 혁명당', '한국 독립당'], answer: 0, explanation: '대한민국 임시 정부는 우리 역사상 최초의 민주 공화제 정부로, 연통제와 교통국을 통해 국내와 비밀리에 연락하며 독립 자금을 모았습니다.' },
+            { id: 'md25', era: 'MODERN', clue: '1919년 김원봉이 만주 지린성에서 조직한 항일 비밀 결사로, 신채호의 「조선 혁명 선언」을 활동 지침으로 삼아 조선 총독부와 동양 척식 주식회사를 폭탄 공격한 단체는?', keywords: ['1919년 김원봉 조직', '신채호의 조선 혁명 선언', '김익상·김상옥·나석주 의거', '황포 군관 학교 입학'], options: ['의열단', '한인 애국단', '신민회', '대한 독립군단', '조선 의용대'], answer: 0, explanation: '의열단은 식민 통치 기관 파괴와 친일파·일제 고관 암살을 목표로 투쟁했으며, 이후 황포 군관 학교에 입학해 조직적인 무장 투쟁으로 발전했습니다.' },
+            { id: 'md26', era: 'MODERN', clue: '1920년 6월 홍범도가 이끄는 대한 독립군 등이 두만강을 건너 추격해 온 일본군 월강 추격대를 매복 공격하여 독립군 최초의 큰 승리를 거둔 전투는?', keywords: ['1920년 6월', '홍범도 대한 독립군', '최진동 군무 도독부군 연합', '청산리 대첩 직전 승전'], options: ['봉오동 전투', '청산리 대첩', '자유시 참변', '쌍성보 전투', '보천보 전투'], answer: 0, explanation: '홍범도·최진동 등이 이끄는 독립군 연합 부대는 1920년 6월 봉오동 전투에서 일본군을 격파하여 독립군 사기를 크게 높였습니다.' },
+            { id: 'md27', era: 'MODERN', clue: '1920년대 초 평양에서 조만식 등이 중심이 되어 ‘내 살림 내 것으로’, ‘조선 사람 조선 것’이라는 구호 아래 국산품 애용을 펼친 경제 운동은?', keywords: ['1920년 평양에서 시작', '조만식 주도', '내 살림 내 것으로', '국산품 애용 운동'], options: ['물산 장려 운동', '국채 보상 운동', '민립 대학 설립 운동', '암태도 소작 쟁의', '원산 총파업'], answer: 0, explanation: '1920년 회사령 철폐로 일본 자본의 침투가 본격화되자, 조만식 등은 토산품 애용과 자작자급을 내세운 물산 장려 운동을 전개했습니다.' },
+            { id: 'md28', era: 'MODERN', clue: '1923년 진주에서 백정에 대한 사회적 차별 철폐와 평등한 대우를 요구하며 이학찬·강상호 등이 창립한 조선 형평사가 주도한 사회 운동은?', keywords: ['1923년 경상남도 진주', '백정 차별 철폐', '조선 형평사 창립', '신간회와 연대 활동'], options: ['형평 운동', '브나로드 운동', '소작 쟁의', '여성 해방 운동', '소년 운동'], answer: 0, explanation: '갑오개혁으로 법적 신분제는 폐지되었으나 백정에 대한 사회적 차별이 남아 있자, 1923년 진주에서 조선 형평사가 창립되어 형평 운동이 일어났습니다.' },
+            { id: 'md29', era: 'MODERN', clue: '1929년 11월 나주역에서 일본인 남학생이 한국인 여학생을 희롱한 사건을 계기로 발생하여 전국 190여 개 학교가 동맹 휴학으로 참여한 항일 학생 운동은?', keywords: ['1929년 11월', '나주역 한·일 학생 충돌', '신간회의 진상 조사단 파견', '3·1 운동 이후 최대 규모 항일 운동'], options: ['광주 학생 항일 운동', '6·10 만세 운동', '4·19 혁명', '부마 민주 항쟁', '원산 총파업'], answer: 0, explanation: '광주 학생 항일 운동은 일제의 민족 차별 교육에 맞선 전국적 학생 항일 운동으로, 신간회의 지원을 받으며 전국으로 확산되었습니다.' },
+            { id: 'md30', era: 'MODERN', clue: '1930년대 초 만주에서 지청천이 이끄는 한국 독립군이 중국 호로군과 연합하여 쌍성보·사도하자·대전자령 전투에서 일본군에 승리한 항일 투쟁은?', keywords: ['1930년대 전반 북만주', '지청천 한국 독립군', '중국 호로군과 한·중 연합 작전', '쌍성보·대전자령 전투'], options: ['한·중 연합 작전 (한국 독립군)', '동북 항일 연군 활동', '조선 의용대 화북 진출', '한국 광복군 국내 진공 작전', '참의부·정의부·신민부 활동'], answer: 0, explanation: '1931년 만주 사변 이후 한국 독립군(지청천)은 중국 호로군과 연합하여 쌍성보·대전자령 전투에서 큰 전과를 올렸으며, 남만주에서는 조선 혁명군(양세봉)이 중국 의용군과 연합해 영릉가·흥경성 전투에서 승리했습니다.' },
+            { id: 'md31', era: 'MODERN', clue: '1940년 9월 대한민국 임시 정부가 충칭에서 창설한 정규 군대로, 대일 선전 포고를 발표하고 영국군과 연합해 인도·미얀마 전선에서 활약한 부대는?', keywords: ['1940년 9월 충칭 창설', '총사령관 지청천·참모장 이범석', '인도·미얀마 전선 참전', '미국 OSS와 국내 진공 작전 준비'], options: ['한국 광복군', '조선 의용대', '북로군정서군', '대한 독립군', '대한 광복회'], answer: 0, explanation: '한국 광복군은 대한민국 임시 정부의 정규군으로 태평양 전쟁 참전, 인도·미얀마 전선 활동, 미국 전략첩보국(OSS)과의 국내 진공 작전을 추진했습니다.' },
+            { id: 'md32', era: 'MODERN', clue: '1941년 11월 대한민국 임시 정부가 조소앙의 삼균주의를 바탕으로 제정·발표하였으며, 정치·경제·교육의 균등과 보통 선거, 토지·대생산 기관 국유화를 담은 강령은?', keywords: ['1941년 11월 발표', '조소앙의 삼균주의', '정치·경제·교육의 균등', '광복 후 건국 청사진 제시'], options: ['대한민국 건국 강령', '조선 혁명 선언', '헌의 6조', '홍범 14조', '개혁 정강 14개조'], answer: 0, explanation: '대한민국 임시 정부는 광복 후 수립할 새로운 민주 국가의 기본 방향으로 삼균주의에 입각한 『대한민국 건국 강령』을 발표했습니다.' },
+            { id: 'md33', era: 'MODERN', clue: '1945년 12월 모스크바 3국 외상 회의 결정 이후, 신탁 통치 문제를 둘러싸고 우익의 반탁 운동과 좌익의 총체적 지지 입장이 대립하던 시기에 김규식·여운형이 추진한 운동은?', keywords: ['1946년 7월 결성', '김규식·여운형 주도', '좌우 합작 7원칙 발표', '통일 임시 정부 수립 노력'], options: ['좌우 합작 운동', '남북 협상', '5·10 총선거', '반민족 행위 처벌법 제정', '농지 개혁법 제정'], answer: 0, explanation: '제1차 미·소 공동 위원회가 무기 휴회되자 중도 우파 김규식과 중도 좌파 여운형은 통일 임시 정부 수립을 위해 좌우 합작 위원회를 조직하고 좌우 합작 7원칙을 발표했습니다.' },
+            { id: 'md34', era: 'MODERN', clue: '1948년 5월 10일 유엔 한국 임시 위원단의 감시 아래 실시된 우리나라 최초의 민주적 보통 선거로, 이를 통해 구성된 제헌 국회가 제정한 헌법의 특징은?', keywords: ['1948년 5·10 총선거', '21세 이상 모든 국민 보통·평등·직접·비밀 선거', '국호 대한민국 확정', '대통령 중심제·국회 간선제'], options: ['제헌 헌법 제정 (1948년 7월 17일)', '발췌 개헌', '사사오입 개헌', '내각 책임제 개헌', '유신 헌법 제정'], answer: 0, explanation: '5·10 총선거로 구성된 제헌 국회는 대한민국 임시 정부의 법통을 계승한 제헌 헌법을 제정하고, 이승만을 초대 대통령으로 선출했습니다.' },
+            { id: 'md35', era: 'MODERN', clue: '1949년 제정되어 1950년부터 본격 시행되었으며, 가구당 농지 소유 상한을 3정보로 제한하고 유상 매수·유상 분배 원칙에 따라 지주제를 소멸시킨 개혁은?', keywords: ['1949년 제정·1950년 시행', '농지 소유 상한 3정보', '유상 매수·유상 분배 원칙', '경자유전의 원칙 실현'], options: ['농지 개혁', '귀속 재산 처리법', '토지 조사 사업', '과전법 시행', '전민변정도감 설치'], answer: 0, explanation: '이승만 정부의 농지 개혁으로 일제 강점기부터 이어진 지주·소작제가 해체되고 자작농 중심의 농촌 구조가 형성되었습니다.' },
+            { id: 'md36', era: 'MODERN', clue: '1950년 6월 25일 북한의 남침으로 시작된 6·25 전쟁의 전개 과정 중, 국군과 유엔군이 전세를 역전시켜 서울을 수복하는 결정적 계기가 된 작전은?', keywords: ['1950년 9월 15일', '맥아더 유엔군 사령관 지휘', '낙동강 방어선 돌파 계기', '서울 수복 성공'], options: ['인천 상륙 작전', '흥남 철수 작전', '다부동 전투', '1·4 후퇴', '정전 협정 체결'], answer: 0, explanation: '1950년 9월 15일 인천 상륙 작전의 성공으로 낙동강 전선까지 밀렸던 국군과 유엔군이 반격에 나서 서울을 수복하고 북진했습니다.' },
+            { id: 'md37', era: 'MODERN', clue: '1972년 7월 4일 서울과 평양에서 동시에 발표되었으며, 자주·평화·민족적 대단결이라는 조국 통일 3대 원칙에 합의한 최초의 남북 간 공식 합의 문서는?', keywords: ['1972년 7월 4일 발표', '자주·평화·민족적 대단결 3대 원칙', '남북 조절 위원회 설치', '박정희 정부 시기'], options: ['7·4 남북 공동 성명', '남북 기본 합의서', '6·15 남북 공동 선언', '10·4 남북 정상 선언', '한반도 비핵화 공동 선언'], answer: 0, explanation: '7·4 남북 공동 성명은 분단 이후 남북 당국이 최초로 합의·발표한 공동 성명으로, 자주·평화·민족적 대단결의 통일 3대 원칙을 천명했습니다.' },
+            { id: 'md38', era: 'MODERN', clue: '1972년 10월 박정희 정부가 대통령 직선제 폐지, 통일주체국민회의 간선제, 대통령의 국회 해산권 및 긴급 조치권 등을 담아 공포한 헌법 체제는?', keywords: ['1972년 10월 선포', '통일주체국민회의 대통령 선출', '국회의원 1/3 대통령 추천 (유신정우회)', '긴급 조치권 발동'], options: ['유신 헌법 (10월 유신)', '제헌 헌법', '3선 개헌', '제2공화국 내각 책임제 헌법', '제6공화국 직선제 헌법'], answer: 0, explanation: '10월 유신으로 공포된 유신 헌법은 대통령에게 입법·사법·행정을 초월하는 절대 권력을 부여하여 장기 독재 체제를 구축했습니다.' },
+            { id: 'md39', era: 'MODERN', clue: '1980년 5월 전두환 등 신군부 세력의 비상계엄 전국 확대와 무력 진압에 맞서 시민군을 조직해 민주주의 수호를 외쳤으며, 기록물이 유네스코 세계 기록 유산에 등재된 운동은?', keywords: ['1980년 5월 18일', '신군부 비상계엄 확대 반대', '시민군 조직·전남도청 항쟁', '유네스코 세계 기록 유산 등재'], options: ['5·18 민주화 운동', '4·19 혁명', '6월 민주 항쟁', '부마 민주 항쟁', '6·3 시위'], answer: 0, explanation: '5·18 민주화 운동은 신군부 독재에 맞선 광주시민의 민주화 항쟁으로, 1980년대 이후 한국 민주화 운동의 원동력이 되었습니다.' },
+            { id: 'md40', era: 'MODERN', clue: '1991년 12월 노태우 정부 시기 남북 고위급 회담에서 채택되었으며, 남북 사이의 화해와 불가침 및 교류·협력에 관해 합의한 문서는?', keywords: ['1991년 12월 채택', '남북 유엔 동시 가입 직후', '화해·불가침·교류 협력 합의', '한반도 비핵화 공동 선언과 연계'], options: ['남북 기본 합의서', '7·4 남북 공동 성명', '6·15 남북 공동 선언', '10·4 남북 정상 선언', '판문점 선언'], answer: 0, explanation: '1991년 남북 기본 합의서는 남북 관계를 나라와 나라 사이의 관계가 아닌 통일을 지향하는 과정에서 잠정적으로 형성되는 특수 관계로 규정했습니다.' }
+        ];
+
+        /* ==========================================================================
+           3. CHRONOLOGICAL TIMELINE ROUNDS (12 SETS ACROSS ALL ERAS)
+           ========================================================================== */
+        const TIMELINE_BANK = [
+            {
+                id: 'tl1', era: 'PRE_GOJOSEON', topic: '고조선과 여러 나라의 성장 흐름',
+                events: [
+                    { text: '단군왕검의 고조선 건국', year: '청동기 문화 기반' },
+                    { text: '위만의 집권과 중계 무역 번성', year: '기원전 194년' },
+                    { text: '한 무제의 침략과 왕검성 함락', year: '기원전 108년' },
+                    { text: '부여·고구려·옥저·동예·삼한의 성장', year: '철기 보급 이후' }
+                ],
+                tip: '고조선 건국 → 위만 조선 성립 → 한 무제 침략으로 멸망 → 철기 기반 여러 나라 성장 순서입니다.'
+            },
+            {
+                id: 'tl2', era: 'THREE_KINGDOMS', topic: '삼국의 치열한 한강 유역 쟁탈전',
+                events: [
+                    { text: '백제 근초고왕의 평양성 공격 (고국원왕 전사)', year: '371년 (4세기)' },
+                    { text: '고구려 장수왕의 평양 천도 및 한성 함락', year: '427~475년 (5세기)' },
+                    { text: '백제 성왕과 신라 진흥왕의 나제 동맹 한강 수복', year: '551년 (6세기)' },
+                    { text: '신라 진흥왕의 한강 유역 독점 및 단양 적성비 건립', year: '553년 (6세기)' }
+                ],
+                tip: '한강 유역 전성기는 4세기 백제 → 5세기 고구려 → 6세기 신라 순으로 이동했습니다.'
+            },
+            {
+                id: 'tl3', era: 'THREE_KINGDOMS', topic: '삼국 항쟁과 신라의 삼국 통일 과정',
+                events: [
+                    { text: '을지문덕의 살수 대첩 승리', year: '612년' },
+                    { text: '연개소문의 정변과 안시성 싸움 승리', year: '642~645년' },
+                    { text: '나당 연합군의 백제 멸망 및 백강 전투', year: '660~663년' },
+                    { text: '매소성·기벌포 전투 승리로 삼국 통일 완성', year: '675~676년' }
+                ],
+                tip: '백제 멸망(660) → 고구려 멸망(668) → 나당 전쟁(매소성·기벌포, 676) 순서를 반드시 기억하세요.'
+            },
+            {
+                id: 'tl4', era: 'NORTH_SOUTH', topic: '남북국 시대(통일 신라와 발해) 주요 사건',
+                events: [
+                    { text: '신문왕의 김흠돌 난 진압 및 관료전 지급·녹읍 폐지', year: '681~689년' },
+                    { text: '대조영의 동모산 발해 건국', year: '698년' },
+                    { text: '발해 무왕의 장문휴 수군 파견 및 당 산둥 공격', year: '732년' },
+                    { text: '장보고의 완도 청해진 설치', year: '828년' }
+                ],
+                tip: '통일 직후 신문왕의 왕권 강화(680년대) 직후 698년에 발해가 건국되었습니다.'
+            },
+            {
+                id: 'tl5', era: 'GORYEO', topic: '고려 전기 기틀 확립과 거란·여진 항쟁',
+                events: [
+                    { text: '태조 왕건의 후삼국 통일과 훈요 10조 작성', year: '936~943년' },
+                    { text: '광종의 노비안검법 및 과거제 실시', year: '956~958년' },
+                    { text: '서희의 외교 담판으로 강동 6주 확보', year: '993년' },
+                    { text: '강감찬의 귀주 대첩 대승', year: '1019년' }
+                ],
+                tip: '태조(통일) → 광종(왕권 강화) → 성종(유교 정치) → 거란 침입(서희 993 → 강감찬 1019) 순서입니다.'
+            },
+            {
+                id: 'tl6', era: 'GORYEO', topic: '무신 정권, 대몽 항쟁, 공민왕 개혁 흐름',
+                events: [
+                    { text: '정중부·이의방 등의 무신 정변 발생', year: '1170년' },
+                    { text: '최우의 강화도 천도 및 대몽 항쟁', year: '1232년' },
+                    { text: '삼별초의 진도·제주도 항쟁', year: '1270~1273년' },
+                    { text: '공민왕의 쌍성총관부 수복 및 전민변정도감 설치', year: '1356~1366년' }
+                ],
+                tip: '무신 정변(1170) → 강화도 천도(1232) → 개경 환도 및 삼별초 항쟁(1270) → 공민왕 개혁(14세기 중반) 순서입니다.'
+            },
+            {
+                id: 'tl7', era: 'JOSEON', topic: '조선 전기 건국과 통치 체제 완성',
+                events: [
+                    { text: '이성계의 위화도 회군 및 과전법 공포', year: '1388~1391년' },
+                    { text: '태종의 6조 직계제 및 호패법 실시', year: '1400~1413년' },
+                    { text: '세종 대왕의 훈민정음 창제 및 4군 6진 개척', year: '1443~1446년' },
+                    { text: '성종의 경국대전 완성 및 반포', year: '1485년' }
+                ],
+                tip: '위화도 회군(1388) → 조선 건국(1392) → 태종 → 세종 → 성종(경국대전 완성, 1485) 순입니다.'
+            },
+            {
+                id: 'tl8', era: 'JOSEON', topic: '임진왜란과 병자호란(양난)의 전개',
+                events: [
+                    { text: '임진왜란 발발 및 이순신의 한산도 대첩', year: '1592년' },
+                    { text: '광해군의 중립 외교와 대동법 최초 시행', year: '1608~1619년' },
+                    { text: '인조반정과 정묘호란 발발', year: '1623~1627년' },
+                    { text: '병자호란 발발과 남한산성 항전·삼전도의 굴욕', year: '1636~1637년' }
+                ],
+                tip: '임진왜란(1592) → 광해군 중립 외교 → 인조반정(1623) → 정묘호란(1627) → 병자호란(1636) 순서입니다.'
+            },
+            {
+                id: 'tl9', era: 'JOSEON', topic: '조선 후기 탕평 정치와 세도 정치기 농민 봉기',
+                events: [
+                    { text: '영조의 탕평비 건립과 균역법 시행', year: '1742~1750년' },
+                    { text: '정조의 규장각 설치, 수원 화성 축조, 신해통공', year: '1776~1796년' },
+                    { text: '홍경래의 난 발생 (평안도 지역 차별)', year: '1811년' },
+                    { text: '임술 농민 봉기(진주 농민 봉기)와 삼정이정청 설치', year: '1862년' }
+                ],
+                tip: '영조(균역법) → 정조(수원 화성·신해통공) → 세도 정치기 홍경래의 난(1811) → 임술 농민 봉기(1862) 순입니다.'
+            },
+            {
+                id: 'tl10', era: 'MODERN', topic: '개항기 근대화 추진과 반외세 투쟁',
+                events: [
+                    { text: '강화도 조약(조일 수호 조규) 체결', year: '1876년' },
+                    { text: '김옥균 등 급진 개화파의 갑신정변', year: '1884년' },
+                    { text: '동학 농민 운동과 제1·2차 갑오개혁', year: '1894년' },
+                    { text: '대한 제국 수립과 광무개혁 추진', year: '1897년' }
+                ],
+                tip: '강화도 조약(1876) → 임오군란(1882) → 갑신정변(1884) → 동학·갑오개혁(1894) → 대한제국(1897) 순입니다.'
+            },
+            {
+                id: 'tl11', era: 'MODERN', topic: '일제 강점기 3·1 운동과 무장 독립 전쟁',
+                events: [
+                    { text: '3·1 운동 발발과 대한민국 임시 정부 수립', year: '1919년' },
+                    { text: '봉오동 전투와 청산리 대첩 승리', year: '1920년' },
+                    { text: '좌우 합작 민족 유일당 신간회 창립', year: '1927년' },
+                    { text: '윤봉길의 상하이 훙커우 공원 의거', year: '1932년' }
+                ],
+                tip: '3·1 운동(1919) → 봉오동·청산리(1920) → 신간회(1927) → 윤봉길 의거(1932) → 한국광복군(1940) 순입니다.'
+            },
+            {
+                id: 'tl12', era: 'MODERN', topic: '광복 이후 대한민국 민주화 운동의 발자취',
+                events: [
+                    { text: '3·15 부정 선거에 항거한 4·19 혁명', year: '1960년 4월' },
+                    { text: '신군부 세력에 맞선 5·18 민주화 운동', year: '1980년 5월' },
+                    { text: '대통령 직선제 개헌을 이끈 6월 민주 항쟁', year: '1987년 6월' },
+                    { text: '최초의 남북 정상 회담과 6·15 남북 공동 선언', year: '2000년 6월' }
+                ],
+                tip: '4·19 혁명(1960) → 5·18 민주화 운동(1980) → 6월 민주 항쟁(1987) → 6·15 남북 공동 선언(2000) 순입니다.'
+            }
+        ];
+
+        /* ==========================================================================
+           4. MATCHING PAIRS BANK (36 PAIRS ACROSS 6 GRANULAR ERAS)
+           ========================================================================== */
+        const MATCHING_BANK = [
+            // PRE_GOJOSEON
+            { era: 'PRE_GOJOSEON', a: '신석기 시대', b: '빗살무늬 토기·농경 시작' },
+            { era: 'PRE_GOJOSEON', a: '청동기 시대', b: '비파형 동검·고인돌 축조' },
+            { era: 'PRE_GOJOSEON', a: '고조선', b: '단군왕검 건국·8조법' },
+            { era: 'PRE_GOJOSEON', a: '부여', b: '사출도·12월 영고' },
+            { era: 'PRE_GOJOSEON', a: '삼한', b: '천군과 신성 지역 소도' },
+            { era: 'PRE_GOJOSEON', a: '동예', b: '책화·10월 무천' },
+            // THREE_KINGDOMS
+            { era: 'THREE_KINGDOMS', a: '광개토대왕', b: '영락 연호·신라 구원' },
+            { era: 'THREE_KINGDOMS', a: '장수왕', b: '평양 천도·충주 고구려비' },
+            { era: 'THREE_KINGDOMS', a: '근초고왕', b: '마한 정복·평양성 공격' },
+            { era: 'THREE_KINGDOMS', a: '무령왕', b: '22담로 파견·벽돌무덤' },
+            { era: 'THREE_KINGDOMS', a: '법흥왕', b: '불교 공인·금관가야 병합' },
+            { era: 'THREE_KINGDOMS', a: '진흥왕', b: '한강 유역 장악·4개 순수비' },
+            // NORTH_SOUTH
+            { era: 'NORTH_SOUTH', a: '신문왕', b: '국학 설립·녹읍 폐지' },
+            { era: 'NORTH_SOUTH', a: '원효', b: '화쟁 사상·아미타 신앙' },
+            { era: 'NORTH_SOUTH', a: '의상', b: '화엄종 개창·영주 부석사' },
+            { era: 'NORTH_SOUTH', a: '장보고', b: '완도 청해진 설치' },
+            { era: 'NORTH_SOUTH', a: '대조영', b: '동모산 발해 건국' },
+            { era: 'NORTH_SOUTH', a: '발해 선왕', b: '해동성국·5경 15부 62주' },
+            // GORYEO
+            { era: 'GORYEO', a: '고려 광종', b: '노비안검법·과거제 실시' },
+            { era: 'GORYEO', a: '서희', b: '외교 담판·강동 6주 확보' },
+            { era: 'GORYEO', a: '강감찬', b: '귀주 대첩 승리' },
+            { era: 'GORYEO', a: '윤관', b: '별무반 편성·동북 9성' },
+            { era: 'GORYEO', a: '지눌', b: '수선사 결사·정혜쌍수' },
+            { era: 'GORYEO', a: '공민왕', b: '쌍성총관부 수복·전민변정도감' },
+            // JOSEON
+            { era: 'JOSEON', a: '조선 태종', b: '6조 직계제·호패법 실시' },
+            { era: 'JOSEON', a: '세종대왕', b: '훈민정음 창제·4군 6진' },
+            { era: 'JOSEON', a: '조선 성종', b: '경국대전 완성 반포' },
+            { era: 'JOSEON', a: '영조', b: '탕평비 건립·균역법 시행' },
+            { era: 'JOSEON', a: '정조', b: '규장각·수원 화성·신해통공' },
+            { era: 'JOSEON', a: '흥선대원군', b: '경복궁 중건·서원 철폐·호포제' },
+            // MODERN
+            { era: 'MODERN', a: '강화도 조약', b: '최초의 근대적 불평등 조약' },
+            { era: 'MODERN', a: '신민회', b: '대성학교·신흥무관학교 설립' },
+            { era: 'MODERN', a: '김좌진', b: '북로군정서군·청산리 대첩' },
+            { era: 'MODERN', a: '신간회', b: '광주 학생 항일 운동 지원' },
+            { era: 'MODERN', a: '윤봉길', b: '상하이 훙커우 공원 의거' },
+            { era: 'MODERN', a: '6월 민주 항쟁', b: '대통령 직선제 개헌 쟁취' }
+        ];
+
+        /* ==========================================================================
+           5. GLOBAL APPLICATION STATE & PERSISTENCE
+           ========================================================================== */
+        let appState = {
+            examName: '제81회 한능검',
+            examDate: '2026-11-28',
+            targetGrade: '심화 1급 (80점 이상)',
+            totalScore: 0,
+            totalAnswered: 0,
+            totalCorrect: 0,
+            wrongNotes: [],
+            seenKwIds: [],
+            seenTlIds: [],
+            soundEnabled: true,
+            omrUserMarks: {},
+            omrCustomKey: {},
+            omrSelectedPreset: 'CUSTOM_81'
+        };
+
+        let selectedEraFilter = 'ALL';
+        let blankModeActive = false;
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('hanneunggeom_master_v3');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    appState = { ...appState, ...parsed };
+                }
+            } catch (e) {
+                console.warn('Local storage load fallback');
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem('hanneunggeom_master_v3', JSON.stringify(appState));
+            } catch (e) {
+                console.warn('Local storage save fallback');
+            }
+        }
+
+        /* ==========================================================================
+           6. SOUND EFFECTS (TONE.JS)
+           ========================================================================== */
+        let synth = null;
+        function initAudio() {
+            if (!synth && typeof Tone !== 'undefined') {
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -8;
+            }
+        }
+
+        function playTone(type) {
+            if (!appState.soundEnabled) return;
+            try {
+                initAudio();
+                if (Tone.context.state !== 'running') Tone.start();
+                const now = Tone.now();
+                if (type === 'click') synth.triggerAttackRelease('C5', '32n', now);
+                else if (type === 'correct') {
+                    synth.triggerAttackRelease('E5', '16n', now);
+                    synth.triggerAttackRelease('G5', '16n', now + 0.08);
+                    synth.triggerAttackRelease('C6', '8n', now + 0.16);
+                } else if (type === 'wrong') {
+                    synth.triggerAttackRelease('E3', '8n', now);
+                    synth.triggerAttackRelease('Eb3', '8n', now + 0.12);
+                } else if (type === 'win') {
+                    ['C5', 'E5', 'G5', 'B5', 'C6'].forEach((n, idx) => {
+                        synth.triggerAttackRelease(n, '16n', now + idx * 0.08);
+                    });
+                }
+            } catch (e) {}
+        }
+
+        function toggleSound() {
+            appState.soundEnabled = !appState.soundEnabled;
+            saveState();
+            showToast(appState.soundEnabled ? '효과음이 켜졌습니다.' : '효과음이 음소거되었습니다.');
+        }
+
+        /* ==========================================================================
+           7. D-DAY, MAIN TAB NAVIGATION & 7-ERA FILTER
+           ========================================================================== */
+        function updateDdayDisplay() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const target = new Date(appState.examDate + 'T00:00:00');
+            const diffDays = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+            const badge = document.getElementById('ddayBadge');
+            const label = document.getElementById('examLabelDisplay');
+            const motiv = document.getElementById('ddayMotivation');
+
+            label.textContent = `${appState.examName} (${appState.examDate.replace(/-/g, '.')})`;
+
+            if (diffDays > 0) {
+                badge.textContent = `D-${diffDays}`;
+                motiv.textContent = diffDays <= 3
+                    ? '시험 직전! 핵심 개념 노트와 모의고사로 최종 점검!'
+                    : `목표(${appState.targetGrade.split(' ')[0]}) 달성까지 7대 시대별 집중 정복!`;
+            } else if (diffDays === 0) {
+                badge.textContent = 'D-DAY';
+                motiv.textContent = '오늘이 바로 결전의 날! 침착하게 실력을 발휘하세요!';
+            } else {
+                badge.textContent = `D+${Math.abs(diffDays)}`;
+                motiv.textContent = '다음 회차 시험 일정을 설정하고 합격 도전을 이어가세요!';
+            }
+        }
+
+        function switchMainTab(tab) {
+            playTone('click');
+            clearInterval(kwTimerInterval);
+            clearInterval(matchTimerInterval);
+            clearInterval(mockTimerInterval);
+
+            ['games', 'concepts', 'mock', 'omr'].forEach(t => {
+                document.getElementById(`section-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`tabBtn-${t}`);
+                btn.className = t === tab
+                    ? 'main-tab-btn px-3 py-2.5 rounded-lg text-xs font-black bg-[#1B2A4A] text-white shadow transition flex items-center justify-center gap-1.5'
+                    : 'main-tab-btn px-3 py-2.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-white/60 transition flex items-center justify-center gap-1.5';
+            });
+
+            document.getElementById(`section-${tab}`).classList.remove('hidden');
+            document.getElementById('eraFilterSection').classList.toggle('hidden', tab === 'mock' || tab === 'omr');
+
+            if (tab === 'games') switchView('home');
+            if (tab === 'concepts') renderConceptNotes();
+            if (tab === 'mock') resetMockView();
+            if (tab === 'omr') initOmrView();
+        }
+
+        function openDdayModal() {
+            document.getElementById('customExamName').value = appState.examName;
+            document.getElementById('customExamDate').value = appState.examDate;
+            document.getElementById('targetGradeSelect').value = appState.targetGrade;
+            document.getElementById('ddayModal').classList.remove('hidden');
+        }
+        function closeDdayModal() { document.getElementById('ddayModal').classList.add('hidden'); }
+
+        function applyExamPreset(name, date) {
+            document.getElementById('customExamName').value = name;
+            document.getElementById('customExamDate').value = date;
+            playTone('click');
+        }
+
+        function saveDdaySettings() {
+            const name = document.getElementById('customExamName').value.trim() || '한국사능력검정시험';
+            const date = document.getElementById('customExamDate').value || '2026-11-28';
+            const grade = document.getElementById('targetGradeSelect').value;
+
+            appState.examName = name;
+            appState.examDate = date;
+            appState.targetGrade = grade;
+            saveState();
+            updateDdayDisplay();
+            updateStatsUI();
+            closeDdayModal();
+            playTone('correct');
+            showToast('시험 D-Day 및 목표 등급이 저장되었습니다!');
+        }
+
+        function setEraFilter(era) {
+            selectedEraFilter = era;
+            playTone('click');
+            document.querySelectorAll('.era-pill').forEach(btn => {
+                const isSelected = btn.getAttribute('data-era') === era;
+                btn.className = isSelected
+                    ? 'era-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-[#1B2A4A] text-white shadow-xs transition'
+                    : 'era-pill px-3 py-1.5 rounded-xl text-xs font-bold bg-[#F3EFE6] text-slate-700 hover:bg-[#E5DEC9] transition';
+            });
+            updatePoolBadges();
+            if (!document.getElementById('section-concepts').classList.contains('hidden')) {
+                renderConceptNotes();
+            }
+        }
+
+        function updatePoolBadges() {
+            const kwAll = selectedEraFilter === 'ALL'
+                ? QUESTION_BANK
+                : QUESTION_BANK.filter(q => q.era === selectedEraFilter);
+            const kwUnseen = kwAll.filter(q => !appState.seenKwIds.includes(q.id));
+            const kwRemainCount = kwUnseen.length > 0 ? kwUnseen.length : kwAll.length;
+
+            const tlAll = selectedEraFilter === 'ALL'
+                ? TIMELINE_BANK
+                : TIMELINE_BANK.filter(t => t.era === selectedEraFilter);
+            const tlUnseen = tlAll.filter(t => !appState.seenTlIds.includes(t.id));
+            const tlRemainCount = tlUnseen.length > 0 ? tlUnseen.length : tlAll.length;
+
+            document.getElementById('poolRemainingText').textContent =
+                `[${ERA_META[selectedEraFilter].label}] 미출제 새 문제: ${kwRemainCount} / ${kwAll.length}문항`;
+            document.getElementById('kwPoolBadge').textContent = `새 문제 ${kwRemainCount}문항`;
+            document.getElementById('tlPoolBadge').textContent = `새 연표 ${tlRemainCount}세트`;
+        }
+
+        function resetSeenPools() {
+            appState.seenKwIds = [];
+            appState.seenTlIds = [];
+            saveState();
+            updatePoolBadges();
+            playTone('click');
+            showToast('문제 출제 기록이 초기화되어 전체 문제 풀에서 다시 출제됩니다.');
+        }
+
+        function updateStatsUI() {
+            document.getElementById('totalAnsweredDisplay').textContent = appState.totalAnswered;
+            const acc = appState.totalAnswered > 0 ? Math.round((appState.totalCorrect / appState.totalAnswered) * 100) : 0;
+            document.getElementById('accuracyDisplay').textContent = `${acc}%`;
+            document.getElementById('targetGoalTag').textContent = `목표: ${appState.targetGrade.split(' (')[0]}`;
+
+            let grade = '도전중';
+            if (appState.totalAnswered >= 5) {
+                if (acc >= 80) grade = '심화 1급';
+                else if (acc >= 70) grade = '심화 2급';
+                else if (acc >= 60) grade = '심화 3급';
+                else grade = '기본 4급';
+            }
+            document.getElementById('currentGradeText').textContent = grade;
+
+            const progressPct = Math.min(100, Math.max(5, Math.round((appState.seenKwIds.length / QUESTION_BANK.length) * 100)));
+            document.getElementById('xpProgressBar').style.width = `${progressPct}%`;
+
+            const wrongCount = appState.wrongNotes.length;
+            document.getElementById('wrongBadgeMobile').textContent = wrongCount;
+            document.getElementById('wrongBadgeDesktop').textContent = wrongCount;
+        }
+
+        function switchView(viewName) {
+            ['home', 'keyword', 'timeline', 'matching', 'result'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+            });
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function confirmExitGame() {
+            showToast('진행 중인 게임을 종료하고 돌아갈까요?', true, () => {
+                clearInterval(kwTimerInterval);
+                clearInterval(matchTimerInterval);
+                switchView('home');
+            });
+        }
+
+        function shuffleArray(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        /* ==========================================================================
+           8. CORE CONCEPT NOTES & BLANK MEMORIZATION MODE
+           ========================================================================== */
+        function renderConceptNotes() {
+            const container = document.getElementById('conceptCardsContainer');
+            const filtered = selectedEraFilter === 'ALL'
+                ? CONCEPT_NOTES
+                : CONCEPT_NOTES.filter(c => c.era === selectedEraFilter);
+
+            container.innerHTML = filtered.map(note => {
+                const meta = ERA_META[note.era];
+                return `
+                    <div class="bg-[#FDFBF7] border-2 border-[#E5DEC9] rounded-2xl p-5 shadow-xs ${blankModeActive ? 'blank-mode' : ''}">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold ${meta.badge}">${meta.label}</span>
+                            ${blankModeActive ? '<span class="text-[11px] text-[#C84B31] font-bold">가려진 단어를 클릭해 확인!</span>' : ''}
+                        </div>
+                        <h3 class="font-history text-base sm:text-lg font-bold text-[#1B2A4A] mb-3 pb-2 border-b border-[#E5DEC9]">${note.title}</h3>
+                        <ul class="space-y-2 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                            ${note.points.map(p => `<li class="flex items-start gap-2"><span class="text-[#D4A338] font-black mt-0.5">•</span><span>${p}</span></li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleBlankMode() {
+            blankModeActive = !blankModeActive;
+            playTone('click');
+            const btn = document.getElementById('blankModeBtn');
+            if (blankModeActive) {
+                btn.className = 'game-btn px-3.5 py-2 rounded-xl bg-[#1B2A4A] text-[#FDE68A] text-xs font-black transition flex items-center gap-1.5 shadow';
+                btn.querySelector('span').textContent = '빈칸 암기 모드 ON (클릭해서 정답 확인)';
+            } else {
+                btn.className = 'game-btn px-3.5 py-2 rounded-xl border-2 border-[#1B2A4A] text-[#1B2A4A] hover:bg-[#1B2A4A] hover:text-white text-xs font-black transition flex items-center gap-1.5';
+                btn.querySelector('span').textContent = '빈칸 암기 모드 OFF';
+            }
+            renderConceptNotes();
+        }
+
+        function revealBlank(el) {
+            if (blankModeActive) {
+                el.classList.toggle('revealed');
+                playTone('click');
+            }
+        }
+
+        /* ==========================================================================
+           9. GAME 1: KEYWORD SPEED QUIZ (5-CHOICE & NON-REPEATING QUEUE)
+           ========================================================================== */
+        let kwQuestions = [];
+        let kwCurrentIdx = 0;
+        let kwScore = 0;
+        let kwCorrectCount = 0;
+        let kwCombo = 0;
+        let kwTimerInterval = null;
+        let kwTimeLeft = 15;
+        let kwAnswered = false;
+
+        function startKeywordGame(customList = null) {
+            playTone('click');
+            if (customList) {
+                kwQuestions = shuffleArray(customList);
+            } else {
+                const eraPool = selectedEraFilter === 'ALL'
+                    ? QUESTION_BANK
+                    : QUESTION_BANK.filter(q => q.era === selectedEraFilter);
+
+                let unseen = eraPool.filter(q => !appState.seenKwIds.includes(q.id));
+                if (unseen.length < 8) {
+                    const eraIds = new Set(eraPool.map(q => q.id));
+                    appState.seenKwIds = appState.seenKwIds.filter(id => !eraIds.has(id));
+                    unseen = [...eraPool];
+                    showToast(`${ERA_META[selectedEraFilter].label} 문제를 모두 풀어서 새 사이클을 시작합니다!`);
+                }
+                kwQuestions = shuffleArray(unseen).slice(0, 8);
+            }
+
+            kwCurrentIdx = 0;
+            kwScore = 0;
+            kwCorrectCount = 0;
+            kwCombo = 0;
+            switchView('keyword');
+            renderKeywordQuestion();
+        }
+
+        function renderKeywordQuestion() {
+            kwAnswered = false;
+            clearInterval(kwTimerInterval);
+
+            const q = kwQuestions[kwCurrentIdx];
+            if (!appState.seenKwIds.includes(q.id)) {
+                appState.seenKwIds.push(q.id);
+                saveState();
+                updatePoolBadges();
+            }
+
+            document.getElementById('kwProgress').textContent = `${kwCurrentIdx + 1} / ${kwQuestions.length}`;
+            document.getElementById('kwSessionScore').textContent = kwScore;
+            const eraTag = document.getElementById('kwEraTag');
+            eraTag.textContent = ERA_META[q.era].label;
+            eraTag.className = `px-2.5 py-1 rounded-md text-xs font-extrabold ${ERA_META[q.era].badge}`;
+
+            document.getElementById('kwQuestionText').textContent = q.clue;
+
+            const kwWrap = document.getElementById('kwKeywordsWrap');
+            kwWrap.innerHTML = q.keywords.map(k =>
+                `<span class="px-2.5 py-1 rounded-lg bg-white border border-[#D4A338]/60 text-xs font-bold text-[#1B2A4A] shadow-2xs"># ${k}</span>`
+            ).join('');
+
+            const comboBadge = document.getElementById('kwComboBadge');
+            if (kwCombo >= 2) {
+                comboBadge.textContent = `🔥 ${kwCombo} COMBO!`;
+                comboBadge.classList.remove('hidden');
+            } else {
+                comboBadge.classList.add('hidden');
+            }
+
+            const optionIndices = shuffleArray([0, 1, 2, 3, 4]);
+            const grid = document.getElementById('kwOptionsGrid');
+            grid.innerHTML = optionIndices.map((origIdx, btnIdx) => `
+                <button onclick="selectKeywordOption(${origIdx}, this)"
+                    class="kw-opt-btn game-btn text-left p-3.5 rounded-xl border-2 border-slate-200 hover:border-[#1B2A4A] bg-white hover:bg-slate-50 font-bold text-sm text-[#1E293B] flex items-center gap-3 shadow-2xs">
+                    <span class="w-7 h-7 rounded-lg bg-[#F3EFE6] text-[#1B2A4A] flex items-center justify-center text-xs font-black shrink-0">${btnIdx + 1}</span>
+                    <span>${q.options[origIdx]}</span>
+                </button>
+            `).join('');
+
+            document.getElementById('kwFeedbackBox').classList.add('hidden');
+
+            kwTimeLeft = 15;
+            updateKwTimerUI();
+            kwTimerInterval = setInterval(() => {
+                kwTimeLeft -= 0.1;
+                if (kwTimeLeft <= 0) {
+                    kwTimeLeft = 0;
+                    clearInterval(kwTimerInterval);
+                    handleKeywordTimeout();
+                }
+                updateKwTimerUI();
+            }, 100);
+        }
+
+        function updateKwTimerUI() {
+            const pct = Math.max(0, (kwTimeLeft / 15) * 100);
+            const bar = document.getElementById('kwTimerBar');
+            bar.style.width = `${pct}%`;
+            bar.className = kwTimeLeft <= 4 ? 'h-full bg-[#C84B31] transition-all duration-100' : 'h-full bg-[#D4A338] transition-all duration-100';
+            document.getElementById('kwTimeText').textContent = Math.ceil(kwTimeLeft);
+        }
+
+        function selectKeywordOption(selectedOrigIdx, btnEl) {
+            if (kwAnswered) return;
+            kwAnswered = true;
+            clearInterval(kwTimerInterval);
+
+            const q = kwQuestions[kwCurrentIdx];
+            const isCorrect = selectedOrigIdx === q.answer;
+            appState.totalAnswered++;
+
+            document.querySelectorAll('.kw-opt-btn').forEach(btn => {
+                btn.disabled = true;
+                if (btn.innerText.includes(q.options[q.answer])) {
+                    btn.classList.remove('border-slate-200', 'bg-white');
+                    btn.classList.add('border-[#2E6F65]', 'bg-teal-50', 'text-[#2E6F65]');
+                }
+            });
+
+            if (isCorrect) {
+                playTone('correct');
+                kwCombo++;
+                kwCorrectCount++;
+                appState.totalCorrect++;
+                const gained = 10 + (kwCombo >= 2 ? kwCombo * 2 : 0);
+                kwScore += gained;
+                appState.totalScore += gained;
+                showKeywordFeedback(true, `정답입니다! (+${gained}점)`, q.explanation);
+            } else {
+                playTone('wrong');
+                kwCombo = 0;
+                btnEl.classList.remove('border-slate-200', 'bg-white');
+                btnEl.classList.add('border-[#C84B31]', 'bg-rose-50', 'text-[#C84B31]', 'animate-shake');
+                addWrongNote(q);
+                showKeywordFeedback(false, `아쉽네요! 정답은 '${q.options[q.answer]}'입니다.`, q.explanation);
+            }
+
+            document.getElementById('kwSessionScore').textContent = kwScore;
+            saveState();
+            updateStatsUI();
+        }
+
+        function handleKeywordTimeout() {
+            if (kwAnswered) return;
+            kwAnswered = true;
+            playTone('wrong');
+            kwCombo = 0;
+            appState.totalAnswered++;
+
+            const q = kwQuestions[kwCurrentIdx];
+            document.querySelectorAll('.kw-opt-btn').forEach(btn => {
+                btn.disabled = true;
+                if (btn.innerText.includes(q.options[q.answer])) {
+                    btn.classList.add('border-[#2E6F65]', 'bg-teal-50', 'text-[#2E6F65]');
+                }
+            });
+            addWrongNote(q);
+            saveState();
+            updateStatsUI();
+            showKeywordFeedback(false, `시간 초과! 정답은 '${q.options[q.answer]}'입니다.`, q.explanation);
+        }
+
+        function showKeywordFeedback(isCorrect, title, exp) {
+            const box = document.getElementById('kwFeedbackBox');
+            const icon = document.getElementById('kwFeedbackIcon');
+            box.className = isCorrect
+                ? 'mt-5 rounded-2xl p-4 border-2 border-[#2E6F65] bg-teal-50/70 animate-pop'
+                : 'mt-5 rounded-2xl p-4 border-2 border-[#C84B31] bg-rose-50/70 animate-pop';
+            icon.className = isCorrect
+                ? 'w-8 h-8 rounded-full bg-[#2E6F65] flex items-center justify-center text-white font-bold shrink-0 mt-0.5'
+                : 'w-8 h-8 rounded-full bg-[#C84B31] flex items-center justify-center text-white font-bold shrink-0 mt-0.5';
+            icon.textContent = isCorrect ? '✓' : '!';
+            document.getElementById('kwFeedbackTitle').textContent = title;
+            document.getElementById('kwFeedbackTitle').className = isCorrect ? 'font-black text-sm sm:text-base mb-1 text-[#2E6F65]' : 'font-black text-sm sm:text-base mb-1 text-[#C84B31]';
+            document.getElementById('kwFeedbackExp').textContent = exp;
+            box.classList.remove('hidden');
+        }
+
+        function nextKeywordQuestion() {
+            playTone('click');
+            kwCurrentIdx++;
+            if (kwCurrentIdx < kwQuestions.length) {
+                renderKeywordQuestion();
+            } else {
+                const acc = Math.round((kwCorrectCount / kwQuestions.length) * 100);
+                showResultScreen('사료·키워드 스피드 퀴즈 완료!', kwScore, `${kwCorrectCount}/${kwQuestions.length} (${acc}%)`, () => startKeywordGame());
+            }
+        }
+
+        /* ==========================================================================
+           10. GAME 2: CHRONOLOGICAL TIMELINE ORDERING (NON-REPEATING)
+           ========================================================================== */
+        let tlRounds = [];
+        let tlCurrentIdx = 0;
+        let tlScore = 0;
+        let tlCorrectRounds = 0;
+        let tlShuffledEvents = [];
+        let tlSelectedIndices = [];
+        let tlRoundChecked = false;
+
+        function startTimelineGame() {
+            playTone('click');
+            const eraPool = selectedEraFilter === 'ALL'
+                ? TIMELINE_BANK
+                : TIMELINE_BANK.filter(t => t.era === selectedEraFilter);
+
+            let unseen = eraPool.filter(t => !appState.seenTlIds.includes(t.id));
+            if (unseen.length === 0) {
+                const ids = new Set(eraPool.map(t => t.id));
+                appState.seenTlIds = appState.seenTlIds.filter(id => !ids.has(id));
+                unseen = [...eraPool];
+            }
+            tlRounds = shuffleArray(unseen).slice(0, Math.min(5, unseen.length));
+            tlCurrentIdx = 0;
+            tlScore = 0;
+            tlCorrectRounds = 0;
+            switchView('timeline');
+            renderTimelineRound();
+        }
+
+        function renderTimelineRound() {
+            tlRoundChecked = false;
+            tlSelectedIndices = [];
+            const round = tlRounds[tlCurrentIdx];
+            if (!appState.seenTlIds.includes(round.id)) {
+                appState.seenTlIds.push(round.id);
+                saveState();
+                updatePoolBadges();
+            }
+
+            document.getElementById('tlProgress').textContent = `라운드 ${tlCurrentIdx + 1} / ${tlRounds.length}`;
+            document.getElementById('tlSessionScore').textContent = tlScore;
+            document.getElementById('tlTopicBadge').textContent = `[${ERA_META[round.era].label}] ${round.topic}`;
+            document.getElementById('tlFeedbackBox').classList.add('hidden');
+            document.getElementById('tlSubmitWrap').classList.remove('hidden');
+
+            tlShuffledEvents = shuffleArray(round.events.map((ev, origOrder) => ({ ...ev, origOrder })));
+            updateTimelineUI();
+        }
+
+        function updateTimelineUI() {
+            const labels = ['1번째 (가장 먼저)', '2번째', '3번째', '4번째 (가장 나중)'];
+            for (let i = 0; i < 4; i++) {
+                const slot = document.getElementById(`tlSlot${i}`);
+                const pickedPoolIdx = tlSelectedIndices[i];
+                if (pickedPoolIdx !== undefined) {
+                    const ev = tlShuffledEvents[pickedPoolIdx];
+                    slot.className = 'min-h-[76px] rounded-xl border-2 border-[#2E6F65] bg-teal-50 p-2.5 flex flex-col justify-center items-center text-center cursor-pointer shadow-2xs transition';
+                    slot.innerHTML = `
+                        <span class="text-[10px] font-black text-[#2E6F65] mb-1">${i + 1}번째 선택됨 (취소 가능)</span>
+                        <span class="text-xs font-bold text-[#1B2A4A] leading-snug">${ev.text}</span>
+                    `;
+                } else {
+                    slot.className = 'min-h-[76px] rounded-xl border-2 border-dashed border-slate-300 bg-white/70 p-2.5 flex flex-col justify-center items-center text-center';
+                    slot.innerHTML = `<span class="text-[11px] font-bold text-slate-400">${labels[i]}</span>`;
+                }
+            }
+
+            const poolGrid = document.getElementById('tlPoolGrid');
+            poolGrid.innerHTML = tlShuffledEvents.map((ev, idx) => {
+                const isUsed = tlSelectedIndices.includes(idx);
+                return `
+                    <button onclick="pickTimelineEvent(${idx})" ${isUsed || tlRoundChecked ? 'disabled' : ''}
+                        class="game-btn p-3.5 rounded-xl border-2 text-left transition flex items-center justify-between ${
+                            isUsed
+                                ? 'border-slate-200 bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed'
+                                : 'border-[#E5DEC9] hover:border-[#2E6F65] bg-white text-[#1B2A4A] shadow-2xs'
+                        }">
+                        <span class="text-xs sm:text-sm font-bold leading-snug">${ev.text}</span>
+                        <span class="text-xs font-black px-2 py-0.5 rounded bg-[#F8F5EE] text-slate-500 shrink-0 ml-2">${isUsed ? '선택됨' : '+ 선택'}</span>
+                    </button>
+                `;
+            }).join('');
+
+            const btn = document.getElementById('tlCheckBtn');
+            if (tlSelectedIndices.length === 4) {
+                btn.disabled = false;
+                btn.className = 'game-btn px-8 py-3 rounded-xl bg-[#2E6F65] hover:bg-[#23564e] text-white font-bold text-sm shadow cursor-pointer';
+                btn.textContent = '순서 정답 확인하기 ✓';
+            } else {
+                btn.disabled = true;
+                btn.className = 'game-btn px-8 py-3 rounded-xl bg-slate-300 text-slate-500 font-bold text-sm cursor-not-allowed';
+                btn.textContent = `4개 사건을 모두 순서대로 선택하세요 (${tlSelectedIndices.length}/4)`;
+            }
+        }
+
+        function pickTimelineEvent(poolIdx) {
+            if (tlRoundChecked || tlSelectedIndices.length >= 4 || tlSelectedIndices.includes(poolIdx)) return;
+            playTone('click');
+            tlSelectedIndices.push(poolIdx);
+            updateTimelineUI();
+        }
+
+        function unselectTimelineSlot(slotIdx) {
+            if (tlRoundChecked || tlSelectedIndices[slotIdx] === undefined) return;
+            playTone('click');
+            tlSelectedIndices.splice(slotIdx, 1);
+            updateTimelineUI();
+        }
+
+        function checkTimelineAnswer() {
+            if (tlSelectedIndices.length !== 4 || tlRoundChecked) return;
+            tlRoundChecked = true;
+            appState.totalAnswered++;
+
+            const round = tlRounds[tlCurrentIdx];
+            const isCorrect = tlSelectedIndices.every((poolIdx, orderPos) => tlShuffledEvents[poolIdx].origOrder === orderPos);
+
+            document.getElementById('tlSubmitWrap').classList.add('hidden');
+            const fbBox = document.getElementById('tlFeedbackBox');
+            const fbTitle = document.getElementById('tlFeedbackTitle');
+
+            if (isCorrect) {
+                playTone('correct');
+                tlScore += 20;
+                tlCorrectRounds++;
+                appState.totalScore += 20;
+                appState.totalCorrect++;
+                fbBox.className = 'mt-5 rounded-2xl p-4 border-2 border-[#2E6F65] bg-teal-50/70 animate-pop';
+                fbTitle.className = 'font-black text-base mb-2 text-[#2E6F65]';
+                fbTitle.textContent = '완벽합니다! 시대 흐름을 정확히 꿰뚫고 있네요! (+20점)';
+            } else {
+                playTone('wrong');
+                fbBox.className = 'mt-5 rounded-2xl p-4 border-2 border-[#C84B31] bg-rose-50/70 animate-pop';
+                fbTitle.className = 'font-black text-base mb-2 text-[#C84B31]';
+                fbTitle.textContent = '순서가 조금 섞였어요! 올바른 연표 순서를 확인하세요.';
+            }
+
+            document.getElementById('tlYearList').innerHTML = round.events.map((ev, i) => `
+                <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                    <span class="font-bold text-[#1B2A4A]"><strong class="text-[#2E6F65] mr-1.5">${i + 1}.</strong>${ev.text}</span>
+                    <span class="font-mono font-bold text-[#C84B31] shrink-0 ml-2">${ev.year}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('tlTipNote').textContent = `암기 팁: ${round.tip}`;
+            document.getElementById('tlSessionScore').textContent = tlScore;
+            fbBox.classList.remove('hidden');
+            saveState();
+            updateStatsUI();
+        }
+
+        function nextTimelineRound() {
+            playTone('click');
+            tlCurrentIdx++;
+            if (tlCurrentIdx < tlRounds.length) {
+                renderTimelineRound();
+            } else {
+                showResultScreen('시대순 연표 배열 정복 완료!', tlScore, `${tlCorrectRounds}/${tlRounds.length} 라운드 정답`, startTimelineGame);
+            }
+        }
+
+        /* ==========================================================================
+           11. GAME 3: MEMORY CARD MATCHING
+           ========================================================================== */
+        let matchCards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let matchMoves = 0;
+        let matchLock = false;
+        let matchTimerInterval = null;
+        let matchSeconds = 0;
+
+        function startMatchingGame() {
+            playTone('click');
+            clearInterval(matchTimerInterval);
+            matchMoves = 0;
+            matchedPairs = 0;
+            flippedCards = [];
+            matchLock = false;
+            matchSeconds = 0;
+
+            document.getElementById('matchMoves').textContent = '0';
+            document.getElementById('matchPairsCount').textContent = '0';
+            document.getElementById('matchTimerDisplay').textContent = '00:00';
+
+            const eraPool = selectedEraFilter === 'ALL'
+                ? MATCHING_BANK
+                : MATCHING_BANK.filter(m => m.era === selectedEraFilter);
+
+            const pickedPairs = shuffleArray(eraPool).slice(0, 6);
+            const rawDeck = [];
+            pickedPairs.forEach((pair, idx) => {
+                rawDeck.push({ pairId: idx, text: pair.a, type: '인물·국가' });
+                rawDeck.push({ pairId: idx, text: pair.b, type: '업적·유산' });
+            });
+            matchCards = shuffleArray(rawDeck);
+
+            switchView('matching');
+            renderMatchingBoard();
+
+            matchTimerInterval = setInterval(() => {
+                matchSeconds++;
+                const mins = String(Math.floor(matchSeconds / 60)).padStart(2, '0');
+                const secs = String(matchSeconds % 60).padStart(2, '0');
+                document.getElementById('matchTimerDisplay').textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function renderMatchingBoard() {
+            const grid = document.getElementById('matchingGrid');
+            grid.innerHTML = matchCards.map((card, idx) => `
+                <div onclick="flipMatchCard(${idx})" class="perspective-1000 h-24 sm:h-28 cursor-pointer select-none">
+                    <div id="mcard-${idx}" class="relative w-full h-full transform-style-3d">
+                        <div class="backface-hidden absolute inset-0 rounded-2xl bg-gradient-to-br from-[#1B2A4A] to-[#283E6B] border-2 border-[#D4A338] flex flex-col items-center justify-center shadow-sm">
+                            <span class="font-history text-xl sm:text-2xl font-bold text-[#D4A338]">史</span>
+                            <span class="text-[10px] text-slate-300 mt-1">한능검 카드</span>
+                        </div>
+                        <div id="mcard-front-${idx}" class="backface-hidden rotate-y-180 absolute inset-0 rounded-2xl bg-white border-2 border-[#1B2A4A] p-2 flex flex-col items-center justify-center text-center shadow-md">
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 mb-1">${card.type}</span>
+                            <span class="text-xs sm:text-sm font-black text-[#1B2A4A] leading-tight">${card.text}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function flipMatchCard(idx) {
+            if (matchLock || flippedCards.includes(idx)) return;
+            const inner = document.getElementById(`mcard-${idx}`);
+            if (inner.classList.contains('matched')) return;
+
+            playTone('click');
+            inner.classList.add('rotate-y-180');
+            flippedCards.push(idx);
+
+            if (flippedCards.length === 2) {
+                matchLock = true;
+                matchMoves++;
+                document.getElementById('matchMoves').textContent = matchMoves;
+
+                const [firstIdx, secondIdx] = flippedCards;
+                const isMatch = matchCards[firstIdx].pairId === matchCards[secondIdx].pairId;
+
+                if (isMatch) {
+                    setTimeout(() => {
+                        playTone('correct');
+                        document.getElementById(`mcard-${firstIdx}`).classList.add('matched');
+                        document.getElementById(`mcard-${secondIdx}`).classList.add('matched');
+                        document.getElementById(`mcard-front-${firstIdx}`).classList.replace('border-[#1B2A4A]', 'border-[#2E6F65]');
+                        document.getElementById(`mcard-front-${firstIdx}`).classList.add('bg-teal-50');
+                        document.getElementById(`mcard-front-${secondIdx}`).classList.replace('border-[#1B2A4A]', 'border-[#2E6F65]');
+                        document.getElementById(`mcard-front-${secondIdx}`).classList.add('bg-teal-50');
+
+                        matchedPairs++;
+                        document.getElementById('matchPairsCount').textContent = matchedPairs;
+                        flippedCards = [];
+                        matchLock = false;
+
+                        if (matchedPairs === 6) {
+                            clearInterval(matchTimerInterval);
+                            const bonus = matchMoves <= 10 ? 25 : 15;
+                            appState.totalScore += bonus;
+                            appState.totalAnswered += 6;
+                            appState.totalCorrect += 6;
+                            saveState();
+                            updateStatsUI();
+
+                            setTimeout(() => {
+                                showResultScreen('인물·유산 짝맞추기 클리어!', bonus, `${matchMoves}회 시도 (${matchSeconds}초)`, startMatchingGame);
+                            }, 450);
+                        }
+                    }, 320);
+                } else {
+                    setTimeout(() => {
+                        playTone('wrong');
+                        document.getElementById(`mcard-${firstIdx}`).classList.remove('rotate-y-180');
+                        document.getElementById(`mcard-${secondIdx}`).classList.remove('rotate-y-180');
+                        flippedCards = [];
+                        matchLock = false;
+                    }, 800);
+                }
+            }
+        }
+
+        /* ==========================================================================
+           12. RESULT SCREEN & WRONG ANSWER NOTEBOOK
+           ========================================================================== */
+        function showResultScreen(title, sessionScore, accuracyText, replayFn) {
+            playTone('win');
+            launchConfetti();
+
+            document.getElementById('resultGameTitle').textContent = title;
+            document.getElementById('resScore').textContent = `+${sessionScore}점`;
+            document.getElementById('resAccuracy').textContent = accuracyText;
+            document.getElementById('resGrade').textContent = document.getElementById('currentGradeText').textContent;
+            document.getElementById('resReplayBtn').onclick = replayFn;
+
+            switchView('result');
+        }
+
+        function addWrongNote(qObj) {
+            if (!appState.wrongNotes.some(item => item.id === qObj.id)) {
+                appState.wrongNotes.unshift(qObj);
+                if (appState.wrongNotes.length > 40) appState.wrongNotes.pop();
+            }
+        }
+
+        function openWrongNotes() {
+            playTone('click');
+            const list = document.getElementById('wrongNotesList');
+            const retryBtn = document.getElementById('retryWrongBtn');
+
+            if (appState.wrongNotes.length === 0) {
+                retryBtn.classList.add('hidden');
+                list.innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-base font-bold text-slate-600 mb-1">아직 틀린 문제가 없습니다!</p>
+                        <p class="text-xs text-slate-400">퀴즈나 모의고사에서 틀린 문제는 자동으로 이곳에 기록됩니다.</p>
+                    </div>
+                `;
+            } else {
+                retryBtn.classList.remove('hidden');
+                list.innerHTML = appState.wrongNotes.map((item, idx) => `
+                    <div class="bg-[#F8F5EE] border border-[#E5DEC9] rounded-2xl p-4">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-[11px] font-extrabold px-2 py-0.5 rounded ${ERA_META[item.era]?.badge || 'bg-slate-200 text-slate-800'}">${ERA_META[item.era]?.label || '한국사'}</span>
+                            <button onclick="removeWrongNote(${idx})" class="text-[11px] text-slate-400 hover:text-rose-600">복습 완료 (삭제)</button>
+                        </div>
+                        <p class="text-xs sm:text-sm font-bold text-[#1B2A4A] mb-2">${item.clue}</p>
+                        <div class="text-xs bg-white p-2.5 rounded-xl border border-slate-200">
+                            <span class="font-black text-[#2E6F65] block mb-1">정답: ${item.options[item.answer]}</span>
+                            <span class="text-slate-600">${item.explanation}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('wrongModal').classList.remove('hidden');
+        }
+
+        function closeWrongNotes() { document.getElementById('wrongModal').classList.add('hidden'); }
+
+        function removeWrongNote(idx) {
+            playTone('click');
+            appState.wrongNotes.splice(idx, 1);
+            saveState();
+            updateStatsUI();
+            openWrongNotes();
+        }
+
+        function clearWrongNotes() {
+            if (appState.wrongNotes.length === 0) return;
+            appState.wrongNotes = [];
+            saveState();
+            updateStatsUI();
+            openWrongNotes();
+            showToast('오답노트를 모두 비웠습니다.');
+        }
+
+        function startWrongNoteRetry() {
+            if (appState.wrongNotes.length === 0) return;
+            const retryList = [...appState.wrongNotes];
+            closeWrongNotes();
+            switchMainTab('games');
+            startKeywordGame(retryList);
+        }
+
+        /* ==========================================================================
+           13. 50-QUESTION 5-CHOICE MOCK EXAM ENGINE (80 MINS / 100 PTS)
+           ========================================================================== */
+        let mockRoundName = '';
+        let mockQuestions = [];
+        let mockCurrentIdx = 0;
+        let mockUserAnswers = [];
+        let mockTimerInterval = null;
+        let mockSecondsLeft = 4800; // 80 minutes
+
+        function resetMockView() {
+            clearInterval(mockTimerInterval);
+            document.getElementById('mock-selector').classList.remove('hidden');
+            document.getElementById('mock-paper').classList.add('hidden');
+            document.getElementById('mock-report').classList.add('hidden');
+        }
+
+        function startMockExam(roundName, seedOffset) {
+            playTone('click');
+            mockRoundName = roundName;
+
+            const eraOrder = { PRE_GOJOSEON: 1, THREE_KINGDOMS: 2, NORTH_SOUTH: 3, GORYEO: 4, JOSEON: 5 };
+            const preEras = ['PRE_GOJOSEON', 'THREE_KINGDOMS', 'NORTH_SOUTH', 'GORYEO', 'JOSEON'];
+
+            // Each round (seedOffset 0, 1, 2, 3) picks a distinct, non-overlapping 50-question set
+            let selectedPre = [];
+            preEras.forEach(eraKey => {
+                const pool = QUESTION_BANK.filter(q => q.era === eraKey); // 12 Qs each
+                let picked = [];
+                if (seedOffset === 0) picked = pool.slice(0, 6);
+                else if (seedOffset === 1) picked = pool.slice(6, 12);
+                else if (seedOffset === 2) picked = pool.filter((_, i) => i % 2 === 0).slice(0, 6);
+                else picked = pool.filter((_, i) => i % 2 === 1).slice(0, 6);
+                selectedPre = selectedPre.concat(shuffleArray(picked));
+            });
+            selectedPre.sort((a, b) => eraOrder[a.era] - eraOrder[b.era]);
+
+            const modernPool = QUESTION_BANK.filter(q => q.era === 'MODERN'); // 40 Qs
+            let pickedMod = [];
+            if (seedOffset === 0) pickedMod = modernPool.slice(0, 20);
+            else if (seedOffset === 1) pickedMod = modernPool.slice(20, 40);
+            else if (seedOffset === 2) pickedMod = modernPool.filter((_, i) => i % 2 === 0).slice(0, 20);
+            else pickedMod = modernPool.filter((_, i) => i % 2 === 1).slice(0, 20);
+            const selectedMod = shuffleArray(pickedMod);
+
+            const combined = [...selectedPre, ...selectedMod];
+            const pointDistribution = shuffleArray([
+                ...Array(10).fill(1),
+                ...Array(30).fill(2),
+                ...Array(10).fill(3)
+            ]);
+
+            mockQuestions = combined.map((q, idx) => ({
+                ...q,
+                qNum: idx + 1,
+                points: pointDistribution[idx],
+                shuffledOptions: shuffleArray([0, 1, 2, 3, 4])
+            }));
+
+            mockCurrentIdx = 0;
+            mockUserAnswers = new Array(50).fill(null);
+            mockSecondsLeft = 4800;
+
+            document.getElementById('mockRoundTitle').textContent = roundName;
+            document.getElementById('mock-selector').classList.add('hidden');
+            document.getElementById('mock-report').classList.add('hidden');
+            document.getElementById('mock-paper').classList.remove('hidden');
+
+            renderMockNavDots();
+            renderMockQuestion();
+
+            clearInterval(mockTimerInterval);
+            mockTimerInterval = setInterval(() => {
+                mockSecondsLeft--;
+                if (mockSecondsLeft <= 0) {
+                    clearInterval(mockTimerInterval);
+                    finishMockExam();
+                    return;
+                }
+                const m = String(Math.floor(mockSecondsLeft / 60)).padStart(2, '0');
+                const s = String(mockSecondsLeft % 60).padStart(2, '0');
+                document.getElementById('mockTimerText').textContent = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function renderMockNavDots() {
+            const answeredCnt = mockUserAnswers.filter(a => a !== null).length;
+            document.getElementById('mockAnsweredCounter').textContent = `마킹: ${answeredCnt}/50`;
+
+            const container = document.getElementById('mockNavDots');
+            container.innerHTML = mockQuestions.map((_, idx) => {
+                const isCurrent = idx === mockCurrentIdx;
+                const isDone = mockUserAnswers[idx] !== null;
+                let cls = 'h-6 rounded text-[10px] font-black transition ';
+                if (isCurrent) cls += 'bg-[#1B2A4A] text-[#FDE68A] ring-2 ring-[#D4A338]';
+                else if (isDone) cls += 'bg-[#2E6F65] text-white';
+                else cls += 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-100';
+                return `<button onclick="jumpMockQuestion(${idx})" class="${cls}">${idx + 1}</button>`;
+            }).join('');
+        }
+
+        function jumpMockQuestion(idx) {
+            playTone('click');
+            mockCurrentIdx = idx;
+            renderMockNavDots();
+            renderMockQuestion();
+        }
+
+        function renderMockQuestion() {
+            const q = mockQuestions[mockCurrentIdx];
+            document.getElementById('mockQNumber').textContent = `${q.qNum} / 50번`;
+            const eraBadge = document.getElementById('mockEraBadge');
+            eraBadge.textContent = ERA_META[q.era].label;
+            eraBadge.className = `px-2.5 py-0.5 rounded-md text-xs font-extrabold ${ERA_META[q.era].badge}`;
+            document.getElementById('mockPointBadge').textContent = `[배점 ${q.points}점]`;
+            document.getElementById('mockQuestionClue').textContent = `${q.qNum}. ${q.clue}`;
+
+            document.getElementById('mockKeywords').innerHTML = q.keywords.map(k =>
+                `<span class="px-2.5 py-1 rounded-lg bg-white border border-[#D4A338]/60 text-xs font-bold text-[#1B2A4A]"># ${k}</span>`
+            ).join('');
+
+            const chosenOrig = mockUserAnswers[mockCurrentIdx];
+            document.getElementById('mockOptions').innerHTML = q.shuffledOptions.map((origIdx, btnIdx) => {
+                const isSelected = chosenOrig === origIdx;
+                return `
+                    <button onclick="selectMockAnswer(${origIdx})"
+                        class="game-btn w-full text-left p-3.5 rounded-xl border-2 font-bold text-sm flex items-center gap-3 transition ${
+                            isSelected
+                                ? 'border-[#1B2A4A] bg-[#1B2A4A] text-white shadow'
+                                : 'border-slate-200 hover:border-[#1B2A4A] bg-white text-[#1E293B]'
+                        }">
+                        <span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${
+                            isSelected ? 'bg-[#D4A338] text-[#1B2A4A]' : 'bg-[#F3EFE6] text-[#1B2A4A]'
+                        }">${btnIdx + 1}</span>
+                        <span>${q.options[origIdx]}</span>
+                    </button>
+                `;
+            }).join('');
+
+            document.getElementById('mockPrevBtn').disabled = mockCurrentIdx === 0;
+            document.getElementById('mockPrevBtn').classList.toggle('opacity-40', mockCurrentIdx === 0);
+            document.getElementById('mockNextBtn').textContent = mockCurrentIdx === 49 ? '최종 답안 제출 →' : '다음 문항 →';
+        }
+
+        function selectMockAnswer(origIdx) {
+            playTone('click');
+            mockUserAnswers[mockCurrentIdx] = origIdx;
+            renderMockNavDots();
+            renderMockQuestion();
+        }
+
+        function moveMockQuestion(delta) {
+            playTone('click');
+            if (mockCurrentIdx + delta >= 50) {
+                confirmFinishMockExam();
+                return;
+            }
+            if (mockCurrentIdx + delta >= 0) {
+                mockCurrentIdx += delta;
+                renderMockNavDots();
+                renderMockQuestion();
+            }
+        }
+
+        function confirmFinishMockExam() {
+            const unanswered = mockUserAnswers.filter(a => a === null).length;
+            const msg = unanswered > 0
+                ? `아직 풀지 않은 문항이 ${unanswered}개 있습니다. 그대로 채점할까요?`
+                : '50문항 모의고사 답안을 최종 제출하고 채점할까요?';
+            showToast(msg, true, () => finishMockExam());
+        }
+
+        function finishMockExam() {
+            clearInterval(mockTimerInterval);
+            playTone('win');
+            launchConfetti();
+
+            let earnedScore = 0;
+            const eraStats = {
+                PRE_GOJOSEON: { total: 0, correct: 0 },
+                THREE_KINGDOMS: { total: 0, correct: 0 },
+                NORTH_SOUTH: { total: 0, correct: 0 },
+                GORYEO: { total: 0, correct: 0 },
+                JOSEON: { total: 0, correct: 0 },
+                MODERN: { total: 0, correct: 0 }
+            };
+
+            const wrongItems = [];
+            mockQuestions.forEach((q, idx) => {
+                const userAns = mockUserAnswers[idx];
+                const isCorrect = userAns === q.answer;
+                eraStats[q.era].total++;
+                appState.totalAnswered++;
+
+                if (isCorrect) {
+                    earnedScore += q.points;
+                    eraStats[q.era].correct++;
+                    appState.totalCorrect++;
+                } else {
+                    addWrongNote(q);
+                    wrongItems.push({ q, userAns });
+                }
+            });
+
+            appState.totalScore += Math.round(earnedScore / 2);
+            saveState();
+            updateStatsUI();
+
+            let gradeLabel = '불합격 (60점 미만)';
+            if (earnedScore >= 80) gradeLabel = '심화 1급 합격!';
+            else if (earnedScore >= 70) gradeLabel = '심화 2급 합격!';
+            else if (earnedScore >= 60) gradeLabel = '심화 3급 합격!';
+
+            document.getElementById('mockReportRound').textContent = mockRoundName;
+            document.getElementById('mockFinalScore').textContent = `${earnedScore}점`;
+            document.getElementById('mockFinalGrade').textContent = gradeLabel;
+
+            document.getElementById('mockEraBreakdown').innerHTML = Object.keys(eraStats).map(eraKey => {
+                const st = eraStats[eraKey];
+                const pct = st.total > 0 ? Math.round((st.correct / st.total) * 100) : 0;
+                return `
+                    <div class="bg-[#F8F5EE] p-3 rounded-xl border border-[#E5DEC9]">
+                        <div class="flex items-center justify-between text-xs font-bold mb-1.5">
+                            <span class="text-[#1B2A4A]">${ERA_META[eraKey].label}</span>
+                            <span class="${pct >= 80 ? 'text-[#2E6F65]' : 'text-[#C84B31]'}">${st.correct}/${st.total}문항 (${pct}%)</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div class="h-full ${pct >= 80 ? 'bg-[#2E6F65]' : 'bg-[#D4A338]'} rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const reviewList = document.getElementById('mockReviewList');
+            if (wrongItems.length === 0) {
+                reviewList.innerHTML = `<div class="p-4 rounded-2xl bg-teal-50 border border-[#2E6F65] text-center text-sm font-black text-[#2E6F65]">50문항 전 문항 만점! 완벽합니다!</div>`;
+            } else {
+                reviewList.innerHTML = `<h4 class="text-sm font-black text-[#C84B31] mb-2">틀린 문항 핵심 해설 (${wrongItems.length}문항 - 오답노트 자동 저장됨)</h4>` +
+                    wrongItems.map(({ q, userAns }) => `
+                        <div class="bg-[#FFF8F6] border border-[#C84B31]/30 rounded-2xl p-4 text-xs">
+                            <div class="font-bold text-[#1B2A4A] mb-1">${q.qNum}번 [${ERA_META[q.era].label} · ${q.points}점] ${q.clue}</div>
+                            <div class="text-slate-600 mb-1">내 선택: <span class="text-[#C84B31] font-bold">${userAns !== null ? q.options[userAns] : '미선택'}</span> / 정답: <span class="text-[#2E6F65] font-black">${q.options[q.answer]}</span></div>
+                            <div class="text-slate-700 bg-white p-2 rounded-lg border border-slate-200">${q.explanation}</div>
+                        </div>
+                    `).join('');
+            }
+
+            document.getElementById('mock-paper').classList.add('hidden');
+            document.getElementById('mock-report').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /* ==========================================================================
+           14. REAL OMR MARKING & AUTO-GRADER ENGINE (1~50 QUESTIONS)
+           ========================================================================== */
+        const OMR_PRESETS = {
+            ROUND_80: {
+                label: '제80회 한능검 심화 기출 연습 정답표',
+                answers: [
+                    3,1,4,2,5, 1,3,2,5,4,
+                    2,4,1,5,3, 4,2,5,1,3,
+                    5,1,3,4,2, 3,5,2,4,1,
+                    4,2,5,1,3, 2,4,1,3,5,
+                    1,3,5,2,4, 5,1,4,2,3
+                ],
+                points: [
+                    1,2,2,2,1, 2,3,2,2,2,
+                    2,1,2,3,2, 2,2,3,2,1,
+                    2,2,3,1,2, 2,3,2,2,1,
+                    2,2,3,2,1, 2,3,2,1,2,
+                    3,2,2,1,2, 3,2,3,1,2
+                ]
+            },
+            ROUND_79: {
+                label: '제79회 한능검 심화 기출 연습 정답표',
+                answers: [
+                    2,5,1,3,4, 4,1,5,2,3,
+                    1,3,4,2,5, 3,5,1,4,2,
+                    4,2,5,1,3, 1,4,3,5,2,
+                    5,1,4,2,3, 3,5,2,4,1,
+                    2,4,1,5,3, 4,2,3,1,5
+                ],
+                points: [
+                    1,2,2,3,1, 2,2,3,2,2,
+                    1,2,3,2,2, 2,3,1,2,2,
+                    2,1,3,2,2, 2,3,2,1,2,
+                    3,2,2,1,2, 2,3,2,2,1,
+                    2,3,1,2,2, 3,2,2,1,3
+                ]
+            },
+            ROUND_78: {
+                label: '제78회 한능검 심화 기출 연습 정답표',
+                answers: [
+                    4,2,5,1,3, 2,4,1,3,5,
+                    3,5,2,4,1, 5,1,3,2,4,
+                    1,3,4,5,2, 4,2,1,3,5,
+                    2,4,1,5,3, 5,2,4,1,3,
+                    3,1,4,2,5, 2,5,1,4,3
+                ],
+                points: [
+                    1,2,3,2,1, 2,2,3,2,2,
+                    2,3,1,2,2, 2,1,3,2,2,
+                    2,2,3,1,2, 3,2,2,1,2,
+                    2,3,2,2,1, 3,2,1,2,2,
+                    2,2,3,1,2, 2,3,2,1,3
+                ]
+            }
+        };
+
+        let omrGraded = false;
+        let omrHighlightUnmarked = false;
+        let omrTimerInterval = null;
+        let omrSecondsLeft = 4800;
+        let omrTimerRunning = false;
+
+        function getActiveOmrKey() {
+            const preset = appState.omrSelectedPreset;
+            if (preset !== 'CUSTOM_81' && OMR_PRESETS[preset]) {
+                return {
+                    label: OMR_PRESETS[preset].label,
+                    answers: [...OMR_PRESETS[preset].answers],
+                    points: [...OMR_PRESETS[preset].points]
+                };
+            }
+            const answers = [];
+            const points = [];
+            for (let i = 1; i <= 50; i++) {
+                const custom = appState.omrCustomKey[i] || { ans: 1, pts: 2 };
+                answers.push(custom.ans);
+                points.push(custom.pts);
+            }
+            return { label: '제81회 / 사용자 직접 입력 정답표', answers, points };
+        }
+
+        function initOmrView() {
+            document.getElementById('omrRoundSelect').value = appState.omrSelectedPreset;
+            renderOmrColumns();
+            renderOmrKeyEditor();
+            updateOmrCounters();
+        }
+
+        function changeOmrPreset() {
+            appState.omrSelectedPreset = document.getElementById('omrRoundSelect').value;
+            omrGraded = false;
+            document.getElementById('omrResultBox').classList.add('hidden');
+            saveState();
+            renderOmrColumns();
+            renderOmrKeyEditor();
+            playTone('click');
+            if (appState.omrSelectedPreset === 'CUSTOM_81') {
+                document.getElementById('omrKeyEditorBox').classList.remove('hidden');
+            }
+        }
+
+        function renderOmrColumns() {
+            const container = document.getElementById('omrColumnsContainer');
+            const activeKey = getActiveOmrKey();
+            let html = '';
+
+            for (let col = 0; col < 5; col++) {
+                const startQ = col * 10 + 1;
+                const endQ = startQ + 9;
+                const eraHint = col === 0 ? '선사·삼국' : col === 1 ? '남북국·고려' : col === 2 ? '조선 전기·후기' : col === 3 ? '개항기·일제' : '일제·현대사';
+
+                html += `
+                    <div class="bg-white rounded-2xl border border-[#E5DEC9] overflow-hidden shadow-2xs">
+                        <div class="bg-[#F3EFE6] px-3 py-2 border-b border-[#E5DEC9] flex items-center justify-between">
+                            <span class="text-xs font-black text-[#1B2A4A]">${startQ} ~ ${endQ}번</span>
+                            <span class="text-[10px] font-bold text-slate-500">${eraHint}</span>
+                        </div>
+                        <div class="divide-y divide-slate-100">
+                `;
+
+                for (let q = startQ; q <= endQ; q++) {
+                    const userPick = appState.omrUserMarks[q] || null;
+                    const correctPick = activeKey.answers[q - 1];
+                    const isUnmarkedWarn = omrHighlightUnmarked && !userPick;
+
+                    html += `
+                        <div class="px-2.5 py-2 flex items-center justify-between ${isUnmarkedWarn ? 'bg-rose-50' : ''}">
+                            <span class="w-7 text-xs font-black ${omrGraded ? (userPick === correctPick ? 'text-[#2E6F65]' : 'text-[#C84B31]') : 'text-slate-700'}">
+                                ${q}.
+                            </span>
+                            <div class="flex items-center gap-1">
+                                ${[1, 2, 3, 4, 5].map(num => {
+                                    let bubbleCls = 'omr-bubble';
+                                    if (omrGraded) {
+                                        if (num === correctPick) bubbleCls += ' correct-ans';
+                                        else if (num === userPick && userPick !== correctPick) bubbleCls += ' wrong-ans';
+                                    } else if (userPick === num) {
+                                        bubbleCls += ' marked';
+                                    }
+                                    return `<button type="button" onclick="markOmrBubble(${q}, ${num})" class="${bubbleCls}">${num}</button>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `</div></div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function markOmrBubble(qNum, choiceNum) {
+            playTone('click');
+            if (appState.omrUserMarks[qNum] === choiceNum) {
+                delete appState.omrUserMarks[qNum];
+            } else {
+                appState.omrUserMarks[qNum] = choiceNum;
+            }
+            omrGraded = false;
+            document.getElementById('omrResultBox').classList.add('hidden');
+            saveState();
+            renderOmrColumns();
+            updateOmrCounters();
+        }
+
+        function updateOmrCounters() {
+            const marked = Object.keys(appState.omrUserMarks).length;
+            document.getElementById('omrMarkedCount').textContent = marked;
+            document.getElementById('omrUnmarkedCount').textContent = 50 - marked;
+        }
+
+        function highlightUnmarkedOmr() {
+            omrHighlightUnmarked = !omrHighlightUnmarked;
+            playTone('click');
+            renderOmrColumns();
+            if (omrHighlightUnmarked) showToast('아직 마킹하지 않은 문항 배경을 붉게 표시했습니다.');
+        }
+
+        function clearOmrSheet() {
+            showToast('마킹한 OMR 답안 전체를 초기화할까요?', true, () => {
+                appState.omrUserMarks = {};
+                omrGraded = false;
+                omrHighlightUnmarked = false;
+                document.getElementById('omrResultBox').classList.add('hidden');
+                saveState();
+                renderOmrColumns();
+                updateOmrCounters();
+            });
+        }
+
+        function toggleOmrAnswerKeyEditor() {
+            playTone('click');
+            const box = document.getElementById('omrKeyEditorBox');
+            box.classList.toggle('hidden');
+            if (!box.classList.contains('hidden')) {
+                appState.omrSelectedPreset = 'CUSTOM_81';
+                document.getElementById('omrRoundSelect').value = 'CUSTOM_81';
+                saveState();
+                renderOmrKeyEditor();
+            }
+        }
+
+        function renderOmrKeyEditor() {
+            const grid = document.getElementById('omrKeyEditorGrid');
+            let html = '';
+            for (let i = 1; i <= 50; i++) {
+                const entry = appState.omrCustomKey[i] || { ans: 1, pts: 2 };
+                html += `
+                    <div class="bg-white border border-amber-200 rounded-xl p-2 flex flex-col gap-1 text-[11px]">
+                        <div class="flex items-center justify-between font-black text-[#1B2A4A]">
+                            <span>${i}번</span>
+                            <select onchange="updateCustomKeyEntry(${i}, 'pts', this.value)" class="border border-slate-200 rounded px-1 text-[10px]">
+                                <option value="1" ${entry.pts === 1 ? 'selected' : ''}>1점</option>
+                                <option value="2" ${entry.pts === 2 ? 'selected' : ''}>2점</option>
+                                <option value="3" ${entry.pts === 3 ? 'selected' : ''}>3점</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-between gap-0.5">
+                            ${[1, 2, 3, 4, 5].map(n => `
+                                <button onclick="updateCustomKeyEntry(${i}, 'ans', ${n})"
+                                    class="w-5 h-5 rounded-full text-[10px] font-bold ${entry.ans === n ? 'bg-[#1B2A4A] text-[#FDE68A]' : 'bg-slate-100 text-slate-600'}">
+                                    ${n}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
+        }
+
+        function updateCustomKeyEntry(qNum, field, val) {
+            if (!appState.omrCustomKey[qNum]) appState.omrCustomKey[qNum] = { ans: 1, pts: 2 };
+            appState.omrCustomKey[qNum][field] = Number(val);
+            saveState();
+            renderOmrKeyEditor();
+        }
+
+        function toggleOmrTimer() {
+            playTone('click');
+            const btn = document.getElementById('omrTimerToggleBtn');
+            if (omrTimerRunning) {
+                clearInterval(omrTimerInterval);
+                omrTimerRunning = false;
+                btn.textContent = '계속';
+                btn.className = 'px-2.5 py-1.5 rounded-lg bg-[#2E6F65] text-white text-xs font-bold';
+            } else {
+                omrTimerRunning = true;
+                btn.textContent = '일시정지';
+                btn.className = 'px-2.5 py-1.5 rounded-lg bg-[#C84B31] text-white text-xs font-bold';
+                omrTimerInterval = setInterval(() => {
+                    omrSecondsLeft--;
+                    if (omrSecondsLeft <= 0) {
+                        clearInterval(omrTimerInterval);
+                        omrTimerRunning = false;
+                        showToast('80분 시험 시간이 종료되었습니다! 채점하기 버튼을 눌러주세요.');
+                    }
+                    const m = String(Math.floor(Math.max(0, omrSecondsLeft) / 60)).padStart(2, '0');
+                    const s = String(Math.max(0, omrSecondsLeft) % 60).padStart(2, '0');
+                    document.getElementById('omrTimerDisplay').textContent = `${m}:${s}`;
+                }, 1000);
+            }
+        }
+
+        function resetOmrTimer() {
+            playTone('click');
+            clearInterval(omrTimerInterval);
+            omrTimerRunning = false;
+            omrSecondsLeft = 4800;
+            document.getElementById('omrTimerDisplay').textContent = '80:00';
+            const btn = document.getElementById('omrTimerToggleBtn');
+            btn.textContent = '시작';
+            btn.className = 'px-2.5 py-1.5 rounded-lg bg-[#2E6F65] hover:bg-[#23564e] text-white text-xs font-bold';
+        }
+
+        function gradeOmrSheet() {
+            const activeKey = getActiveOmrKey();
+            let totalScore = 0;
+            const wrongNums = [];
+
+            const buckets = [
+                { name: '1~10번 (선사·삼국)', start: 1, end: 10, ok: 0, cnt: 10 },
+                { name: '11~20번 (남북국·고려)', start: 11, end: 20, ok: 0, cnt: 10 },
+                { name: '21~30번 (조선 시대)', start: 21, end: 30, ok: 0, cnt: 10 },
+                { name: '31~38번 (개항기)', start: 31, end: 38, ok: 0, cnt: 8 },
+                { name: '39~45번 (일제 강점기)', start: 39, end: 45, ok: 0, cnt: 7 },
+                { name: '46~50번 (현대사)', start: 46, end: 50, ok: 0, cnt: 5 }
+            ];
+
+            for (let q = 1; q <= 50; q++) {
+                const pick = appState.omrUserMarks[q] || null;
+                const ans = activeKey.answers[q - 1];
+                const pts = activeKey.points[q - 1];
+
+                if (pick === ans) {
+                    totalScore += pts;
+                    const b = buckets.find(bk => q >= bk.start && q <= bk.end);
+                    if (b) b.ok++;
+                } else {
+                    wrongNums.push(`${q}번`);
+                }
+            }
+
+            omrGraded = true;
+            omrHighlightUnmarked = false;
+            renderOmrColumns();
+
+            playTone('win');
+            launchConfetti();
+
+            let gradeStr = '60점 미만';
+            if (totalScore >= 80) gradeStr = '심화 1급 합격';
+            else if (totalScore >= 70) gradeStr = '심화 2급 합격';
+            else if (totalScore >= 60) gradeStr = '심화 3급 합격';
+
+            document.getElementById('omrGradedTitle').textContent = activeKey.label;
+            document.getElementById('omrTotalScoreText').textContent = `${totalScore}점`;
+            document.getElementById('omrGradeResultText').textContent = gradeStr;
+            document.getElementById('omrWrongNumbersText').textContent = wrongNums.length > 0
+                ? `틀린 문항 (${wrongNums.length}개): ${wrongNums.join(', ')}`
+                : '전 문항 정답! 완벽한 100점입니다!';
+
+            document.getElementById('omrEraBreakdownGrid').innerHTML = buckets.map(b => {
+                const pct = Math.round((b.ok / b.cnt) * 100);
+                return `
+                    <div class="bg-white p-2.5 rounded-xl border border-slate-200 text-xs">
+                        <span class="font-bold text-slate-600 block text-[11px] mb-1">${b.name}</span>
+                        <span class="font-black ${pct >= 80 ? 'text-[#2E6F65]' : 'text-[#C84B31]'}">${b.ok}/${b.cnt} (${pct}%)</span>
+                    </div>
+                `;
+            }).join('');
+
+            const resBox = document.getElementById('omrResultBox');
+            resBox.classList.remove('hidden');
+            resBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        /* ==========================================================================
+           15. TOAST NOTIFICATION & CONFETTI CELEBRATION
+           ========================================================================== */
+        let toastTimeout = null;
+        function showToast(msg, withConfirm = false, onConfirm = null) {
+            clearTimeout(toastTimeout);
+            const box = document.getElementById('toastBox');
+            const actions = document.getElementById('toastActions');
+            document.getElementById('toastMsg').textContent = msg;
+
+            if (withConfirm && onConfirm) {
+                actions.classList.remove('hidden');
+                const confirmBtn = document.getElementById('toastConfirmBtn');
+                confirmBtn.onclick = () => {
+                    hideToast();
+                    onConfirm();
+                };
+            } else {
+                actions.classList.add('hidden');
+                toastTimeout = setTimeout(hideToast, 3200);
+            }
+            box.classList.remove('hidden');
+        }
+
+        function hideToast() { document.getElementById('toastBox').classList.add('hidden'); }
+
+        function launchConfetti() {
+            const colors = ['#D4A338', '#C84B31', '#2E6F65', '#1B2A4A', '#FDE68A'];
+            for (let i = 0; i < 40; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti rounded-xs';
+                el.style.left = `${Math.random() * 100}vw`;
+                el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                el.style.animationDuration = `${1.6 + Math.random() * 1.5}s`;
+                el.style.animationDelay = `${Math.random() * 0.25}s`;
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 3500);
+            }
+        }
+
+        /* ==========================================================================
+           16. INITIALIZATION ON WINDOW LOAD
+           ========================================================================== */
+        window.onload = function () {
+            loadState();
+            updateDdayDisplay();
+            updateStatsUI();
+            updatePoolBadges();
+        };
+    </script>
+</body>
+</html>
