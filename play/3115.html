@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VocaCard - 예비 고1 클래스카드 스타일 영단어 암기 앱</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans KR', 'sans-serif'],
+          },
+          colors: {
+            cc: {
+              blue: '#2563eb',
+              indigo: '#4f46e5',
+              green: '#10b981',
+              amber: '#f59e0b',
+              purple: '#8b5cf6',
+              rose: '#f43f5e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 3D 카드 플립 애니메이션 */
+    .perspective-1000 { perspective: 1000px; }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 { transform: rotateY(180deg); }
+
+    /* 클래스카드식 가림막(Blind) 블러 효과 */
+    .blind-blur {
+      filter: blur(7px);
+      user-select: none;
+      transition: filter 0.2s ease;
+    }
+    .blind-blur:hover {
+      filter: blur(0px);
+    }
+
+    /* 커스텀 스크롤바 */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in { animation: fadeIn 0.25s ease-out forwards; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .animate-shake { animation: shake 0.3s ease-in-out; }
+  </style>
+</head>
+<body class="bg-[#f4f6fa] text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200 selection:bg-blue-600 selection:text-white">
+
+  <!-- ========================================================================
+       1. 상단 네비게이션 헤더 (클래스카드 스타일 에듀테크 상단 바)
+       ======================================================================== -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-2xs">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <!-- 좌측 로고 및 홈 복귀 -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
+          <i class="fa-solid fa-layer-group text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-black text-xl tracking-tight text-slate-900 dark:text-white">Voca<span class="text-blue-600 dark:text-blue-400">Card</span></h1>
+            <span class="px-2 py-0.5 text-[11px] font-extrabold bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800 rounded-md">예비 고1</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">암기 → 리콜 → 스펠 3단계 완전학습 단어장</p>
+        </div>
+      </div>
+
+      <!-- 중앙 오늘의 학습량 & 연속 학습일 -->
+      <div class="hidden md:flex items-center gap-4 bg-slate-100/90 dark:bg-slate-800/90 px-4 py-1.5 rounded-full border border-slate-200/70 dark:border-slate-700">
+        <div class="flex items-center gap-1.5 text-xs font-extrabold text-orange-500">
+          <span>🔥</span>
+          <span><span id="hdr-streak">1</span>일 연속</span>
+        </div>
+        <div class="w-px h-3.5 bg-slate-300 dark:bg-slate-700"></div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-600 dark:text-slate-300">오늘 학습</span>
+          <div class="w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div id="hdr-daily-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+          <span class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400"><span id="hdr-daily-count">0</span>/30</span>
+        </div>
+      </div>
+
+      <!-- 우측 컨트롤 (한글 발음 ON/OFF, 음성 억양/속도, 다크모드, 데이터 관리) -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <!-- 한글 발음 글로벌 토글 -->
+        <button id="btn-kopron-toggle" onclick="toggleKoPron()" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800 text-xs font-extrabold flex items-center gap-1.5 transition" title="한글 발음 표기 켜기/끄기">
+          <i class="fa-solid fa-comment-dots"></i>
+          <span class="hidden sm:inline">한글발음</span>
+          <span id="hdr-kopron-badge" class="px-1.5 py-0.5 rounded bg-indigo-600 text-white text-[10px]">ON</span>
+        </button>
+
+        <!-- US/UK & 속도 -->
+        <div class="hidden lg:flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 text-xs font-bold border border-slate-200/70 dark:border-slate-700">
+          <button id="btn-us" onclick="setAccent('en-US')" class="px-2 py-1 rounded-lg bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-2xs transition">US</button>
+          <button id="btn-uk" onclick="setAccent('en-GB')" class="px-2 py-1 rounded-lg text-slate-500 dark:text-slate-400 transition">UK</button>
+          <div class="w-px h-3 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+          <button id="btn-rate" onclick="toggleRate()" class="px-2 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-blue-600 transition">1.0x</button>
+        </div>
+
+        <!-- 다크모드 -->
+        <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition" title="테마 전환">
+          <i class="fa-solid fa-moon dark:hidden"></i>
+          <i class="fa-solid fa-sun hidden dark:inline text-amber-400"></i>
+        </button>
+
+        <!-- 설정/백업 -->
+        <button onclick="openModal('modal-settings')" class="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition" title="설정 및 백업">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       2. 메인 콘텐츠 영역 (세트 대시보드 <-> 세트 학습방 동적 전환)
+       ======================================================================== -->
+  <main id="app-main" class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6">
+    <!-- JS로 렌더링됩니다 -->
+  </main>
+
+  <!-- 하단 단축키 가이드 푸터 -->
+  <footer class="max-w-6xl w-full mx-auto px-4 sm:px-6 py-4 text-center text-xs text-slate-400 dark:text-slate-500 border-t border-slate-200/70 dark:border-slate-800/70 flex flex-col sm:flex-row items-center justify-between gap-2">
+    <div>VocaCard · 예비 고1 필수 중등·고등 영단어 120 완벽 마스터</div>
+    <div class="hidden md:flex items-center gap-3">
+      <span><kbd class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 rounded font-mono">Space</kbd> 카드 뒤집기</span>
+      <span><kbd class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 rounded font-mono">1~4</kbd> 암기 난이도 / 객관식 선택</span>
+      <span><kbd class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 rounded font-mono">S</kbd> 원어민 발음 듣기</span>
+    </div>
+  </footer>
+
+  <!-- 토스트 알림 -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ========================================================================
+       3. 모달 다이얼로그 (단어 상세 모달, 나만의 단어 추가 모달, 설정 모달, 확인창)
+       ======================================================================== -->
+  <!-- 단어 심층 상세 모달 -->
+  <div id="modal-word-detail" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/65 backdrop-blur-xs p-4">
+    <div id="modal-word-detail-body" class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-2xl animate-fade-in"></div>
+  </div>
+
+  <!-- 나만의 단어 추가 모달 -->
+  <div id="modal-add-word" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/65 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl animate-fade-in space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-folder-plus text-blue-600"></i> 나만의 단어장에 추가
+        </h3>
+        <button onclick="closeModal('modal-add-word')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form onsubmit="handleAddCustomWord(event)" class="space-y-3">
+        <div class="grid grid-cols-3 gap-2">
+          <input type="text" id="add-word-en" required placeholder="영단어 (예: achieve)" class="col-span-2 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <select id="add-word-pos" class="px-2.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+            <option value="v.">v. 동사</option>
+            <option value="n.">n. 명사</option>
+            <option value="adj.">adj. 형용사</option>
+            <option value="adv.">adv. 부사</option>
+            <option value="phr.">phr. 숙어</option>
+          </select>
+        </div>
+        <input type="text" id="add-word-ko" required placeholder="한글 뜻 (예: 성취하다, 달성하다)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="text" id="add-word-kopron" placeholder="한글 발음 표기 (예: 어치브)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="text" id="add-word-ex" placeholder="영어 예문 (선택)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="text" id="add-word-exko" placeholder="예문 해석 (선택)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="text" id="add-word-tip" placeholder="유의어 또는 암기 팁 (선택)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button type="submit" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-sm transition">
+          단어 저장하기
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 설정 및 백업 모달 -->
+  <div id="modal-settings" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/65 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl animate-fade-in space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-blue-600"></i> 학습 환경 및 데이터 관리
+        </h3>
+        <button onclick="closeModal('modal-settings')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 space-y-3">
+        <p class="text-xs font-bold text-slate-500 dark:text-slate-400">발음 및 표기 설정</p>
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-bold">한글 발음 표기 (예: 애드밴티지)</span>
+          <button id="modal-kopron-toggle" onclick="toggleKoPron(); syncSettingsModal();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-indigo-600 text-white">ON</button>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-bold">원어민 억양</span>
+          <div class="flex gap-1.5">
+            <button id="modal-us" onclick="setAccent('en-US'); syncSettingsModal();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-blue-600 text-white">미국 (US)</button>
+            <button id="modal-uk" onclick="setAccent('en-GB'); syncSettingsModal();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">영국 (UK)</button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-bold">발음 재생 속도</span>
+          <button id="modal-rate" onclick="toggleRate(); syncSettingsModal();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">1.0x</button>
+        </div>
+      </div>
+
+      <div class="space-y-2.5">
+        <button onclick="exportData()" class="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between transition">
+          <span><i class="fa-solid fa-download text-blue-600 mr-2"></i>학습 진도 백업 다운로드 (JSON)</span>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+        </button>
+        <label class="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between transition cursor-pointer">
+          <span><i class="fa-solid fa-upload text-emerald-600 mr-2"></i>백업 파일 불러오기</span>
+          <input type="file" accept=".json" onchange="importData(event)" class="hidden">
+          <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+        </label>
+        <button onclick="requestResetAll()" class="w-full py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-sm font-bold text-rose-600 dark:text-rose-400 flex items-center justify-between transition">
+          <span><i class="fa-solid fa-trash-can mr-2"></i>전체 학습 기록 초기화</span>
+          <i class="fa-solid fa-chevron-right text-xs"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 커스텀 확인창 (alert/confirm 대체) -->
+  <div id="modal-confirm" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/65 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl animate-fade-in">
+      <h4 id="confirm-title" class="text-base font-black text-slate-900 dark:text-white mb-2">확인</h4>
+      <p id="confirm-msg" class="text-sm text-slate-600 dark:text-slate-300 mb-5 leading-relaxed"></p>
+      <div class="flex justify-end gap-2">
+        <button id="confirm-cancel" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">취소</button>
+        <button id="confirm-ok" class="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. 예비 고1 완벽 대비 120단어 데이터베이스 (Day 1~3 중등 60 + Day 4~6 고등 60)
+          모든 단어에 직관적인 한글 발음(koPron) 및 유의어·반의어·파생어·암기팁 포함
+       ========================================================================== */
+    const SETS_META = [
+      { id: 'day_1', day: 1, level: 'middle', title: 'Day 01 · 중등 필수 완성 ①', desc: '고교 독해의 기초가 되는 핵심 동사·명사 20선', badge: '중등 필수', color: 'blue' },
+      { id: 'day_2', day: 2, level: 'middle', title: 'Day 02 · 중등 필수 완성 ②', desc: '내신 서술형·어법 단골 형용사·동사 20선', badge: '중등 필수', color: 'indigo' },
+      { id: 'day_3', day: 3, level: 'middle', title: 'Day 03 · 중등 필수 완성 ③', desc: '중등→고등 연결 고리 및 다의어 총정리 20선', badge: '중등 필수', color: 'violet' },
+      { id: 'day_4', day: 4, level: 'high', title: 'Day 04 · 고등 기초·핵심 ①', desc: '고1 3월 학평 1등급 필수 동사·형용사 20선', badge: '고등 핵심', color: 'emerald' },
+      { id: 'day_5', day: 5, level: 'high', title: 'Day 05 · 고등 기초·핵심 ②', desc: '모의고사 비문학·인문 지문 빈출 어휘 20선', badge: '고등 핵심', color: 'teal' },
+      { id: 'day_6', day: 6, level: 'high', title: 'Day 06 · 고등 기초·핵심 ③', desc: '고난도 빈칸추론·논리 전개 핵심 어휘 20선', badge: '고등 핵심', color: 'rose' }
+    ];
+
+    const INITIAL_WORDS = [
+      // ==================== DAY 1: 중등 필수 완성 ① (20단어) ====================
+      { id: 'd1_01', level: 'middle', day: 1, word: 'achieve', phonetic: '[əˈtʃiːv]', koPron: '어치브', pos: 'v.', meaning: '성취하다, 달성하다', subMeanings: ['(노력 끝에) 이루다', '획득하다'], example: 'You can achieve any goal if you stay consistent.', exampleKo: '꾸준함을 유지한다면 어떤 목표든 성취할 수 있다.', synonyms: ['accomplish', 'attain', 'fulfill'], antonyms: ['fail', 'abandon'], derivatives: 'achievement (n) 성취, 업적 / achievable (adj) 달성 가능한', tip: 'a(방향) + chieve(머리/끝) → 끝까지 도달하여 성취하다!' },
+      { id: 'd1_02', level: 'middle', day: 1, word: 'advantage', phonetic: '[ədˈvæntɪdʒ]', koPron: '애드밴티지', pos: 'n.', meaning: '이점, 유리한 점', subMeanings: ['우세', '혜택'], example: 'Being bilingual is a huge advantage in the global job market.', exampleKo: '2개 국어를 구사하는 것은 세계 취업 시장에서 큰 이점이다.', synonyms: ['benefit', 'merit', 'asset'], antonyms: ['disadvantage', 'drawback'], derivatives: 'advantageous (adj) 유리한, 이로운', tip: 'take advantage of (~을 이용하다/활용하다) 숙어와 함께 외우세요.' },
+      { id: 'd1_03', level: 'middle', day: 1, word: 'affect', phonetic: '[əˈfekt]', koPron: '어펙트', pos: 'v.', meaning: '~에 영향을 미치다', subMeanings: ['감동시키다', '~인 체하다'], example: 'Lack of sleep directly affects your concentration in class.', exampleKo: '수면 부족은 수업 시간 집중력에 직접적인 영향을 미친다.', synonyms: ['influence', 'impact'], antonyms: [], derivatives: 'affection (n) 애정 / affected (adj) 영향을 받은', tip: 'affect(동사: 영향을 미치다) vs effect(명사: 효과/결과) 구분은 고1 내신 단골!' },
+      { id: 'd1_04', level: 'middle', day: 1, word: 'afford', phonetic: '[əˈfɔːrd]', koPron: '어포드', pos: 'v.', meaning: '~할 여유가 되다', subMeanings: ['(시간·비용을) 감당하다', '제공하다'], example: 'High school students cannot afford to waste time on smartphones.', exampleKo: '고등학생들은 스마트폰에 시간을 낭비할 여유가 없다.', synonyms: ['manage', 'bear'], antonyms: [], derivatives: 'affordable (adj) (가격이) 알맞은, 감당할 수 있는', tip: '주로 can/cannot + afford + to부정사 형태로 자주 출제됩니다.' },
+      { id: 'd1_05', level: 'middle', day: 1, word: 'appreciate', phonetic: '[əˈpriːʃieɪt]', koPron: '어프리시에이트', pos: 'v.', meaning: '감사하다, 진가를 인정하다', subMeanings: ['(예술 작품을) 감상하다', '제대로 이해하다'], example: 'I truly appreciate your thoughtful advice and support.', exampleKo: '당신의 사려 깊은 조언과 지지에 진심으로 감사드립니다.', synonyms: ['value', 'recognize', 'cherish'], antonyms: ['underestimate', 'neglect'], derivatives: 'appreciation (n) 감사, 감상 / appreciative (adj) 감사하는', tip: 'thank는 사람을 목적어로 취하지만, appreciate는 사물/상황을 목적어로 취합니다!' },
+      { id: 'd1_06', level: 'middle', day: 1, word: 'approach', phonetic: '[əˈproʊtʃ]', koPron: '어프로치', pos: 'v./n.', meaning: '접근하다 / 접근법', subMeanings: ['다가오다', '처리하다'], example: 'We need a completely new approach to solve this problem.', exampleKo: '우리는 이 문제를 해결하기 위해 완전히 새로운 접근법이 필요하다.', synonyms: ['method', 'access', 'near'], antonyms: ['retreat', 'withdraw'], derivatives: 'approachable (adj) 접근하기 쉬운, 친근한', tip: '타동사이므로 뒤에 전치사 to를 쓰지 않고 바로 목적어를 씁니다 (approach the station).' },
+      { id: 'd1_07', level: 'middle', day: 1, word: 'attitude', phonetic: '[ˈætɪtuːd]', koPron: '애티튜드', pos: 'n.', meaning: '태도, 마음가짐', subMeanings: ['사고방식', '자세'], example: 'A positive attitude turns obstacles into opportunities.', exampleKo: '긍정적인 태도는 장애물을 기회로 바꾼다.', synonyms: ['mindset', 'outlook', 'stance'], antonyms: [], derivatives: 'attitudinal (adj) 태도에 관한', tip: '철자 혼동 주의: attitude(태도) vs altitude(고도, 높이) vs aptitude(적성).' },
+      { id: 'd1_08', level: 'middle', day: 1, word: 'available', phonetic: '[əˈveɪləbl]', koPron: '어베일러블', pos: 'adj.', meaning: '이용 가능한, 구할 수 있는', subMeanings: ['(사람이) 시간이 있는'], example: 'This study guide is available for free on our website.', exampleKo: '이 학습 가이드는 우리 웹사이트에서 무료로 이용 가능하다.', synonyms: ['accessible', 'obtainable', 'handy'], antonyms: ['unavailable', 'occupied'], derivatives: 'availability (n) 이용 가능성, 유효성', tip: 'avail(도움이 되다) + able(할 수 있는) → 언제든 써먹을 수 있는!' },
+      { id: 'd1_09', level: 'middle', day: 1, word: 'behavior', phonetic: '[bɪˈheɪvjər]', koPron: '비헤이비어', pos: 'n.', meaning: '행동, 태도', subMeanings: ['행실', '(과학) 반응·작용'], example: 'Scientists observed the social behavior of wild dolphins.', exampleKo: '과학자들은 야생 돌고래의 사회적 행동을 관찰했다.', synonyms: ['conduct', 'manner', 'action'], antonyms: ['misconduct'], derivatives: 'behave (v) 행동하다 / behavioral (adj) 행동의', tip: '영국식 철자는 behaviour로 u가 하나 더 들어갑니다.' },
+      { id: 'd1_10', level: 'middle', day: 1, word: 'benefit', phonetic: '[ˈbenɪfɪt]', koPron: '베너핏', pos: 'n./v.', meaning: '이익, 혜택 / 이롭다', subMeanings: ['수당', '이득을 얻다'], example: 'Reading books daily brings countless benefits to your brain.', exampleKo: '매일 책을 읽는 것은 뇌에 셀 수 없는 혜택을 가져다준다.', synonyms: ['profit', 'advantage', 'gain'], antonyms: ['harm', 'loss'], derivatives: 'beneficial (adj) 유익한, 이로운', tip: '어근 bene-는 "좋은(good)"이라는 뜻! (beneficial 유익한, benevolent 자애로운)' },
+      { id: 'd1_11', level: 'middle', day: 1, word: 'challenge', phonetic: '[ˈtʃælɪndʒ]', koPron: '챌린지', pos: 'n./v.', meaning: '도전, 난제 / 이의를 제기하다', subMeanings: ['과제', '도전하다'], example: 'Entering high school is an exciting new challenge for you.', exampleKo: '고등학교에 입학하는 것은 여러분에게 흥미진진한 새로운 도전이다.', synonyms: ['difficulty', 'task', 'question'], antonyms: ['acceptance'], derivatives: 'challenging (adj) 도전적인, 힘든', tip: 'challenging은 단순히 "어려운"이 아니라 "해볼 만한 가치가 있게 힘든" 뉘앙스!' },
+      { id: 'd1_12', level: 'middle', day: 1, word: 'communicate', phonetic: '[kəˈmjuːnɪkeɪt]', koPron: '커뮤니케이트', pos: 'v.', meaning: '의사소통하다, 전달하다', subMeanings: ['교감하다', '(질병을) 전염시키다'], example: 'Effective leaders know how to communicate their vision clearly.', exampleKo: '유능한 리더들은 자신의 비전을 명확히 전달하는 법을 안다.', synonyms: ['convey', 'interact', 'express'], antonyms: ['withhold', 'suppress'], derivatives: 'communication (n) 의사소통 / communicative (adj) 말하기 좋아하는', tip: '어근 commun(공통의) → 생각을 공통으로 나누다 = 의사소통하다.' },
+      { id: 'd1_13', level: 'middle', day: 1, word: 'compare', phonetic: '[kəmˈper]', koPron: '컴페어', pos: 'v.', meaning: '비교하다, 비유하다', subMeanings: ['견주다'], example: 'Do not compare your progress with that of others.', exampleKo: '자신의 발전을 다른 사람의 것과 비교하지 마라.', synonyms: ['contrast', 'liken'], antonyms: [], derivatives: 'comparison (n) 비교 / comparative (adj) 비교의, 상대적인', tip: 'compare A with B (A와 B를 비교하다), compare A to B (A를 B에 비유하다).' },
+      { id: 'd1_14', level: 'middle', day: 1, word: 'concentrate', phonetic: '[ˈkɑːnsntreɪt]', koPron: '컨센트레이트', pos: 'v.', meaning: '집중하다, 농축하다', subMeanings: ['한곳에 모으다'], example: 'Turn off notifications so you can concentrate on your studies.', exampleKo: '공부에 집중할 수 있도록 알림을 꺼라.', synonyms: ['focus', 'absorb'], antonyms: ['distract', 'scatter'], derivatives: 'concentration (n) 집중력, 농도', tip: 'con(함께) + centr(중심) + ate → 중심에 한데 모으다 = 집중하다!' },
+      { id: 'd1_15', level: 'middle', day: 1, word: 'confident', phonetic: '[ˈkɑːnfɪdənt]', koPron: '컨피던트', pos: 'adj.', meaning: '자신감 있는, 확신하는', subMeanings: ['당당한'], example: 'She felt confident about passing the final exam.', exampleKo: '그녀는 기말고사 합격에 대해 자신감이 있었다.', synonyms: ['assured', 'certain', 'self-reliant'], antonyms: ['anxious', 'doubtful'], derivatives: 'confidence (n) 자신감, 신뢰 / confidential (adj) 기밀의', tip: '혼동 주의: confident(자신감 있는) vs confidential(비밀의, 기밀의)!' },
+      { id: 'd1_16', level: 'middle', day: 1, word: 'consume', phonetic: '[kənˈsuːm]', koPron: '컨슘', pos: 'v.', meaning: '소비하다, 섭취하다', subMeanings: ['(시간·에너지를) 소모하다', '다 써버리다'], example: 'Modern electric vehicles consume much less energy.', exampleKo: '현대 전기 자동차는 에너지를 훨씬 덜 소비한다.', synonyms: ['use up', 'expend', 'devour'], antonyms: ['conserve', 'save'], derivatives: 'consumer (n) 소비자 / consumption (n) 소비, 섭취', tip: '명사형 spelling 주의! consume → consumption (p가 들어갑니다).' },
+      { id: 'd1_17', level: 'middle', day: 1, word: 'contribute', phonetic: '[kənˈtrɪbjuːt]', koPron: '컨트리뷰트', pos: 'v.', meaning: '기여하다, 공헌하다', subMeanings: ['기부하다', '원인이 되다'], example: 'Every team member contributed to the success of the project.', exampleKo: '모든 팀원이 프로젝트의 성공에 기여했다.', synonyms: ['donate', 'supply', 'lead to'], antonyms: ['hinder', 'detract'], derivatives: 'contribution (n) 기여, 기부 / contributor (n) 기여자', tip: 'contribute to + 명사/동명사 (~에 기여하다, ~의 원인이 되다)에서 to는 전치사!' },
+      { id: 'd1_18', level: 'middle', day: 1, word: 'create', phonetic: '[kriˈeɪt]', koPron: '크리에이트', pos: 'v.', meaning: '창조하다, 만들어 내다', subMeanings: ['(감정·인상을) 불러일으키다'], example: 'Artists use colors and shapes to create new worlds.', exampleKo: '예술가들은 새로운 세계를 창조하기 위해 색과 형태를 사용한다.', synonyms: ['invent', 'generate', 'produce'], antonyms: ['destroy', 'ruin'], derivatives: 'creative (adj) 창의적인 / creativity (n) 창의력 / creature (n) 생명체', tip: '파생어 3총사: creative(창의적인), creativity(창의성), creature(생물) 모두 필수!' },
+      { id: 'd1_19', level: 'middle', day: 1, word: 'curious', phonetic: '[ˈkjʊriəs]', koPron: '큐리어스', pos: 'adj.', meaning: '호기심이 많은, 궁금한', subMeanings: ['기이한, 별난'], example: 'Curious minds always ask questions about how things work.', exampleKo: '호기심이 많은 사람들은 사물이 어떻게 작동하는지 항상 질문한다.', synonyms: ['inquisitive', 'interested', 'peculiar'], antonyms: ['indifferent', 'uninterested'], derivatives: 'curiosity (n) 호기심 / curiously (adv) 호기심 있게', tip: 'be curious about (~에 대해 궁금해하다) 형태로 독해에 매우 자주 나옵니다.' },
+      { id: 'd1_20', level: 'middle', day: 1, word: 'decrease', phonetic: '[dɪˈkriːs]', koPron: '디크리스', pos: 'v./n.', meaning: '감소하다, 줄이다 / 감소', subMeanings: ['하락하다'], example: 'The use of disposable plastic bags has decreased sharply.', exampleKo: '일회용 비닐봉지의 사용량이 급격히 감소했다.', synonyms: ['reduce', 'decline', 'diminish'], antonyms: ['increase', 'expand'], derivatives: 'decreasing (adj) 감소하는', tip: 'de(아래로) + crease(자라다) → 아래로 줄어들다! 반대는 in(안으로) + crease.' },
+
+      // ==================== DAY 2: 중등 필수 완성 ② (20단어) ====================
+      { id: 'd2_01', level: 'middle', day: 2, word: 'describe', phonetic: '[dɪˈskraɪb]', koPron: '디스크라이브', pos: 'v.', meaning: '묘사하다, 설명하다', subMeanings: ['특징을 말하다'], example: 'Words cannot fully describe the beauty of the sunrise.', exampleKo: '말로는 그 일출의 아름다움을 온전히 묘사할 수 없다.', synonyms: ['depict', 'portray', 'explain'], antonyms: ['conceal', 'hide'], derivatives: 'description (n) 묘사, 설명 / descriptive (adj) 묘사적인', tip: 'de(아래에) + scribe(쓰다) → 글로 상세히 적어 내려가다 = 묘사하다!' },
+      { id: 'd2_02', level: 'middle', day: 2, word: 'determine', phonetic: '[dɪˈtɜːrmɪn]', koPron: '디터민', pos: 'v.', meaning: '결정하다, 결심하다', subMeanings: ['알아내다, 밝히다'], example: 'Your daily habits determine your future success.', exampleKo: '당신의 매일의 습관이 당신의 미래 성공을 결정한다.', synonyms: ['decide', 'resolve', 'establish'], antonyms: ['hesitate', 'waver'], derivatives: 'determination (n) 결심, 투지 / determined (adj) 단호한', tip: 'be determined to V (~하기로 굳게 결심하다)는 고1 내신 서술형 빈출 표현!' },
+      { id: 'd2_03', level: 'middle', day: 2, word: 'develop', phonetic: '[dɪˈveləp]', koPron: '디벨롭', pos: 'v.', meaning: '발달하다, 개발하다', subMeanings: ['(병·습관이) 생기다', '(필름을) 현상하다'], example: 'Reading diverse genres helps develop critical thinking skills.', exampleKo: '다양한 장르를 읽는 것은 비판적 사고력을 발달시키는 데 도움이 된다.', synonyms: ['grow', 'advance', 'evolve'], antonyms: ['decline', 'regress'], derivatives: 'development (n) 발달, 개발 / developing (adj) 개발도상국의', tip: 'developing country(개발도상국) vs developed country(선진국) 분사 구분 필수!' },
+      { id: 'd2_04', level: 'middle', day: 2, word: 'disappear', phonetic: '[ˌdɪsəˈpɪr]', koPron: '디서피어', pos: 'v.', meaning: '사라지다, 없어지다', subMeanings: ['멸종하다'], example: 'Many endangered species may disappear within a few decades.', exampleKo: '많은 멸종 위기종들이 수십 년 내에 사라질지도 모른다.', synonyms: ['vanish', 'fade'], antonyms: ['appear', 'emerge'], derivatives: 'disappearance (n) 실종, 소멸', tip: '자동사이므로 수동태(be disappeared)로 절대 쓰지 않습니다! 어법 시험 단골!' },
+      { id: 'd2_05', level: 'middle', day: 2, word: 'discover', phonetic: '[dɪˈskʌvər]', koPron: '디스커버', pos: 'v.', meaning: '발견하다, 알아내다', subMeanings: ['깨닫다'], example: 'Alexander Fleming discovered penicillin by accident in 1928.', exampleKo: '알렉산더 플레밍은 1928년 우연히 페니실린을 발견했다.', synonyms: ['find', 'uncover', 'detect'], antonyms: ['hide', 'overlook'], derivatives: 'discovery (n) 발견', tip: 'dis(반대/벗기다) + cover(덮개) → 덮개를 벗겨내어 발견하다!' },
+      { id: 'd2_06', level: 'middle', day: 2, word: 'effective', phonetic: '[ɪˈfektɪv]', koPron: '이펙티브', pos: 'adj.', meaning: '효과적인, 유효한', subMeanings: ['실질적인'], example: 'Summarizing what you learned is a very effective study method.', exampleKo: '배운 내용을 요약하는 것은 매우 효과적인 공부법이다.', synonyms: ['efficient', 'productive', 'useful'], antonyms: ['ineffective', 'useless'], derivatives: 'effect (n) 효과, 결과 / effectively (adv) 효과적으로', tip: 'effective(효과적인: 결과를 내는) vs efficient(효율적인: 시간·비용을 아끼는).' },
+      { id: 'd2_07', level: 'middle', day: 2, word: 'encourage', phonetic: '[ɪnˈkɜːrɪdʒ]', koPron: '인커리지', pos: 'v.', meaning: '격려하다, 장려하다', subMeanings: ['용기를 북돋우다', '촉진하다'], example: 'Good teachers encourage students to think for themselves.', exampleKo: '훌륭한 선생님들은 학생들이 스스로 생각하도록 격려한다.', synonyms: ['inspire', 'motivate', 'promote'], antonyms: ['discourage', 'prevent'], derivatives: 'encouragement (n) 격려 / encouraging (adj) 고무적인', tip: 'en(만들다) + courage(용기) → 용기를 불어넣어 주다! (encourage O to V)' },
+      { id: 'd2_08', level: 'middle', day: 2, word: 'environment', phonetic: '[ɪnˈvaɪrənmənt]', koPron: '인바이런먼트', pos: 'n.', meaning: '환경, 주변 상황', subMeanings: ['자연환경'], example: 'A quiet study environment helps improve memory retention.', exampleKo: '조용한 학습 환경은 기억력 유지를 향상시키는 데 도움이 된다.', synonyms: ['surroundings', 'setting', 'habitat'], antonyms: [], derivatives: 'environmental (adj) 환경의 / environmentalist (n) 환경운동가', tip: '철자 주의: 중간에 n이 들어갑니다 (envi-ron-ment).' },
+      { id: 'd2_09', level: 'middle', day: 2, word: 'especially', phonetic: '[ɪˈspeʃəli]', koPron: '이스페셜리', pos: 'adv.', meaning: '특히, 특별히', subMeanings: ['유달리'], example: 'English vocabulary is important, especially for high school exams.', exampleKo: '영어 어휘는 특히 고등학교 시험에서 중요하다.', synonyms: ['particularly', 'notably', 'chiefly'], antonyms: ['generally'], derivatives: 'especial (adj) 특별한', tip: '독해 지문에서 especially 뒤에는 필자가 강조하는 핵심 예시가 나옵니다!' },
+      { id: 'd2_10', level: 'middle', day: 2, word: 'evidence', phonetic: '[ˈevɪdəns]', koPron: '에비던스', pos: 'n.', meaning: '증거, 흔적', subMeanings: ['증언'], example: 'Scientists found strong evidence of water on Mars.', exampleKo: '과학자들은 화성에 물이 있었다는 강력한 증거를 발견했다.', synonyms: ['proof', 'clue', 'indication'], antonyms: [], derivatives: 'evident (adj) 분명한, 명백한 / evidently (adv) 분명히', tip: '불가산 명사이므로 앞에 부정관사 a/an을 붙이지 않습니다 (clear evidence).' },
+      { id: 'd2_11', level: 'middle', day: 2, word: 'familiar', phonetic: '[fəˈmɪliər]', koPron: '퍼밀리어', pos: 'adj.', meaning: '익숙한, 친숙한', subMeanings: ['잘 알고 있는'], example: 'Make yourself familiar with the test format before exam day.', exampleKo: '시험 날 전에 시험 형식에 익숙해지도록 해라.', synonyms: ['accustomed', 'acquainted', 'common'], antonyms: ['unfamiliar', 'strange'], derivatives: 'familiarity (n) 친숙함 / familiarize (v) 익숙하게 하다', tip: '주어가 사람이면 be familiar with(사물), 사물이면 be familiar to(사람)!' },
+      { id: 'd2_12', level: 'middle', day: 2, word: 'frequent', phonetic: '[ˈfriːkwənt]', koPron: '프리퀀트', pos: 'adj.', meaning: '빈번한, 잦은', subMeanings: ['자주 일어나는'], example: 'Frequent review is the secret to long-term memory.', exampleKo: '빈번한 복습이 장기 기억의 비결이다.', synonyms: ['common', 'repeated', 'regular'], antonyms: ['rare', 'infrequent'], derivatives: 'frequently (adv) 자주 / frequency (n) 빈도, 주파수', tip: 'frequency(빈도)는 과학·통계 지문에서도 매우 자주 쓰이는 명사입니다.' },
+      { id: 'd2_13', level: 'middle', day: 2, word: 'generation', phonetic: '[ˌdʒenəˈreɪʃn]', koPron: '제너레이션', pos: 'n.', meaning: '세대, 발생', subMeanings: ['(전기 등의) 생산'], example: 'Bridging the gap between generations requires open dialogue.', exampleKo: '세대 간의 격차를 줄이려면 열린 대화가 필요하다.', synonyms: ['age group', 'era', 'creation'], antonyms: [], derivatives: 'generate (v) 발생시키다, 만들어 내다 / generator (n) 발전기', tip: '어근 gen(낳다/생산하다) → 같은 시대에 태어난 사람들 = 세대(generation).' },
+      { id: 'd2_14', level: 'middle', day: 2, word: 'ignore', phonetic: '[ɪɡˈnɔːr]', koPron: '이그노어', pos: 'v.', meaning: '무시하다, 모른 체하다', subMeanings: ['묵살하다'], example: 'Never ignore small mistakes when reviewing your mock exams.', exampleKo: '모의고사를 복습할 때 작은 실수들을 결코 무시하지 마라.', synonyms: ['neglect', 'overlook', 'disregard'], antonyms: ['notice', 'heed', 'attend'], derivatives: 'ignorance (n) 무지 / ignorant (adj) 무지한, 모르는', tip: '형용사 ignorant는 "무시하는"이 아니라 "무지한, 잘 모르는"이라는 뜻이니 주의!' },
+      { id: 'd2_15', level: 'middle', day: 2, word: 'improve', phonetic: '[ɪmˈpruːv]', koPron: '임프루브', pos: 'v.', meaning: '향상시키다, 개선되다', subMeanings: ['나아지다'], example: 'Consistent practice will dramatically improve your reading speed.', exampleKo: '꾸준한 연습은 당신의 독해 속도를 극적으로 향상시킬 것이다.', synonyms: ['enhance', 'advance', 'upgrade'], antonyms: ['worsen', 'deteriorate'], derivatives: 'improvement (n) 향상, 개선', tip: '글의 목적/주제 찾기에서 "향상시키는 방법"을 설명할 때 핵심 키워드입니다.' },
+      { id: 'd2_16', level: 'middle', day: 2, word: 'include', phonetic: '[ɪnˈkluːd]', koPron: '인클루드', pos: 'v.', meaning: '포함하다', subMeanings: ['함유하다'], example: 'The exam will include chapters one through five.', exampleKo: '이번 시험은 1장부터 5장까지를 포함할 것이다.', synonyms: ['contain', 'comprise', 'involve'], antonyms: ['exclude', 'omit'], derivatives: 'inclusion (n) 포함 / inclusive (adj) 포함하는, 포괄적인', tip: 'in(안으로) + clude(닫다) → 안에 넣고 닫다 = 포함하다! 반대는 ex(밖으로) + clude.' },
+      { id: 'd2_17', level: 'middle', day: 2, word: 'independent', phonetic: '[ˌɪndɪˈpendənt]', koPron: '인디펜던트', pos: 'adj.', meaning: '독립적인, 자립심이 강한', subMeanings: ['별개의, 무관한'], example: 'High school requires more independent self-directed learning.', exampleKo: '고등학교에서는 더 독립적인 자기주도 학습이 요구된다.', synonyms: ['autonomous', 'self-reliant', 'free'], antonyms: ['dependent', 'reliant'], derivatives: 'independence (n) 독립, 자립 / independently (adv) 독립적으로', tip: 'depend(의존하다)에 부정 접두사 in-이 붙어 "의존하지 않는 = 독립적인"!' },
+      { id: 'd2_18', level: 'middle', day: 2, word: 'individual', phonetic: '[ˌɪndɪˈvɪdʒuəl]', koPron: '인디비주얼', pos: 'n./adj.', meaning: '개인 / 개별의, 독특한', subMeanings: ['개체'], example: 'Every individual has a unique learning style.', exampleKo: '모든 개인은 고유한 학습 스타일을 가지고 있다.', synonyms: ['person', 'single', 'distinct'], antonyms: ['collective', 'group'], derivatives: 'individually (adv) 개별적으로 / individuality (n) 개성', tip: 'in(아닌) + divid(나누다) → 더 이상 나눌 수 없는 최소 단위 = 개인!' },
+      { id: 'd2_19', level: 'middle', day: 2, word: 'influence', phonetic: '[ˈɪnfluəns]', koPron: '인플루언스', pos: 'n./v.', meaning: '영향 / 영향을 미치다', subMeanings: ['영향력'], example: 'Peer groups have a powerful influence on teenagers.', exampleKo: '또래 집단은 십 대들에게 강력한 영향을 미친다.', synonyms: ['impact', 'effect', 'affect'], antonyms: [], derivatives: 'influential (adj) 영향력 있는', tip: 'in(안으로) + flu(흐르다) → 마음속으로 흘러 들어가 영향을 주다!' },
+      { id: 'd2_20', level: 'middle', day: 2, word: 'instance', phonetic: '[ˈɪnstəns]', koPron: '인스턴스', pos: 'n.', meaning: '사례, 경우', subMeanings: ['실례'], example: 'For instance, learning roots helps you guess unfamiliar words.', exampleKo: '예를 들어, 어근을 배우는 것은 낯선 단어를 추측하는 데 도움이 된다.', synonyms: ['example', 'case', 'illustration'], antonyms: [], derivatives: 'instant (adj) 즉각적인 / instantly (adv) 즉시', tip: 'for instance = for example (예를 들어). 고교 독해 연결어 문제 필수!' },
+
+      // ==================== DAY 3: 중등 필수 완성 ③ (20단어) ====================
+      { id: 'd3_01', level: 'middle', day: 3, word: 'involve', phonetic: '[ɪnˈvɑːlv]', koPron: '인볼브', pos: 'v.', meaning: '포함하다, 수반하다', subMeanings: ['관련시키다', '참여시키다'], example: 'Success involves hard work, patience, and smart planning.', exampleKo: '성공은 노력, 인내, 그리고 현명한 계획을 수반한다.', synonyms: ['include', 'entail', 'engage'], antonyms: ['exclude'], derivatives: 'involvement (n) 관여, 참여 / involved (adj) 관련된', tip: 'be involved in (~에 관여하다/참여하다) 숙어로 독해에 매우 자주 나옵니다.' },
+      { id: 'd3_02', level: 'middle', day: 3, word: 'issue', phonetic: '[ˈɪʃuː]', koPron: '이슈', pos: 'n./v.', meaning: '주제, 쟁점 / 발행하다', subMeanings: ['문제점', '(잡지의) 호', '발표하다'], example: 'Climate change is one of the most urgent global issues.', exampleKo: '기후 변화는 가장 시급한 전 세계적 쟁점 중 하나이다.', synonyms: ['topic', 'matter', 'publish'], antonyms: [], derivatives: [], tip: '다의어 주의! 명사로 "쟁점/문제", 동사로 "(여권·잡지·명령을) 발행/발급하다".' },
+      { id: 'd3_03', level: 'middle', day: 3, word: 'local', phonetic: '[ˈloʊkl]', koPron: '로컬', pos: 'adj.', meaning: '지역의, 현지의', subMeanings: ['국부적인'], example: 'We visited a local library to research historical documents.', exampleKo: '우리는 역사 문서를 조사하기 위해 지역 도서관을 방문했다.', synonyms: ['regional', 'community', 'native'], antonyms: ['global', 'national'], derivatives: 'locally (adv) 지역적으로 / locate (v) 위치를 찾아내다', tip: 'global(전 세계의)과 정반대 개념으로 대조 지문에 자주 함께 등장합니다.' },
+      { id: 'd3_04', level: 'middle', day: 3, word: 'maintain', phonetic: '[meɪnˈteɪn]', koPron: '메인테인', pos: 'v.', meaning: '유지하다, 지속하다', subMeanings: ['주장하다', '보수·관리하다'], example: 'It is important to maintain a balance between study and rest.', exampleKo: '공부와 휴식 사이의 균형을 유지하는 것이 중요하다.', synonyms: ['preserve', 'sustain', 'keep'], antonyms: ['abandon', 'neglect'], derivatives: 'maintenance (n) 유지, 보수', tip: 'main(손) + tain(잡다) → 손으로 계속 붙잡고 유지하다! 주장하다는 뜻도 필수!' },
+      { id: 'd3_05', level: 'middle', day: 3, word: 'material', phonetic: '[məˈtɪriəl]', koPron: '머티리얼', pos: 'n./adj.', meaning: '재료, 자료 / 물질의', subMeanings: ['직물, 천', '중요한'], example: 'The teacher prepared extra reading material for the class.', exampleKo: '선생님은 수업을 위해 추가 읽기 자료를 준비하셨다.', synonyms: ['substance', 'matter', 'resource'], antonyms: ['spiritual'], derivatives: 'materialize (v) 실현되다 / materialism (n) 물질주의', tip: '독해에서 reading material(읽기 자료), raw material(원자재)로 자주 쓰입니다.' },
+      { id: 'd3_06', level: 'middle', day: 3, word: 'mention', phonetic: '[ˈmenʃn]', koPron: '멘션', pos: 'v./n.', meaning: '언급하다 / 언급', subMeanings: ['말하다'], example: 'The article did not mention the exact cause of the accident.', exampleKo: '그 기사는 사고의 정확한 원인을 언급하지 않았다.', synonyms: ['refer to', 'state', 'cite'], antonyms: ['omit', 'ignore'], derivatives: [], tip: '내용 일치/불일치 문제에서 "지문에 언급되지 않은 것(not mentioned)"으로 단골 출제!' },
+      { id: 'd3_07', level: 'middle', day: 3, word: 'object', phonetic: '[ˈɑːbdʒɪkt]', koPron: '옵젝트', pos: 'n./v.', meaning: '물체, 목표 / 반대하다', subMeanings: ['대상', '목적어'], example: 'Many local residents objected to building a factory nearby.', exampleKo: '많은 지역 주민들이 근처에 공장을 짓는 것에 반대했다.', synonyms: ['item', 'goal', 'oppose'], antonyms: ['agree', 'approve'], derivatives: 'objection (n) 반대 / objective (adj) 객관적인 (n) 목표', tip: '명사 objective는 "목표", 형용사 objective는 "객관적인(↔ subjective 주관적인)"!' },
+      { id: 'd3_08', level: 'middle', day: 3, word: 'observe', phonetic: '[əbˈzɜːrv]', koPron: '옵저브', pos: 'v.', meaning: '관찰하다, 준수하다', subMeanings: ['목격하다', '말하다'], example: 'All citizens must observe traffic laws for safety.', exampleKo: '모든 시민은 안전을 위해 교통법규를 준수해야 한다.', synonyms: ['watch', 'notice', 'obey'], antonyms: ['violate', 'ignore'], derivatives: 'observation (n) 관찰 / observance (n) (법규 등의) 준수', tip: '다의어 핵심! "관찰하다(observation)"와 "(법·규칙을) 지키다/준수하다(observance)".' },
+      { id: 'd3_09', level: 'middle', day: 3, word: 'occur', phonetic: '[əˈkɜːr]', koPron: '어커', pos: 'v.', meaning: '일어나다, 발생하다', subMeanings: ['(생각이) 떠오르다'], example: 'Earthquakes frequently occur along tectonic plate boundaries.', exampleKo: '지진은 지각판 경계를 따라 빈번하게 발생한다.', synonyms: ['happen', 'take place', 'arise'], antonyms: [], derivatives: 'occurrence (n) 발생, 사건', tip: '자동사이므로 수동태 불가! "It occurred to me that~(내게 ~라는 생각이 떠올랐다)" 구문 주의.' },
+      { id: 'd3_10', level: 'middle', day: 3, word: 'opportunity', phonetic: '[ˌɑːpərˈtuːnəti]', koPron: '오퍼튜니티', pos: 'n.', meaning: '기회', subMeanings: ['호기'], example: 'Winter break is a great opportunity to master English vocabulary.', exampleKo: '겨울방학은 영어 어휘를 정복할 수 있는 훌륭한 기회이다.', synonyms: ['chance', 'occasion', 'opening'], antonyms: [], derivatives: 'opportune (adj) 시기적절한', tip: 'seize an opportunity(기회를 잡다), miss an opportunity(기회를 놓치다).' },
+      { id: 'd3_11', level: 'middle', day: 3, word: 'organize', phonetic: '[ˈɔːrɡənaɪz]', koPron: '오거나이즈', pos: 'v.', meaning: '조직하다, 정리하다', subMeanings: ['체계화하다', '개최하다'], example: 'Organize your notes by topic so you can review easily.', exampleKo: '쉽게 복습할 수 있도록 주제별로 노트를 정리해라.', synonyms: ['arrange', 'structure', 'coordinate'], antonyms: ['scatter', 'disorganize'], derivatives: 'organization (n) 조직, 단체 / organized (adj) 체계적인', tip: 'organ(기관/장기) + ize → 각 기관이 제 역할을 하도록 체계적으로 조직하다!' },
+      { id: 'd3_12', level: 'middle', day: 3, word: 'participate', phonetic: '[pɑːrˈtɪsɪpeɪt]', koPron: '파티시페이트', pos: 'v.', meaning: '참여하다, 참가하다', subMeanings: ['함께 하다'], example: 'Students are encouraged to participate actively in discussions.', exampleKo: '학생들은 토론에 적극적으로 참여하도록 권장된다.', synonyms: ['take part in', 'join', 'engage'], antonyms: ['withdraw', 'abstain'], derivatives: 'participation (n) 참여 / participant (n) 참가자', tip: '자동사이므로 반드시 전치사 in과 함께 씁니다 (participate in).' },
+      { id: 'd3_13', level: 'middle', day: 3, word: 'positive', phonetic: '[ˈpɑːzətɪv]', koPron: '파지티브', pos: 'adj.', meaning: '긍정적인, 확신하는', subMeanings: ['양성의', '적극적인'], example: 'Feedback from teachers had a positive impact on my writing.', exampleKo: '선생님들의 피드백은 내 글쓰기에 긍정적인 영향을 주었다.', synonyms: ['optimistic', 'constructive', 'certain'], antonyms: ['negative', 'pessimistic'], derivatives: 'positively (adv) 긍정적으로', tip: '지문의 어조/분위기 파악 문제에서 글쓴이의 태도를 나타낼 때 자주 나옵니다.' },
+      { id: 'd3_14', level: 'middle', day: 3, word: 'prefer', phonetic: '[prɪˈfɜːr]', koPron: '프리퍼', pos: 'v.', meaning: '~을 더 좋아하다, 선호하다', subMeanings: ['우선시하다'], example: 'Many students prefer studying in the morning rather than at night.', exampleKo: '많은 학생들이 밤보다는 아침에 공부하는 것을 선호한다.', synonyms: ['favor', 'choose', 'like better'], antonyms: ['dislike', 'reject'], derivatives: 'preference (n) 선호, 기호 / preferable (adj) 더 나은', tip: 'prefer A to B (B보다 A를 더 좋아하다)에서 비교 대상 앞에 than이 아닌 to를 씁니다!' },
+      { id: 'd3_15', level: 'middle', day: 3, word: 'prevent', phonetic: '[prɪˈvent]', koPron: '프리벤트', pos: 'v.', meaning: '막다, 예방하다', subMeanings: ['방해하다'], example: 'Proper preparation prevents poor performance on test day.', exampleKo: '철저한 준비는 시험 당일의 저조한 성적을 막아준다.', synonyms: ['stop', 'avoid', 'hinder'], antonyms: ['allow', 'encourage', 'permit'], derivatives: 'prevention (n) 예방 / preventive (adj) 예방의', tip: 'prevent A from -ing (A가 ~하는 것을 막다)는 고1 내신 필수 문형!' },
+      { id: 'd3_16', level: 'middle', day: 3, word: 'provide', phonetic: '[prəˈvaɪd]', koPron: '프로바이드', pos: 'v.', meaning: '제공하다, 공급하다', subMeanings: ['준비하다'], example: 'Books provide us with knowledge and new perspectives.', exampleKo: '책은 우리에게 지식과 새로운 관점을 제공해 준다.', synonyms: ['supply', 'offer', 'furnish'], antonyms: ['withhold', 'deprive'], derivatives: 'provision (n) 공급, 조항', tip: 'provide A with B (A에게 B를 제공하다) = provide B for/to A.' },
+      { id: 'd3_17', level: 'middle', day: 3, word: 'recognize', phonetic: '[ˈrekəɡnaɪz]', koPron: '레커그나이즈', pos: 'v.', meaning: '알아보다, 인식하다', subMeanings: ['인정하다'], example: 'It is important to recognize your own strengths and weaknesses.', exampleKo: '자신의 강점과 약점을 인식하는 것이 중요하다.', synonyms: ['identify', 'acknowledge', 'realize'], antonyms: ['ignore', 'overlook'], derivatives: 'recognition (n) 인식, 인정', tip: 're(다시) + cogn(알다) + ize → 다시 보고 알아차리다!' },
+      { id: 'd3_18', level: 'middle', day: 3, word: 'reduce', phonetic: '[rɪˈduːs]', koPron: '리듀스', pos: 'v.', meaning: '줄이다, 감소시키다', subMeanings: ['축소하다'], example: 'Breaking big tasks into small steps reduces stress.', exampleKo: '큰 과제를 작은 단계로 나누면 스트레스가 줄어든다.', synonyms: ['decrease', 'cut', 'lower'], antonyms: ['increase', 'raise', 'expand'], derivatives: 'reduction (n) 감소, 축소', tip: '명사형 spelling 주의: reduce → reduction (e가 탈락하고 ction이 붙음).' },
+      { id: 'd3_19', level: 'middle', day: 3, word: 'require', phonetic: '[rɪˈkwaɪər]', koPron: '리콰이어', pos: 'v.', meaning: '요구하다, 필요로 하다', subMeanings: ['의무화하다'], example: 'Mastering a foreign language requires patience and daily practice.', exampleKo: '외국어를 정복하는 것은 인내와 매일의 연습을 필요로 한다.', synonyms: ['demand', 'need', 'call for'], antonyms: [], derivatives: 'requirement (n) 필요조건, 요구사항', tip: '당위성 동사: require + that + 주어 + (should) 동사원형 구문에 자주 쓰입니다.' },
+      { id: 'd3_20', level: 'middle', day: 3, word: 'valuable', phonetic: '[ˈvæljuəbl]', koPron: '밸류어블', pos: 'adj.', meaning: '귀중한, 값비싼', subMeanings: ['유용한'], example: 'Failure often teaches us the most valuable life lessons.', exampleKo: '실패는 종종 우리에게 가장 귀중한 인생의 교훈을 가르쳐 준다.', synonyms: ['precious', 'priceless', 'useful'], antonyms: ['worthless', 'trivial'], derivatives: 'value (n) 가치 (v) 소중히 여기다 / invaluable (adj) 매우 귀중한', tip: '초강력 주의! invaluable은 "가치 없는"이 아니라 "값을 매길 수 없을 만큼 귀중한" 뜻!' },
+
+      // ==================== DAY 4: 고등 기초·내신 핵심 ① (20단어) ====================
+      { id: 'd4_01', level: 'high', day: 4, word: 'abandon', phonetic: '[əˈbændən]', koPron: '어밴던', pos: 'v.', meaning: '버리다, 포기하다', subMeanings: ['유기하다', '그만두다'], example: 'Do not abandon your dream just because the path looks steep.', exampleKo: '길이 가파르게 보인다는 이유만으로 꿈을 포기하지 마라.', synonyms: ['give up', 'desert', 'forsake'], antonyms: ['keep', 'pursue', 'maintain'], derivatives: 'abandoned (adj) 버려진 / abandonment (n) 포기, 유기', tip: 'a(멀리) + bandon(통제) → 통제를 놓고 멀리 버리다 = 포기하다.' },
+      { id: 'd4_02', level: 'high', day: 4, word: 'abstract', phonetic: '[ˈæbstrækt]', koPron: '앱스트랙트', pos: 'adj./n.', meaning: '추상적인 / 요약, 개요', subMeanings: ['관념적인', '추상화'], example: 'Mathematics helps students understand abstract concepts logically.', exampleKo: '수학은 학생들이 추상적인 개념을 논리적으로 이해하도록 돕는다.', synonyms: ['theoretical', 'conceptual', 'summary'], antonyms: ['concrete', 'tangible', 'specific'], derivatives: 'abstraction (n) 추상화, 관념', tip: 'abs(떨어져) + tract(끌어내다) → 구체적 사물에서 떼어낸 = 추상적인! 반대는 concrete(구체적인).' },
+      { id: 'd4_03', level: 'high', day: 4, word: 'abundant', phonetic: '[əˈbʌndənt]', koPron: '어번던트', pos: 'adj.', meaning: '풍부한, 많은', subMeanings: ['넘치는'], example: 'The internet provides abundant resources for self-study.', exampleKo: '인터넷은 독학을 위한 풍부한 자료를 제공한다.', synonyms: ['plentiful', 'ample', 'rich'], antonyms: ['scarce', 'deficient', 'rare'], derivatives: 'abundance (n) 풍부, 다량 / abundantly (adv) 풍부하게', tip: 'ab(넘치게) + und(파도) → 파도처럼 넘실거릴 정도로 풍부한!' },
+      { id: 'd4_04', level: 'high', day: 4, word: 'accompany', phonetic: '[əˈkʌmpəni]', koPron: '어컴퍼니', pos: 'v.', meaning: '동반하다, 함께 가다', subMeanings: ['수반하다', '반주하다'], example: 'Strong winds were accompanied by heavy rain throughout the night.', exampleKo: '밤새 폭우를 동반한 강풍이 불었다.', synonyms: ['escort', 'attend', 'go with'], antonyms: ['leave', 'abandon'], derivatives: 'accompaniment (n) 반주, 동반', tip: 'ac(함께) + company(친구/동료) → 친구처럼 곁에서 함께 가다!' },
+      { id: 'd4_05', level: 'high', day: 4, word: 'accurate', phonetic: '[ˈækjərət]', koPron: '애큐럿', pos: 'adj.', meaning: '정확한, 정밀한', subMeanings: ['오차가 없는'], example: 'Always check your answers to ensure accurate results.', exampleKo: '정확한 결과를 보장하기 위해 항상 답안을 확인해라.', synonyms: ['precise', 'exact', 'correct'], antonyms: ['inaccurate', 'vague'], derivatives: 'accuracy (n) 정확성 / accurately (adv) 정확하게', tip: 'ac(강조) + cur(주의를 기울이다) → 세심한 주의를 기울여 정확한!' },
+      { id: 'd4_06', level: 'high', day: 4, word: 'adapt', phonetic: '[əˈdæpt]', koPron: '어댑트', pos: 'v.', meaning: '적응하다, 각색하다', subMeanings: ['맞추다, 조정하다'], example: 'Humans have a remarkable ability to adapt to new environments.', exampleKo: '인간은 새로운 환경에 적응하는 놀라운 능력을 가지고 있다.', synonyms: ['adjust', 'acclimate', 'modify'], antonyms: ['resist'], derivatives: 'adaptation (n) 적응, 각색 / adaptable (adj) 적응력 있는', tip: '철자 혼동 필수 암기! adapt(적응하다) vs adopt(채택하다, 입양하다)!' },
+      { id: 'd4_07', level: 'high', day: 4, word: 'adequate', phonetic: '[ˈædɪkwət]', koPron: '애디퀏', pos: 'adj.', meaning: '적절한, 충분한', subMeanings: ['알맞은'], example: 'Adequate sleep is essential for consolidating newly learned words.', exampleKo: '충분한 수면은 새로 배운 단어를 굳히는 데 필수적이다.', synonyms: ['sufficient', 'enough', 'suitable'], antonyms: ['inadequate', 'insufficient'], derivatives: 'adequately (adv) 적절하게, 충분히', tip: 'ad(맞추어) + equ(동등한) → 필요한 기준에 딱 맞게 충분한!' },
+      { id: 'd4_08', level: 'high', day: 4, word: 'alternative', phonetic: '[ɔːlˈtɜːrnətɪv]', koPron: '올터너티브', pos: 'n./adj.', meaning: '대안 / 대체 가능한', subMeanings: ['양자택일', '기존과 다른'], example: 'Renewable energy is a sustainable alternative to fossil fuels.', exampleKo: '재생 에너지는 화석 연료에 대한 지속 가능한 대안이다.', synonyms: ['option', 'substitute', 'choice'], antonyms: ['necessity'], derivatives: 'alternatively (adv) 그 대신에 / alternate (v) 번갈아 하다', tip: 'alter(다른) → 다른 선택지 = 대안! alterna-tive.' },
+      { id: 'd4_09', level: 'high', day: 4, word: 'analyze', phonetic: '[ˈænəlaɪz]', koPron: '애널라이즈', pos: 'v.', meaning: '분석하다, 검토하다', subMeanings: ['분해하다'], example: 'We must analyze why we got a question wrong to avoid repeating it.', exampleKo: '실수를 반복하지 않으려면 문제를 왜 틀렸는지 분석해야 한다.', synonyms: ['examine', 'investigate', 'evaluate'], antonyms: ['synthesize', 'ignore'], derivatives: 'analysis (n) 분석 / analytical (adj) 분석적인', tip: '명사형은 analysis [əˈnæləsɪs], 복수형은 analyses입니다.' },
+      { id: 'd4_10', level: 'high', day: 4, word: 'apparent', phonetic: '[əˈpærənt]', koPron: '어패런트', pos: 'adj.', meaning: '분명한, 명백한', subMeanings: ['외관상의, 겉보기의'], example: 'It soon became apparent that the plan needed major revisions.', exampleKo: '그 계획에 대대적인 수정이 필요하다는 것이 곧 명백해졌다.', synonyms: ['obvious', 'evident', 'clear'], antonyms: ['obscure', 'hidden'], derivatives: 'apparently (adv) 보아하니, 분명히', tip: 'appear(나타나다)에서 파생 → 눈앞에 딱 나타나서 분명한!' },
+      { id: 'd4_11', level: 'high', day: 4, word: 'assume', phonetic: '[əˈsuːm]', koPron: '어슘', pos: 'v.', meaning: '추정하다, 가정하다', subMeanings: ['(책임·역할을) 떠맡다', '(태도를) 취하다'], example: 'Never assume you know a word without checking its exact meaning.', exampleKo: '정확한 뜻을 확인하지 않고 단어를 안다고 지레짐작하지 마라.', synonyms: ['presume', 'suppose', 'undertake'], antonyms: ['prove', 'verify'], derivatives: 'assumption (n) 가정, 추정', tip: '고1 모의고사에서 "Many people assume that~(많은 사람들이 ~라고 가정한다)"는 통념 제시의 신호탄!' },
+      { id: 'd4_12', level: 'high', day: 4, word: 'attribute', phonetic: '[əˈtrɪbjuːt]', koPron: '어트리뷰트', pos: 'v./n.', meaning: '~의 탓으로 돌리다 / 속성, 자질', subMeanings: ['~덕분으로 여기다'], example: 'She attributed her high English score to consistent daily reading.', exampleKo: '그녀는 높은 영어 점수를 매일 꾸준히 독서한 덕분으로 돌렸다.', synonyms: ['ascribe', 'credit', 'quality', 'trait'], antonyms: [], derivatives: 'attribution (n) 귀속', tip: '동사로는 attribute A to B (A를 B의 탓/덕분으로 돌리다), 명사로는 "특성/속성"!' },
+      { id: 'd4_13', level: 'high', day: 4, word: 'capacity', phonetic: '[kəˈpæsəti]', koPron: '커패서티', pos: 'n.', meaning: '능력, 수용력', subMeanings: ['용량', '역할, 자격'], example: 'The human brain has an extraordinary capacity for learning.', exampleKo: '인간의 뇌는 학습에 대한 비범한 능력을 가지고 있다.', synonyms: ['ability', 'capability', 'volume'], antonyms: ['inability', 'incapacity'], derivatives: 'capable (adj) ~할 능력이 있는 (be capable of)', tip: 'cap(잡다/담다) → 머릿속에 담아낼 수 있는 그릇의 크기 = 수용력, 능력!' },
+      { id: 'd4_14', level: 'high', day: 4, word: 'circumstance', phonetic: '[ˈsɜːrkəmstæns]', koPron: '서컴스탠스', pos: 'n.', meaning: '상황, 환경, 처지', subMeanings: ['사정, 형편'], example: 'Under no circumstances should you give up on yourself.', exampleKo: '어떤 상황에서도 스스로를 포기해서는 안 된다.', synonyms: ['situation', 'condition', 'context'], antonyms: [], derivatives: 'circumstantial (adj) 정황상의', tip: 'circum(주위) + stance(서 있다) → 내 주위를 둘러싸고 서 있는 것들 = 상황, 환경!' },
+      { id: 'd4_15', level: 'high', day: 4, word: 'cognitive', phonetic: '[ˈkɑːɡnətɪv]', koPron: '코그너티브', pos: 'adj.', meaning: '인지의, 인식의', subMeanings: ['인식력이 있는'], example: 'Bilingualism can enhance cognitive flexibility in adolescents.', exampleKo: '이중 언어 사용은 청소년의 인지적 유연성을 향상시킬 수 있다.', synonyms: ['mental', 'intellectual', 'perceptual'], antonyms: ['physical'], derivatives: 'cognition (n) 인지, 인식', tip: '고1·고2 심리학/뇌과학 지문 1순위 필수 형용사! (cognitive process 인지 과정)' },
+      { id: 'd4_16', level: 'high', day: 4, word: 'colleague', phonetic: '[ˈkɑːliːɡ]', koPron: '콜리그', pos: 'n.', meaning: '동료', subMeanings: ['동업자'], example: 'Scientists share their findings with colleagues around the world.', exampleKo: '과학자들은 전 세계 동료들과 연구 결과를 공유한다.', synonyms: ['coworker', 'associate', 'partner'], antonyms: ['opponent', 'rival'], derivatives: [], tip: '철자 주의: 끝에 -ue가 붙습니다 (col-leag-ue). college(대학)와 혼동 주의!' },
+      { id: 'd4_17', level: 'high', day: 4, word: 'compensate', phonetic: '[ˈkɑːmpenseɪt]', koPron: '컴펜세이트', pos: 'v.', meaning: '보상하다, 보완하다', subMeanings: ['배상하다', '상쇄하다'], example: 'Hard work can often compensate for a lack of natural talent.', exampleKo: '노력은 종종 타고난 재능의 부족을 보완할 수 있다.', synonyms: ['make up for', 'repay', 'offset'], antonyms: ['deprive', 'penalize'], derivatives: 'compensation (n) 보상, 배상', tip: 'compensate for (~을 보완하다/보상하다) 형태로 전치사 for와 짝을 이룹니다.' },
+      { id: 'd4_18', level: 'high', day: 4, word: 'consequence', phonetic: '[ˈkɑːnsɪkwens]', koPron: '컨시퀀스', pos: 'n.', meaning: '결과, 중요성', subMeanings: ['영향', '결론'], example: 'Every decision we make carries long-term consequences.', exampleKo: '우리가 내리는 모든 결정은 장기적인 결과를 수반한다.', synonyms: ['result', 'outcome', 'effect'], antonyms: ['cause', 'origin'], derivatives: 'consequent (adj) 결과로 일어나는 / consequently (adv) 그 결과, 따라서', tip: 'con(함께) + sequ(따르다) → 뒤따라 나오는 것 = 결과! 연결어 consequently(따라서) 필수!' },
+      { id: 'd4_19', level: 'high', day: 4, word: 'consistent', phonetic: '[kənˈsɪstənt]', koPron: '컨시스턴트', pos: 'adj.', meaning: '일관된, 한결같은', subMeanings: ['일치하는'], example: 'Consistent daily effort beats last-minute cramming.', exampleKo: '매일 하는 꾸준한 노력이 막판 벼락치기를 이긴다.', synonyms: ['steady', 'constant', 'uniform'], antonyms: ['inconsistent', 'erratic'], derivatives: 'consistency (n) 일관성 / consistently (adv) 꾸준히', tip: 'be consistent with (~와 일치하다) 숙어로도 자주 출제됩니다.' },
+      { id: 'd4_20', level: 'high', day: 4, word: 'contemporary', phonetic: '[kənˈtempəreri]', koPron: '컨템퍼러리', pos: 'adj./n.', meaning: '현대의, 동시대의 / 동시대인', subMeanings: ['당대의'], example: 'Contemporary society relies heavily on digital communication.', exampleKo: '현대 사회는 디지털 의사소통에 크게 의존한다.', synonyms: ['modern', 'current', 'present-day'], antonyms: ['ancient', 'old-fashioned'], derivatives: [], tip: 'con(함께) + tempor(시간) → 같은 시간대에 함께 있는 = 동시대의, 현대의!' },
+
+      // ==================== DAY 5: 고등 기초·내신 핵심 ② (20단어) ====================
+      { id: 'd5_01', level: 'high', day: 5, word: 'contradict', phonetic: '[ˌkɑːntrəˈdɪkt]', koPron: '컨트러딕트', pos: 'v.', meaning: '모순되다, 반박하다', subMeanings: ['부정하다'], example: 'His actions completely contradict what he promised yesterday.', exampleKo: '그의 행동은 어제 약속했던 것과 완전히 모순된다.', synonyms: ['oppose', 'deny', 'conflict with'], antonyms: ['confirm', 'agree', 'corroborate'], derivatives: 'contradiction (n) 모순 / contradictory (adj) 모순되는', tip: 'contra(반대로) + dict(말하다) → 반대로 말하다 = 반박하다, 모순되다!' },
+      { id: 'd5_02', level: 'high', day: 5, word: 'crucial', phonetic: '[ˈkruːʃl]', koPron: '크루셜', pos: 'adj.', meaning: '중대한, 결정적인', subMeanings: ['매우 중요한'], example: 'Time management is a crucial skill for high school students.', exampleKo: '시간 관리는 고등학생들에게 결정적인 기술이다.', synonyms: ['vital', 'critical', 'essential'], antonyms: ['trivial', 'minor', 'insignificant'], derivatives: 'crucially (adv) 결정적으로', tip: '독해 지문에서 crucial, vital, essential이 나오면 그 문장이 바로 주제문일 확률 90%!' },
+      { id: 'd5_03', level: 'high', day: 5, word: 'demonstrate', phonetic: '[ˈdemənstreɪt]', koPron: '데먼스트레이트', pos: 'v.', meaning: '입증하다, 보여주다', subMeanings: ['시연하다', '시위하다'], example: 'Recent studies demonstrate that handwriting improves memory.', exampleKo: '최근 연구들은 손글씨가 기억력을 향상시킨다는 것을 입증한다.', synonyms: ['prove', 'show', 'illustrate'], antonyms: ['conceal', 'disprove'], derivatives: 'demonstration (n) 입증, 시연, 시위', tip: '실험/연구 결과 지문에서 "Studies demonstrate that~" 형태로 결론을 이끌 때 자주 등장!' },
+      { id: 'd5_04', level: 'high', day: 5, word: 'derive', phonetic: '[dɪˈraɪv]', koPron: '디라이브', pos: 'v.', meaning: '유래하다, 끌어내다', subMeanings: ['파생되다', '얻다'], example: 'Many academic English words derive from Latin and Greek roots.', exampleKo: '많은 학술적 영어 단어들이 라틴어와 그리스어 어근에서 유래한다.', synonyms: ['originate', 'stem', 'obtain'], antonyms: [], derivatives: 'derivation (n) 유래, 파생 / derivative (n) 파생어', tip: 'de(아래로) + rive(강물) → 강줄기에서 흘러나오다 = 유래하다! (derive from)' },
+      { id: 'd5_05', level: 'high', day: 5, word: 'diminish', phonetic: '[dɪˈmɪnɪʃ]', koPron: '디미니시', pos: 'v.', meaning: '줄어들다, 약화시키다', subMeanings: ['축소하다', '폄하하다'], example: 'The fear of public speaking diminishes with repeated practice.', exampleKo: '대중 연설에 대한 두려움은 반복적인 연습으로 줄어든다.', synonyms: ['decrease', 'lessen', 'shrink'], antonyms: ['increase', 'amplify', 'magnify'], derivatives: 'diminished (adj) 줄어든', tip: 'mini(작은)가 단어 속에 숨어 있어요! 점점 작아지다 = 줄어들다.' },
+      { id: 'd5_06', level: 'high', day: 5, word: 'distinguish', phonetic: '[dɪˈstɪŋɡwɪʃ]', koPron: '디스팅귀시', pos: 'v.', meaning: '구별하다, 식별하다', subMeanings: ['눈에 띄게 하다'], example: 'Critical readers can distinguish objective facts from opinions.', exampleKo: '비판적 독자는 객관적 사실과 의견을 구별할 수 있다.', synonyms: ['differentiate', 'discern', 'tell apart'], antonyms: ['confuse', 'mix up'], derivatives: 'distinction (n) 구별, 차이 / distinguished (adj) 저명한, 뛰어난', tip: 'distinguish A from B (A와 B를 구별하다). 형용사 distinguished는 "훌륭한/저명한" 뜻!' },
+      { id: 'd5_07', level: 'high', day: 5, word: 'eliminate', phonetic: '[ɪˈlɪmɪneɪt]', koPron: '일리미네이트', pos: 'v.', meaning: '제거하다, 없애다', subMeanings: ['배제하다', '탈락시키다'], example: 'Eliminating distractions is the first step toward deep focus.', exampleKo: '방해 요소를 제거하는 것이 깊은 집중을 향한 첫걸음이다.', synonyms: ['remove', 'eradicate', 'get rid of'], antonyms: ['include', 'retain', 'preserve'], derivatives: 'elimination (n) 제거, 배제', tip: 'e(밖으로) + limin(문지방) → 문지방 밖으로 내쫓다 = 제거하다!' },
+      { id: 'd5_08', level: 'high', day: 5, word: 'emerge', phonetic: '[ɪˈmɜːrdʒ]', koPron: '이머지', pos: 'v.', meaning: '나타나다, 부상하다', subMeanings: ['드러나다', '생겨나다'], example: 'New career fields emerge rapidly in the age of AI.', exampleKo: 'AI 시대에는 새로운 직업 분야들이 빠르게 부상한다.', synonyms: ['appear', 'arise', 'surface'], antonyms: ['disappear', 'vanish', 'submerge'], derivatives: 'emergence (n) 출현 / emerging (adj) 신흥의, 떠오르는', tip: 'e(밖으로) + merge(잠기다) → 물속에 잠겨 있다가 밖으로 떠오르다 = 나타나다!' },
+      { id: 'd5_09', level: 'high', day: 5, word: 'emphasize', phonetic: '[ˈemfəsaɪz]', koPron: '엠퍼사이즈', pos: 'v.', meaning: '강조하다, 역설하다', subMeanings: ['두드러지게 하다'], example: 'The author emphasizes the importance of lifelong learning.', exampleKo: '저자는 평생 학습의 중요성을 강조한다.', synonyms: ['stress', 'highlight', 'underline'], antonyms: ['understate', 'downplay'], derivatives: 'emphasis (n) 강조, 중점 (복수: emphases)', tip: '영국식 철자는 emphasise입니다. 명사형 emphasis도 독해 핵심 단어!' },
+      { id: 'd5_10', level: 'high', day: 5, word: 'encounter', phonetic: '[ɪnˈkaʊntər]', koPron: '인카운터', pos: 'v./n.', meaning: '마주치다, 직면하다 / 만남', subMeanings: ['우연히 만나다'], example: 'When you encounter an unknown word, try guessing from context.', exampleKo: '모르는 단어를 마주치면 문맥에서 뜻을 추측해 보아라.', synonyms: ['meet', 'face', 'confront'], antonyms: ['avoid', 'evade'], derivatives: [], tip: 'en(안으로) + counter(맞서다) → 정면으로 맞닥뜨리다!' },
+      { id: 'd5_11', level: 'high', day: 5, word: 'enhance', phonetic: '[ɪnˈhæns]', koPron: '인핸스', pos: 'v.', meaning: '향상시키다, 높이다', subMeanings: ['강화하다', '돋보이게 하다'], example: 'Listening to English podcasts can enhance your comprehension.', exampleKo: '영어 팟캐스트를 듣는 것은 이해력을 향상시킬 수 있다.', synonyms: ['improve', 'boost', 'elevate'], antonyms: ['diminish', 'weaken', 'lower'], derivatives: 'enhancement (n) 향상, 증진', tip: 'improve의 고급 버전으로 고1 이상 지문에서 압도적으로 많이 쓰입니다!' },
+      { id: 'd5_12', level: 'high', day: 5, word: 'essential', phonetic: '[ɪˈsenʃl]', koPron: '이센셜', pos: 'adj./n.', meaning: '필수적인, 본질적인 / 필수품', subMeanings: ['근본적인'], example: 'Curiosity is an essential ingredient for scientific discovery.', exampleKo: '호기심은 과학적 발견을 위한 필수적인 요소이다.', synonyms: ['vital', 'crucial', 'indispensable'], antonyms: ['optional', 'unnecessary'], derivatives: 'essentially (adv) 본질적으로 / essence (n) 본질', tip: 'essence(본질) + ial → 본질적으로 꼭 필요한 = 필수적인!' },
+      { id: 'd5_13', level: 'high', day: 5, word: 'evaluate', phonetic: '[ɪˈvæljueɪt]', koPron: '이밸류에이트', pos: 'v.', meaning: '평가하다, 감정하다', subMeanings: ['가치를 매기다'], example: 'Mock exams help you evaluate your current academic standing.', exampleKo: '모의고사는 현재 학업 성취도를 평가하는 데 도움이 된다.', synonyms: ['assess', 'judge', 'appraise'], antonyms: ['neglect'], derivatives: 'evaluation (n) 평가', tip: '단어 가운데 value(가치)가 들어있죠? 가치를 따져보다 = 평가하다!' },
+      { id: 'd5_14', level: 'high', day: 5, word: 'inevitable', phonetic: '[ɪnˈevɪtəbl]', koPron: '이네비터블', pos: 'adj.', meaning: '피할 수 없는, 필연적인', subMeanings: ['당연한'], example: 'Making mistakes is an inevitable part of learning a language.', exampleKo: '실수를 하는 것은 언어를 배우는 데 피할 수 없는 부분이다.', synonyms: ['unavoidable', 'certain', 'inescapable'], antonyms: ['avoidable', 'preventable'], derivatives: 'inevitably (adv) 필연적으로, 불가피하게', tip: 'in(아닌) + evit(피하다) + able → 피할 수 없는 = 필연적인!' },
+      { id: 'd5_15', level: 'high', day: 5, word: 'interpret', phonetic: '[ɪnˈtɜːrprɪt]', koPron: '인터프릿', pos: 'v.', meaning: '해석하다, 통역하다', subMeanings: ['이해하다', '표현하다'], example: 'Different historians may interpret the same event differently.', exampleKo: '다른 역사가들은 같은 사건을 다르게 해석할 수도 있다.', synonyms: ['explain', 'translate', 'decipher'], antonyms: ['misunderstand', 'distort'], derivatives: 'interpretation (n) 해석, 통역 / interpreter (n) 통역사', tip: '데이터/그래프 분석 문제나 문학 비평 지문에서 가장 많이 쓰이는 동사 중 하나!' },
+      { id: 'd5_16', level: 'high', day: 5, word: 'justify', phonetic: '[ˈdʒʌstɪfaɪ]', koPron: '저스티파이', pos: 'v.', meaning: '정당화하다, 옳음을 보여주다', subMeanings: ['변명하다'], example: 'Good intentions alone cannot justify unethical behavior.', exampleKo: '좋은 의도만으로는 비윤리적인 행동을 정당화할 수 없다.', synonyms: ['defend', 'validate', 'warrant'], antonyms: ['condemn', 'criticize'], derivatives: 'justification (n) 정당화 / justified (adj) 정당한', tip: 'just(정의로운/옳은) + ify(만들다) → 옳은 것으로 만들다 = 정당화하다!' },
+      { id: 'd5_17', level: 'high', day: 5, word: 'modify', phonetic: '[ˈmɑːdɪfaɪ]', koPron: '모디파이', pos: 'v.', meaning: '수정하다, 변경하다', subMeanings: ['완화하다', '(문법) 수식하다'], example: 'You may need to modify your study plan as exams approach.', exampleKo: '시험이 다가옴에 따라 공부 계획을 수정해야 할 수도 있다.', synonyms: ['alter', 'adjust', 'revise'], antonyms: ['maintain', 'preserve'], derivatives: 'modification (n) 수정, 변경', tip: '영문법 용어에서 "형용사가 명사를 수식하다(modify)"라고 할 때도 이 단어를 씁니다!' },
+      { id: 'd5_18', level: 'high', day: 5, word: 'perspective', phonetic: '[pərˈspektɪv]', koPron: '퍼스펙티브', pos: 'n.', meaning: '관점, 시각', subMeanings: ['원근법', '전망'], example: 'Reading literature allows you to see life from another perspective.', exampleKo: '문학을 읽는 것은 다른 관점에서 삶을 바라보게 해 준다.', synonyms: ['viewpoint', 'standpoint', 'outlook'], antonyms: [], derivatives: [], tip: 'per(통하여) + spect(보다) → 세상을 투과하여 바라보는 창 = 관점, 시각!' },
+      { id: 'd5_19', level: 'high', day: 5, word: 'phenomenon', phonetic: '[fəˈnɑːmɪnɑːn]', koPron: '페노메논', pos: 'n.', meaning: '현상, 사건', subMeanings: ['경이로운 사람·사물'], example: 'Aurora borealis is a breathtaking natural phenomenon.', exampleKo: '오로라는 숨이 멎을 듯 아름다운 자연 현상이다.', synonyms: ['occurrence', 'event', 'wonder'], antonyms: [], derivatives: 'phenomenal (adj) 경이로운, 대단한 / 복수형: phenomena', tip: '불규칙 복수형 주의! 단수 phenomenon → 복수 phenomena (수능 어법 단골!).' },
+      { id: 'd5_20', level: 'high', day: 5, word: 'significant', phonetic: '[sɪɡˈnɪfɪkənt]', koPron: '시그니피컨트', pos: 'adj.', meaning: '중요한, 상당한', subMeanings: ['의미심장한'], example: 'There was a significant improvement in her mock exam score.', exampleKo: '그녀의 모의고사 성적에 상당한 향상이 있었다.', synonyms: ['important', 'considerable', 'notable'], antonyms: ['insignificant', 'trivial', 'negligible'], derivatives: 'significance (n) 중요성, 의미 / significantly (adv) 상당히', tip: '도표 문제에서 "상당한 증가/감소(significant increase/decrease)"로 100% 출제됩니다!' },
+
+      // ==================== DAY 6: 고등 기초·내신 핵심 ③ (20단어) ====================
+      { id: 'd6_01', level: 'high', day: 6, word: 'accumulate', phonetic: '[əˈkjuːmjəleɪt]', koPron: '어큐뮬레이트', pos: 'v.', meaning: '축적하다, 모으다', subMeanings: ['늘어나다, 쌓이다'], example: 'Small daily efforts accumulate into remarkable achievements.', exampleKo: '매일의 작은 노력들이 축적되어 놀라운 성취를 이룬다.', synonyms: ['gather', 'amass', 'pile up'], antonyms: ['disperse', 'scatter', 'spend'], derivatives: 'accumulation (n) 축적, 누적', tip: 'ac(강조) + cumul(쌓아 올린 더미) → 차곡차곡 쌓아 올리다 = 축적하다!' },
+      { id: 'd6_02', level: 'high', day: 6, word: 'advocate', phonetic: '[ˈædvəkeɪt]', koPron: '애드버케이트', pos: 'v./n.', meaning: '지지하다, 옹호하다 / 옹호자', subMeanings: ['주장하다'], example: 'Many educators advocate experiential learning over rote memorization.', exampleKo: '많은 교육자들이 단순 암기보다 체험 학습을 지지한다.', synonyms: ['support', 'promote', 'champion'], antonyms: ['oppose', 'criticize'], derivatives: 'advocacy (n) 옹호, 지지', tip: 'ad(향하여) + voc(부르다/목소리) → ~을 위해 목소리를 높여 지지하다!' },
+      { id: 'd6_03', level: 'high', day: 6, word: 'ambiguous', phonetic: '[æmˈbɪɡjuəs]', koPron: '앰비규어스', pos: 'adj.', meaning: '모호한, 애매한', subMeanings: ['여러 가지로 해석될 수 있는'], example: 'Avoid ambiguous expressions when writing an argumentative essay.', exampleKo: '논설문을 쓸 때는 모호한 표현을 피해라.', synonyms: ['vague', 'unclear', 'obscure'], antonyms: ['clear', 'explicit', 'definite'], derivatives: 'ambiguity (n) 모호함, 애매성', tip: 'ambi(양쪽의) → 이쪽으로도 저쪽으로도 해석되어 애매모호한!' },
+      { id: 'd6_04', level: 'high', day: 6, word: 'bias', phonetic: '[ˈbaɪəs]', koPron: '바이어스', pos: 'n./v.', meaning: '편견, 선입견 / 편향되게 하다', subMeanings: ['성향'], example: 'Good journalism requires reporting facts without personal bias.', exampleKo: '훌륭한 저널리즘은 개인적인 편견 없이 사실을 보도할 것을 요구한다.', synonyms: ['prejudice', 'partiality', 'slant'], antonyms: ['fairness', 'neutrality', 'objectivity'], derivatives: 'biased (adj) 편향된 / unbiased (adj) 편견 없는, 공정한', tip: '고1·고2 사회/미디어 지문에서 prejudice(편견)와 함께 가장 많이 쓰이는 핵심 명사!' },
+      { id: 'd6_05', level: 'high', day: 6, word: 'coherent', phonetic: '[koʊˈhɪrənt]', koPron: '코히어런트', pos: 'adj.', meaning: '일관성 있는, 조리 있는', subMeanings: ['논리정연한'], example: 'A well-written paragraph has a clear and coherent structure.', exampleKo: '잘 쓰인 단락은 명확하고 일관성 있는 구조를 갖추고 있다.', synonyms: ['logical', 'consistent', 'unified'], antonyms: ['incoherent', 'confused'], derivatives: 'coherence (n) 일관성, 통일성', tip: 'co(함께) + her(달라붙다) → 문장들이 서로 찰싹 달라붙어 조리 있는!' },
+      { id: 'd6_06', level: 'high', day: 6, word: 'comprehensive', phonetic: '[ˌkɑːmprɪˈhensɪv]', koPron: '컴프리헨시브', pos: 'adj.', meaning: '포괄적인, 종합적인', subMeanings: ['광범위한'], example: 'This app offers a comprehensive review of middle and high school words.', exampleKo: '이 앱은 중등 및 고등 단어에 대한 포괄적인 복습을 제공한다.', synonyms: ['thorough', 'complete', 'extensive'], antonyms: ['partial', 'narrow', 'limited'], derivatives: 'comprehend (v) 이해하다 / comprehension (n) 이해력 (reading comprehension 독해)', tip: '혼동 주의! comprehensive(포괄적인) vs comprehensible(이해할 수 있는)!' },
+      { id: 'd6_07', level: 'high', day: 6, word: 'conform', phonetic: '[kənˈfɔːrm]', koPron: '컨폼', pos: 'v.', meaning: '순응하다, 따르다', subMeanings: ['일치하다'], example: 'Teenagers often feel pressure to conform to peer expectations.', exampleKo: '십 대들은 종종 또래의 기대에 순응해야 한다는 압박감을 느낀다.', synonyms: ['comply', 'obey', 'adapt'], antonyms: ['rebel', 'resist', 'deviate'], derivatives: 'conformity (n) 순응, 일치', tip: 'con(함께) + form(형태) → 남들과 같은 형태로 맞추어 순응하다! (conform to)' },
+      { id: 'd6_08', level: 'high', day: 6, word: 'controversy', phonetic: '[ˈkɑːntrəvɜːrsi]', koPron: '컨트러버시', pos: 'n.', meaning: '논란, 논쟁', subMeanings: ['언쟁'], example: 'The new school policy sparked heated controversy among students.', exampleKo: '새로운 학교 정책은 학생들 사이에 뜨거운 논란을 불러일으켰다.', synonyms: ['debate', 'dispute', 'argument'], antonyms: ['agreement', 'consensus'], derivatives: 'controversial (adj) 논란이 많은', tip: 'contro(반대로) + vers(돌다) → 서로 반대로 돌아서서 다투는 논란!' },
+      { id: 'd6_09', level: 'high', day: 6, word: 'conventional', phonetic: '[kənˈvenʃənl]', koPron: '컨벤셔널', pos: 'adj.', meaning: '전통적인, 관습적인', subMeanings: ['평범한, 틀에 박힌'], example: 'Creative thinkers challenge conventional wisdom to innovate.', exampleKo: '창의적인 사상가들은 혁신을 위해 기존의 통념에 도전한다.', synonyms: ['traditional', 'customary', 'standard'], antonyms: ['unconventional', 'innovative', 'novel'], derivatives: 'convention (n) 관습, 대회, 협약', tip: 'conventional wisdom(기존 통념)은 고교 독해에서 "반박당하는 대상"으로 자주 나옵니다!' },
+      { id: 'd6_10', level: 'high', day: 6, word: 'deliberate', phonetic: '[dɪˈlɪbərət]', koPron: '딜리버럿', pos: 'adj./v.', meaning: '의도적인, 신중한 / 숙고하다', subMeanings: ['고의의'], example: 'Mastering complex skills requires deliberate and focused practice.', exampleKo: '복잡한 기술을 숙달하려면 의도적이고 집중적인 연습이 필요하다.', synonyms: ['intentional', 'planned', 'cautious'], antonyms: ['accidental', 'unintentional'], derivatives: 'deliberately (adv) 의도적으로, 고의로 / deliberation (n) 숙고', tip: 'deliberate practice(의식적 연습)는 교육학/자기계발 지문의 핵심 키워드입니다!' },
+      { id: 'd6_11', level: 'high', day: 6, word: 'deteriorate', phonetic: '[dɪˈtɪriəreɪt]', koPron: '디티리어레이트', pos: 'v.', meaning: '악화되다, 나빠지다', subMeanings: ['저하되다'], example: 'Without regular maintenance, the building will quickly deteriorate.', exampleKo: '정기적인 보수가 없다면 그 건물은 빠르게 악화될 것이다.', synonyms: ['worsen', 'decline', 'degrade'], antonyms: ['improve', 'ameliorate', 'recover'], derivatives: 'deterioration (n) 악화, 저하', tip: 'improve(향상되다)의 대표적인 고급 반의어입니다. 꼭 세트로 외워두세요!' },
+      { id: 'd6_12', level: 'high', day: 6, word: 'explicit', phonetic: '[ɪkˈsplɪsɪt]', koPron: '익스플리싯', pos: 'adj.', meaning: '명백한, 분명한', subMeanings: ['노골적인, 솔직한'], example: 'The instructions were explicit, leaving no room for confusion.', exampleKo: '지시사항이 명백해서 혼란의 여지가 전혀 없었다.', synonyms: ['clear', 'direct', 'definite'], antonyms: ['implicit', 'ambiguous', 'vague'], derivatives: 'explicitly (adv) 명백히', tip: 'ex(밖으로) + plic(접다) → 접힌 것을 밖으로 쫙 펼쳐 보여 명백한! 반대는 implicit(암묵적인).' },
+      { id: 'd6_13', level: 'high', day: 6, word: 'fluctuate', phonetic: '[ˈflʌktʃueɪt]', koPron: '플럭추에이트', pos: 'v.', meaning: '변동하다, 오르내리다', subMeanings: ['동요하다'], example: 'Temperatures in spring tend to fluctuate wildly between day and night.', exampleKo: '봄철 기온은 낮과 밤 사이에 크게 변동하는 경향이 있다.', synonyms: ['vary', 'shift', 'oscillate'], antonyms: ['stabilize', 'remain steady'], derivatives: 'fluctuation (n) 변동, 파동', tip: 'fluct(물결) → 물결처럼 위아래로 출렁이며 변동하다! 도표/경제 지문 필수!' },
+      { id: 'd6_14', level: 'high', day: 6, word: 'fundamental', phonetic: '[ˌfʌndəˈmentl]', koPron: '펀더멘털', pos: 'adj./n.', meaning: '근본적인, 기본적인 / 기본 원칙', subMeanings: ['필수적인'], example: 'Vocabulary is the fundamental building block of reading comprehension.', exampleKo: '어휘력은 독해력의 근본적인 구성 요소이다.', synonyms: ['basic', 'essential', 'underlying'], antonyms: ['superficial', 'secondary'], derivatives: 'fundamentally (adv) 근본적으로', tip: 'fund(바닥/기초) → 건물의 기초 토대처럼 가장 근본적인!' },
+      { id: 'd6_15', level: 'high', day: 6, word: 'hypothesis', phonetic: '[haɪˈpɑːθəsɪs]', koPron: '하이파서시스', pos: 'n.', meaning: '가설, 추정', subMeanings: ['전제'], example: 'Scientists conduct experiments to test whether a hypothesis is valid.', exampleKo: '과학자들은 가설이 타당한지 검증하기 위해 실험을 수행한다.', synonyms: ['theory', 'assumption', 'premise'], antonyms: ['fact', 'proof'], derivatives: 'hypothesize (v) 가설을 세우다 / hypothetical (adj) 가설의 / 복수형: hypotheses', tip: 'hypo(아래에) + thesis(놓다) → 이론 아래에 깔아두는 임시 전제 = 가설!' },
+      { id: 'd6_16', level: 'high', day: 6, word: 'implement', phonetic: '[ˈɪmplɪment]', koPron: '임플리먼트', pos: 'v./n.', meaning: '시행하다, 실행하다 / 도구', subMeanings: ['이행하다'], example: 'The school decided to implement a new morning reading program.', exampleKo: '학교는 새로운 아침 독서 프로그램을 시행하기로 결정했다.', synonyms: ['execute', 'carry out', 'enforce'], antonyms: ['cancel', 'abandon'], derivatives: 'implementation (n) 시행, 이행', tip: '정책이나 계획을 "실제로 실행에 옮기다"라고 할 때 가장 세련된 동사입니다.' },
+      { id: 'd6_17', level: 'high', day: 6, word: 'inherent', phonetic: '[ɪnˈhɪrənt]', koPron: '인히어런트', pos: 'adj.', meaning: '내재된, 타고난', subMeanings: ['고유한'], example: 'Curiosity is an inherent trait shared by all human beings.', exampleKo: '호기심은 모든 인간이 공유하는 타고난 특성이다.', synonyms: ['innate', 'inborn', 'intrinsic'], antonyms: ['acquired', 'external'], derivatives: 'inherently (adv) 본질적으로, 선천적으로', tip: 'in(안에) + her(달라붙다) → 태어날 때부터 안에 달라붙어 있는 = 내재된, 선천적인!' },
+      { id: 'd6_18', level: 'high', day: 6, word: 'paradox', phonetic: '[ˈpærədɑːks]', koPron: '패러독스', pos: 'n.', meaning: '역설, 모순된 말', subMeanings: ['패러독스'], example: 'It is a paradox that having too many choices can make us less happy.', exampleKo: '너무 많은 선택지를 갖는 것이 우리를 덜 행복하게 만들 수 있다는 것은 역설이다.', synonyms: ['contradiction', 'irony', 'absurdity'], antonyms: ['consistency'], derivatives: 'paradoxical (adj) 역설적인 / paradoxically (adv) 역설적으로', tip: 'para(반하여) + dox(생각/통념) → 일반적 상식에 반하는 말 = 역설!' },
+      { id: 'd6_19', level: 'high', day: 6, word: 'simultaneously', phonetic: '[ˌsaɪmlˈteɪniəsli]', koPron: '사이멀테이니어슬리', pos: 'adv.', meaning: '동시에', subMeanings: ['일제히'], example: 'The human brain struggles to focus on two complex tasks simultaneously.', exampleKo: '인간의 뇌는 두 가지 복잡한 과제에 동시에 집중하는 데 어려움을 겪는다.', synonyms: ['at the same time', 'concurrently'], antonyms: ['separately', 'sequentially'], derivatives: 'simultaneous (adj) 동시의', tip: '멀티태스킹(multitasking) 관련 고1·고2 지문에서 "at the same time" 대신 단골 출제!' },
+      { id: 'd6_20', level: 'high', day: 6, word: 'sustainable', phonetic: '[səˈsteɪnəbl]', koPron: '서스테이너블', pos: 'adj.', meaning: '지속 가능한', subMeanings: ['환경을 파괴하지 않는'], example: 'Adopting sustainable habits is crucial for protecting our planet.', exampleKo: '지속 가능한 습관을 채택하는 것은 지구를 보호하는 데 결정적이다.', synonyms: ['maintainable', 'viable', 'eco-friendly'], antonyms: ['unsustainable', 'temporary'], derivatives: 'sustain (v) 지탱하다, 유지하다 / sustainability (n) 지속 가능성', tip: '환경·경제·에너지 지문에서 1순위로 등장하는 현대 영어 최고 핵심 어휘!' }
+    ];
+
+    /* ==========================================================================
+       2. 클래스카드 핵심 학습 데이터 상태 관리 (암기 / 리콜 / 스펠 진도율)
+       ========================================================================== */
+    const STORAGE_KEY = 'vocacard_classcard_v1';
+    const DAILY_GOAL = 30;
+
+    // wordStatus[wordId] = { memo: 0..4 (0:미학습, 1:모름, 2:헷갈림, 3:앎, 4:완벽함), recall: boolean, spell: boolean, wrongCount: number }
+    let state = {
+      customWords: [],
+      wordStatus: {},
+      starredIds: [],
+      dailyHistory: {},
+      streak: 1,
+      lastActiveDate: new Date().toISOString().split('T')[0],
+      bestMatchTime: null,
+      settings: {
+        darkMode: false,
+        voiceAccent: 'en-US',
+        voiceRate: 1.0,
+        showKoPron: true
+      }
+    };
+
+    // UI 세션 상태
+    let ui = {
+      view: 'home', // 'home' | 'set'
+      activeSetId: 'day_1', // 'day_1'..'day_6' | 'starred' | 'wrong' | 'custom' | 'all'
+      setTab: 'list', // 'list' | 'memo' | 'recall' | 'spell' | 'test' | 'matching'
+      // 단어장 리스트 가림막 및 검색
+      blindMode: 'none', // 'none' | 'word' | 'meaning' | 'pron'
+      listSearch: '',
+      // 암기(플래시카드) 상태
+      cardIndex: 0,
+      isFlipped: false,
+      clozeExampleMode: false, // 예문 빈칸 훈련 모드
+      // 리콜(4지선다 스피드 퀴즈) 상태
+      recallIndex: 0,
+      recallDirection: 'en2ko', // 'en2ko' | 'ko2en'
+      recallOptions: [],
+      recallAnswered: false,
+      recallSelected: null,
+      recallTimeLeft: 100, // % 게이지
+      recallTimerId: null,
+      recallScore: 0,
+      // 스펠(주관식 타이핑) 상태
+      spellIndex: 0,
+      spellInput: '',
+      spellAnswered: false,
+      spellCorrect: false,
+      spellHintShown: false,
+      // 테스트(종합 실전 시험) 상태
+      testQueue: [],
+      testIndex: 0,
+      testAnswers: [],
+      testFinished: false,
+      // 매칭 게임 상태
+      matchCards: [],
+      matchSelected: [],
+      matchMatchedIds: [],
+      matchStartTime: 0,
+      matchElapsed: '0.0',
+      matchTimerId: null
+    };
+
+    function getTodayStr() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state = {
+            ...state,
+            ...parsed,
+            settings: { ...state.settings, ...(parsed.settings || {}) }
+          };
+        }
+        const today = getTodayStr();
+        if (state.lastActiveDate !== today) {
+          const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+          if (state.lastActiveDate === yesterday && (state.dailyHistory[yesterday] || 0) > 0) {
+            state.streak += 1;
+          } else {
+            state.streak = 1;
+          }
+          state.lastActiveDate = today;
+          saveState();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      applyTheme();
+      syncHeaderUI();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.error(e);
+      }
+      syncHeaderUI();
+    }
+
+    function applyTheme() {
+      document.documentElement.classList.toggle('dark', !!state.settings.darkMode);
+    }
+
+    function toggleDarkMode() {
+      state.settings.darkMode = !state.settings.darkMode;
+      applyTheme();
+      saveState();
+    }
+
+    function toggleKoPron() {
+      state.settings.showKoPron = !state.settings.showKoPron;
+      saveState();
+      syncHeaderUI();
+      renderApp();
+      showToast(`한글 발음 표기가 ${state.settings.showKoPron ? '켜졌습니다 (ON)' : '숨겨졌습니다 (OFF)'}.`, 'info');
+    }
+
+    function setAccent(acc) {
+      state.settings.voiceAccent = acc;
+      saveState();
+      syncHeaderUI();
+      showToast(`발음 억양: ${acc === 'en-US' ? '미국식 (US)' : '영국식 (UK)'}`, 'info');
+    }
+
+    function toggleRate() {
+      state.settings.voiceRate = state.settings.voiceRate === 1.0 ? 0.8 : 1.0;
+      saveState();
+      syncHeaderUI();
+      showToast(`발음 속도: ${state.settings.voiceRate.toFixed(1)}x`, 'info');
+    }
+
+    function syncHeaderUI() {
+      const todayCount = state.dailyHistory[getTodayStr()] || 0;
+      const pct = Math.min(100, Math.round((todayCount / DAILY_GOAL) * 100));
+      document.getElementById('hdr-streak').textContent = state.streak;
+      document.getElementById('hdr-daily-count').textContent = todayCount;
+      document.getElementById('hdr-daily-bar').style.width = `${pct}%`;
+
+      const badge = document.getElementById('hdr-kopron-badge');
+      if (badge) {
+        badge.textContent = state.settings.showKoPron ? 'ON' : 'OFF';
+        badge.className = state.settings.showKoPron
+          ? 'px-1.5 py-0.5 rounded bg-indigo-600 text-white text-[10px]'
+          : 'px-1.5 py-0.5 rounded bg-slate-400 text-white text-[10px]';
+      }
+
+      const btnUs = document.getElementById('btn-us');
+      const btnUk = document.getElementById('btn-uk');
+      const btnRate = document.getElementById('btn-rate');
+      if (btnUs && btnUk && btnRate) {
+        if (state.settings.voiceAccent === 'en-US') {
+          btnUs.className = 'px-2 py-1 rounded-lg bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-2xs transition';
+          btnUk.className = 'px-2 py-1 rounded-lg text-slate-500 dark:text-slate-400 transition';
+        } else {
+          btnUk.className = 'px-2 py-1 rounded-lg bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-2xs transition';
+          btnUs.className = 'px-2 py-1 rounded-lg text-slate-500 dark:text-slate-400 transition';
+        }
+        btnRate.textContent = `${state.settings.voiceRate.toFixed(1)}x`;
+      }
+    }
+
+    /* ==========================================================================
+       3. 헬퍼 함수 (단어 조회, 진도율 계산, TTS 발음, 토스트)
+       ========================================================================== */
+    function getAllWords() {
+      return [...INITIAL_WORDS, ...state.customWords];
+    }
+
+    function getStatus(wordId) {
+      return state.wordStatus[wordId] || { memo: 0, recall: false, spell: false, wrongCount: 0 };
+    }
+
+    function updateWordStatus(wordId, patch, isWrong = false) {
+      const prev = getStatus(wordId);
+      state.wordStatus[wordId] = {
+        ...prev,
+        ...patch,
+        wrongCount: isWrong ? (prev.wrongCount + 1) : prev.wrongCount
+      };
+      if (!isWrong) {
+        const today = getTodayStr();
+        const before = state.dailyHistory[today] || 0;
+        state.dailyHistory[today] = before + 1;
+        if (before < DAILY_GOAL && state.dailyHistory[today] >= DAILY_GOAL && typeof confetti === 'function') {
+          confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+          showToast('🎉 오늘의 목표 30단어 학습을 달성했습니다!', 'success');
+        }
+      }
+      saveState();
+    }
+
+    function getSetWords(setId) {
+      const all = getAllWords();
+      if (setId.startsWith('day_')) {
+        const d = Number(setId.split('_')[1]);
+        return all.filter(w => w.day === d);
+      }
+      if (setId === 'starred') return all.filter(w => state.starredIds.includes(w.id));
+      if (setId === 'wrong') return all.filter(w => getStatus(w.id).wrongCount > 0);
+      if (setId === 'custom') return state.customWords;
+      return all;
+    }
+
+    // 세트별 클래스카드 3단계(암기 / 리콜 / 스펠) 달성률 계산
+    function getSetProgressStats(words) {
+      if (!words || words.length === 0) return { memoPct: 0, recallPct: 0, spellPct: 0, totalPct: 0 };
+      const memoDone = words.filter(w => getStatus(w.id).memo >= 3).length;
+      const recallDone = words.filter(w => getStatus(w.id).recall).length;
+      const spellDone = words.filter(w => getStatus(w.id).spell).length;
+      const memoPct = Math.round((memoDone / words.length) * 100);
+      const recallPct = Math.round((recallDone / words.length) * 100);
+      const spellPct = Math.round((spellDone / words.length) * 100);
+      const totalPct = Math.round((memoPct + recallPct + spellPct) / 3);
+      return { memoPct, recallPct, spellPct, totalPct };
+    }
+
+    function speakText(text, e) {
+      if (e) e.stopPropagation();
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = state.settings.voiceAccent;
+      utter.rate = state.settings.voiceRate;
+      window.speechSynthesis.speak(utter);
+    }
+
+    // 발음기호 + 한글 발음 HTML 반환
+    function renderPronHTML(w, large = false) {
+      const ipa = w.phonetic || '';
+      const ko = (state.settings.showKoPron && w.koPron) ? w.koPron : '';
+      if (!ipa && !ko) return '';
+      if (large) {
+        return `
+          <div class="flex items-center justify-center gap-2 flex-wrap">
+            ${ipa ? `<span class="text-base sm:text-lg font-mono text-slate-400">${ipa}</span>` : ''}
+            ${ko ? `<span class="px-3 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/90 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-sm sm:text-base font-extrabold">[${ko}]</span>` : ''}
+          </div>
+        `;
+      }
+      return `
+        <span class="inline-flex items-center gap-1.5 flex-wrap">
+          ${ipa ? `<span class="text-xs font-mono text-slate-400">${ipa}</span>` : ''}
+          ${ko ? `<span class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400">[${ko}]</span>` : ''}
+        </span>
+      `;
+    }
+
+    function toggleStar(wordId, e) {
+      if (e) e.stopPropagation();
+      const idx = state.starredIds.indexOf(wordId);
+      if (idx === -1) {
+        state.starredIds.push(wordId);
+        showToast('⭐ 별표 단어장에 저장했습니다.', 'warning');
+      } else {
+        state.starredIds.splice(idx, 1);
+        showToast('별표가 해제되었습니다.', 'info');
+      }
+      saveState();
+      renderApp();
+    }
+
+    function showToast(msg, type = 'info') {
+      const box = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      const bg = {
+        info: 'bg-slate-800 text-white',
+        success: 'bg-emerald-600 text-white',
+        warning: 'bg-amber-500 text-white',
+        error: 'bg-rose-600 text-white'
+      }[type];
+      el.className = `${bg} px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm font-bold animate-fade-in pointer-events-auto`;
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.25s';
+        setTimeout(() => el.remove(), 250);
+      }, 2200);
+    }
+
+    function clearTimers() {
+      if (ui.recallTimerId) { clearInterval(ui.recallTimerId); ui.recallTimerId = null; }
+      if (ui.matchTimerId) { clearInterval(ui.matchTimerId); ui.matchTimerId = null; }
+    }
+
+    function goHome() {
+      clearTimers();
+      ui.view = 'home';
+      renderApp();
+    }
+
+    function openSet(setId, initialTab = 'list') {
+      clearTimers();
+      ui.view = 'set';
+      ui.activeSetId = setId;
+      ui.setTab = initialTab;
+      ui.cardIndex = 0;
+      ui.isFlipped = false;
+      ui.recallIndex = 0;
+      ui.recallScore = 0;
+      ui.spellIndex = 0;
+      resetModeSubStates();
+      renderApp();
+    }
+
+    function switchSetTab(tab) {
+      clearTimers();
+      ui.setTab = tab;
+      ui.isFlipped = false;
+      resetModeSubStates();
+      renderApp();
+    }
+
+    function resetModeSubStates() {
+      ui.recallOptions = [];
+      ui.recallAnswered = false;
+      ui.recallSelected = null;
+      ui.spellInput = '';
+      ui.spellAnswered = false;
+      ui.spellCorrect = false;
+      ui.spellHintShown = false;
+      ui.testQueue = [];
+      ui.testIndex = 0;
+      ui.testAnswers = [];
+      ui.testFinished = false;
+      ui.matchCards = [];
+      ui.matchSelected = [];
+      ui.matchMatchedIds = [];
+    }
+
+    /* ==========================================================================
+       4. 메인 라우터
+       ========================================================================== */
+    function renderApp() {
+      const main = document.getElementById('app-main');
+      if (ui.view === 'home') {
+        renderHomeDashboard(main);
+      } else {
+        renderSetWorkspace(main);
+      }
+    }
+
+    /* ==========================================================================
+       5. 화면 ①: 클래스카드 세트 라이브러리 홈 대시보드
+       ========================================================================== */
+    function renderHomeDashboard(container) {
+      const all = getAllWords();
+      const overall = getSetProgressStats(all);
+      const wrongWords = getSetWords('wrong');
+      const starredWords = getSetWords('starred');
+
+      container.innerHTML = `
+        <div class="space-y-6 animate-fade-in">
+          <!-- 상단 요약 & 나의 특수 세트(별표, 오답, 내 단어장) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <!-- 전체 마스터리 현황 카드 -->
+            <div class="lg:col-span-5 bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 text-white rounded-3xl p-6 shadow-lg flex flex-col justify-between">
+              <div class="space-y-1.5">
+                <span class="inline-block px-2.5 py-0.5 rounded-full bg-white/15 text-xs font-extrabold">예비 고1 겨울방학 집중 코스</span>
+                <h2 class="text-2xl font-black">중등·고등 영단어 120 세트</h2>
+                <p class="text-xs text-blue-100">각 세트마다 <strong>암기 → 리콜 → 스펠</strong> 3단계를 완료하여 100% 마스터를 달성하세요!</p>
+              </div>
+              <div class="mt-5 space-y-2 bg-black/15 p-4 rounded-2xl">
+                <div class="flex items-center justify-between text-xs font-extrabold">
+                  <span>전체 종합 달성률</span>
+                  <span class="text-amber-300 text-base">${overall.totalPct}%</span>
+                </div>
+                <div class="w-full h-2.5 bg-black/25 rounded-full overflow-hidden">
+                  <div class="h-full bg-amber-400 rounded-full transition-all duration-500" style="width: ${overall.totalPct}%"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-1 text-center text-[11px] font-bold text-blue-100">
+                  <div>암기 ${overall.memoPct}%</div>
+                  <div>리콜 ${overall.recallPct}%</div>
+                  <div>스펠 ${overall.spellPct}%</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 특수 학습 폴더 3종 (오답 노트, 별표 단어장, 나만의 단어장) -->
+            <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              <!-- 오답 자동 집중 세트 -->
+              <div onclick="openSet('wrong', 'memo')" class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-rose-400 shadow-xs hover:shadow-md transition cursor-pointer flex flex-col justify-between">
+                <div class="space-y-2">
+                  <div class="w-11 h-11 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-500 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-fire-flame-curved"></i>
+                  </div>
+                  <h3 class="font-black text-base text-slate-900 dark:text-white">오답 집중 세트</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">틀렸거나 모름을 누른 단어 자동 수집</p>
+                </div>
+                <div class="pt-4 flex items-center justify-between">
+                  <span class="text-lg font-black text-rose-600 dark:text-rose-400">${wrongWords.length}단어</span>
+                  <span class="text-xs font-bold text-slate-400">복습하기 <i class="fa-solid fa-chevron-right"></i></span>
+                </div>
+              </div>
+
+              <!-- 별표 즐겨찾기 세트 -->
+              <div onclick="openSet('starred', 'memo')" class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-amber-400 shadow-xs hover:shadow-md transition cursor-pointer flex flex-col justify-between">
+                <div class="space-y-2">
+                  <div class="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-500 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-star"></i>
+                  </div>
+                  <h3 class="font-black text-base text-slate-900 dark:text-white">별표 단어 세트</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">중요 표시한 나만의 핵심 단어 모음</p>
+                </div>
+                <div class="pt-4 flex items-center justify-between">
+                  <span class="text-lg font-black text-amber-500">${starredWords.length}단어</span>
+                  <span class="text-xs font-bold text-slate-400">학습하기 <i class="fa-solid fa-chevron-right"></i></span>
+                </div>
+              </div>
+
+              <!-- 나만의 단어장 세트 -->
+              <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+                <div onclick="openSet('custom', 'list')" class="space-y-2 cursor-pointer">
+                  <div class="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-folder-plus"></i>
+                  </div>
+                  <h3 class="font-black text-base text-slate-900 dark:text-white">나만의 단어장</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">직접 추가한 단어 (${state.customWords.length}개)</p>
+                </div>
+                <div class="pt-4 flex items-center justify-between gap-2">
+                  <button onclick="openModal('modal-add-word')" class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold transition">
+                    + 새 단어 추가
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 정규 커리큘럼 세트 목록 (Day 1 ~ Day 6) -->
+          <div class="space-y-3.5">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-book-bookmark text-blue-600"></i> 정규 학습 세트 (총 6세트 · 120단어)
+              </h3>
+              <button onclick="openSet('all', 'list')" class="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:underline">
+                전체 120단어 한눈에 보기 <i class="fa-solid fa-arrow-right ml-0.5"></i>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              ${SETS_META.map(meta => {
+                const words = getSetWords(meta.id);
+                const stats = getSetProgressStats(words);
+                const isMiddle = meta.level === 'middle';
+
+                return `
+                  <div onclick="openSet('${meta.id}', 'list')" class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 shadow-xs hover:shadow-lg transition cursor-pointer flex flex-col justify-between space-y-4">
+                    <div class="space-y-2">
+                      <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold ${isMiddle ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/70 dark:text-blue-300' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-300'}">
+                          ${meta.badge} · 20단어
+                        </span>
+                        <span class="text-xs font-black text-slate-400">달성 ${stats.totalPct}%</span>
+                      </div>
+                      <h4 class="text-lg font-black text-slate-900 dark:text-white">${meta.title}</h4>
+                      <p class="text-xs text-slate-500 dark:text-slate-400">${meta.desc}</p>
+                    </div>
+
+                    <!-- 클래스카드 핵심 3단계 달성 배지 (암기 / 리콜 / 스펠) -->
+                    <div class="grid grid-cols-3 gap-1.5 pt-1">
+                      <div class="px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-center">
+                        <span class="text-[10px] font-bold text-slate-400 block">암기</span>
+                        <span class="text-xs font-black ${stats.memoPct === 100 ? 'text-emerald-600' : 'text-blue-600 dark:text-blue-400'}">${stats.memoPct}%</span>
+                      </div>
+                      <div class="px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-center">
+                        <span class="text-[10px] font-bold text-slate-400 block">리콜</span>
+                        <span class="text-xs font-black ${stats.recallPct === 100 ? 'text-emerald-600' : 'text-amber-500'}">${stats.recallPct}%</span>
+                      </div>
+                      <div class="px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-center">
+                        <span class="text-[10px] font-bold text-slate-400 block">스펠</span>
+                        <span class="text-xs font-black ${stats.spellPct === 100 ? 'text-emerald-600' : 'text-purple-600 dark:text-purple-400'}">${stats.spellPct}%</span>
+                      </div>
+                    </div>
+
+                    <div class="pt-1 flex items-center justify-between text-xs font-extrabold text-blue-600 dark:text-blue-400">
+                      <span>세트 열기</span>
+                      <span class="w-7 h-7 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center"><i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ==========================================================================
+       6. 화면 ②: 클래스카드 세트 학습방 (상단 모드 런처 + 학습 스테이지)
+       ========================================================================== */
+    function getSetTitle(setId) {
+      const found = SETS_META.find(m => m.id === setId);
+      if (found) return found.title;
+      if (setId === 'starred') return '⭐ 별표 단어 세트';
+      if (setId === 'wrong') return '🚨 오답 집중 세트';
+      if (setId === 'custom') return '📗 나만의 단어장 세트';
+      return '📚 전체 120+ 단어 통합 세트';
+    }
+
+    function renderSetWorkspace(container) {
+      const words = getSetWords(ui.activeSetId);
+      const stats = getSetProgressStats(words);
+
+      const tabs = [
+        { id: 'list', label: '단어 목록', icon: 'fa-list-ul', color: 'slate', pct: null },
+        { id: 'memo', label: '1. 암기', icon: 'fa-clone', color: 'blue', pct: stats.memoPct },
+        { id: 'recall', label: '2. 리콜', icon: 'fa-bolt', color: 'amber', pct: stats.recallPct },
+        { id: 'spell', label: '3. 스펠', icon: 'fa-keyboard', color: 'purple', pct: stats.spellPct },
+        { id: 'test', label: '실전 테스트', icon: 'fa-file-signature', color: 'rose', pct: null },
+        { id: 'matching', label: '매칭 게임', icon: 'fa-puzzle-piece', color: 'emerald', pct: null }
+      ];
+
+      container.innerHTML = `
+        <div class="space-y-5 animate-fade-in">
+          <!-- 세트 헤더 & 뒤로가기 -->
+          <div class="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <button onclick="goHome()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 transition" title="세트 목록으로">
+                  <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div>
+                  <h2 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white">${getSetTitle(ui.activeSetId)}</h2>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">총 <strong>${words.length}</strong>단어 · 종합 달성률 <strong class="text-blue-600 dark:text-blue-400">${stats.totalPct}%</strong></p>
+                </div>
+              </div>
+
+              ${ui.activeSetId === 'custom' ? `
+                <button onclick="openModal('modal-add-word')" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold transition">
+                  + 단어 추가하기
+                </button>
+              ` : ''}
+            </div>
+
+            <!-- 클래스카드식 6대 학습 런처 버튼 바 -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              ${tabs.map(t => {
+                const active = ui.setTab === t.id;
+                const activeStyles = {
+                  slate: 'bg-slate-800 text-white border-slate-800 dark:bg-slate-700',
+                  blue: 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/25',
+                  amber: 'bg-amber-500 text-white border-amber-500 shadow-sm shadow-amber-500/25',
+                  purple: 'bg-purple-600 text-white border-purple-600 shadow-sm shadow-purple-500/25',
+                  rose: 'bg-rose-600 text-white border-rose-600 shadow-sm shadow-rose-500/25',
+                  emerald: 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-500/25'
+                }[t.color];
+
+                return `
+                  <button onclick="switchSetTab('${t.id}')" class="py-2.5 px-3 rounded-2xl border text-left transition flex items-center justify-between ${active ? activeStyles : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/70 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200'}">
+                    <div class="flex items-center gap-2">
+                      <i class="fa-solid ${t.icon} text-xs ${active ? 'text-white' : `text-${t.color}-500`}"></i>
+                      <span class="text-xs sm:text-sm font-extrabold">${t.label}</span>
+                    </div>
+                    ${t.pct !== null ? `<span class="text-[11px] font-black ${active ? 'text-white/90' : 'text-slate-400'}">${t.pct}%</span>` : ''}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- 선택된 탭 스테이지 -->
+          <div id="set-stage"></div>
+        </div>
+      `;
+
+      const stage = document.getElementById('set-stage');
+      if (words.length === 0) {
+        stage.innerHTML = `
+          <div class="bg-white dark:bg-slate-900 rounded-3xl p-12 border border-slate-200 dark:border-slate-800 text-center space-y-3">
+            <i class="fa-regular fa-folder-open text-4xl text-slate-300"></i>
+            <h3 class="text-base font-extrabold text-slate-800 dark:text-slate-100">이 세트에는 아직 단어가 없습니다</h3>
+            <p class="text-xs text-slate-500">다른 학습 세트를 선택하거나 새 단어를 추가해 보세요.</p>
+            <button onclick="goHome()" class="mt-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold">홈으로 돌아가기</button>
+          </div>
+        `;
+        return;
+      }
+
+      if (ui.setTab === 'list') renderWordListTab(stage, words);
+      else if (ui.setTab === 'memo') renderMemorizeTab(stage, words);
+      else if (ui.setTab === 'recall') renderRecallTab(stage, words);
+      else if (ui.setTab === 'spell') renderSpellTab(stage, words);
+      else if (ui.setTab === 'test') renderTestTab(stage, words);
+      else if (ui.setTab === 'matching') renderMatchingTab(stage, words);
+    }
+
+    /* --------------------------------------------------------------------------
+       6-1. 탭 ①: 단어 목록 & 클래스카드식 가림막(단어 / 뜻 / 발음 가리기)
+       -------------------------------------------------------------------------- */
+    function renderWordListTab(stage, words) {
+      let filtered = words;
+      if (ui.listSearch.trim()) {
+        const q = ui.listSearch.trim().toLowerCase();
+        filtered = words.filter(w =>
+          w.word.toLowerCase().includes(q) ||
+          w.meaning.toLowerCase().includes(q) ||
+          (w.koPron && w.koPron.includes(q))
+        );
+      }
+
+      stage.innerHTML = `
+        <div class="space-y-4">
+          <!-- 가림막 컨트롤 & 검색 바 -->
+          <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-xs font-extrabold text-slate-500 mr-1"><i class="fa-solid fa-eye-slash text-blue-600 mr-1"></i>가림막:</span>
+              ${[
+                { id: 'none', label: '모두 보기' },
+                { id: 'meaning', label: '뜻 가리기' },
+                { id: 'word', label: '영어 가리기' },
+                { id: 'pron', label: '한글발음 가리기' }
+              ].map(b => `
+                <button onclick="ui.blindMode='${b.id}'; renderSetWorkspace(document.getElementById('app-main'))" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${ui.blindMode === b.id ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}">
+                  ${b.label}
+                </button>
+              `).join('')}
+            </div>
+
+            <div class="relative w-full sm:w-64">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input type="text" id="set-list-search" value="${ui.listSearch}" oninput="ui.listSearch=this.value; renderSetWorkspace(document.getElementById('app-main'))" placeholder="세트 내 단어/발음 검색..." class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <!-- 단어 카드 리스트 -->
+          <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden shadow-2xs">
+            ${filtered.map((w, idx) => {
+              const st = getStatus(w.id);
+              const isStar = state.starredIds.includes(w.id);
+              const memoBadge = st.memo >= 3
+                ? '<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 text-[10px] font-extrabold">암기완료</span>'
+                : st.memo > 0
+                  ? '<span class="px-2 py-0.5 rounded bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400 text-[10px] font-extrabold">학습중</span>'
+                  : '';
+
+              return `
+                <div onclick="openWordDetail('${w.id}')" class="p-4 sm:px-6 hover:bg-slate-50/90 dark:hover:bg-slate-800/50 transition cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <!-- 좌측: 번호 + 영단어 + 발음기호 + 한글발음 -->
+                  <div class="sm:w-5/12 flex items-start gap-3">
+                    <span class="text-xs font-bold text-slate-400 mt-1.5 w-5">${idx + 1}</span>
+                    <div>
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-lg sm:text-xl font-black text-slate-900 dark:text-white ${ui.blindMode === 'word' ? 'blind-blur' : ''}">${w.word}</span>
+                        <button onclick="speakText('${w.word.replace(/'/g, "\\'")}', event)" class="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-300 flex items-center justify-center text-xs transition" title="발음 듣기">
+                          <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                        ${memoBadge}
+                      </div>
+                      <div class="mt-0.5 ${ui.blindMode === 'pron' ? 'blind-blur' : ''}">
+                        ${renderPronHTML(w, false)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 중앙: 품사 + 한글 뜻 + 예문 -->
+                  <div class="sm:w-6/12 pl-8 sm:pl-0">
+                    <p class="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100 ${ui.blindMode === 'meaning' ? 'blind-blur' : ''}">
+                      <span class="text-xs font-bold text-blue-600 dark:text-blue-400 mr-1.5">${w.pos}</span>${w.meaning}
+                    </p>
+                    ${w.example ? `<p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">${w.example}</p>` : ''}
+                  </div>
+
+                  <!-- 우측: 별표 & 상세 아이콘 -->
+                  <div class="flex items-center justify-end gap-2 sm:w-1/12">
+                    <button onclick="toggleStar('${w.id}', event)" class="w-8 h-8 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700 flex items-center justify-center text-base ${isStar ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'}">
+                      <i class="fa-${isStar ? 'solid' : 'regular'} fa-star"></i>
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+
+      if (ui.listSearch) {
+        const inp = document.getElementById('set-list-search');
+        if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+       6-2. 탭 ②: [1단계: 암기] 클래스카드 플래시카드 + 4단계 난이도 평가
+       -------------------------------------------------------------------------- */
+    function renderMemorizeTab(stage, words) {
+      if (ui.cardIndex >= words.length) ui.cardIndex = 0;
+      const w = words[ui.cardIndex];
+      const isStar = state.starredIds.includes(w.id);
+
+      // 예문 빈칸 처리
+      let exampleDisplay = w.example || '';
+      if (ui.clozeExampleMode && w.example) {
+        const regex = new RegExp(w.word, 'gi');
+        exampleDisplay = w.example.replace(regex, '<span class="px-2 py-0.5 rounded bg-amber-400/30 text-amber-200 font-mono font-black">[ ______ ]</span>');
+      }
+
+      stage.innerHTML = `
+        <div class="max-w-2xl mx-auto space-y-4 animate-fade-in">
+          <!-- 상단 진행바 & 예문 빈칸 토글 -->
+          <div class="flex items-center justify-between px-1">
+            <span class="text-xs font-black text-blue-600 dark:text-blue-400">
+              암기 카드 ${ui.cardIndex + 1} / ${words.length}
+            </span>
+            <div class="flex items-center gap-2">
+              <button onclick="ui.clozeExampleMode=!ui.clozeExampleMode; renderSetWorkspace(document.getElementById('app-main'));" class="px-3 py-1 rounded-full text-xs font-bold transition ${ui.clozeExampleMode ? 'bg-amber-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}">
+                <i class="fa-solid fa-highlighter mr-1"></i>예문 빈칸 훈련 ${ui.clozeExampleMode ? 'ON' : 'OFF'}
+              </button>
+            </div>
+          </div>
+
+          <!-- 3D 플립 카드 -->
+          <div class="perspective-1000 h-96 cursor-pointer select-none" onclick="flipMemoCard()">
+            <div id="memo-card-inner" class="relative w-full h-full transform-style-3d ${ui.isFlipped ? 'rotate-y-180' : ''}">
+              
+              <!-- 앞면: 영단어 + 발음기호 + 한글발음 + 스피커 -->
+              <div class="absolute inset-0 backface-hidden bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border-2 border-slate-200 dark:border-slate-800 shadow-lg flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                  <span class="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 text-xs font-extrabold">
+                    ${w.level === 'custom' ? '내 단어' : `Day ${w.day}`} · ${w.pos}
+                  </span>
+                  <button onclick="toggleStar('${w.id}', event)" class="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-xl ${isStar ? 'text-amber-400' : 'text-slate-300 dark:text-slate-600'}">
+                    <i class="fa-${isStar ? 'solid' : 'regular'} fa-star"></i>
+                  </button>
+                </div>
+
+                <div class="text-center my-auto space-y-3">
+                  <h3 class="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white break-words">${w.word}</h3>
+                  ${renderPronHTML(w, true)}
+                  <div class="pt-2">
+                    <button onclick="speakText('${w.word.replace(/'/g, "\\'")}', event)" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-extrabold shadow-xs transition">
+                      <i class="fa-solid fa-volume-high"></i> 발음 듣기 (${state.settings.voiceAccent === 'en-US' ? 'US' : 'UK'})
+                    </button>
+                  </div>
+                </div>
+
+                <div class="text-center text-xs font-semibold text-slate-400">
+                  카드를 클릭하거나 <kbd class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded">Space</kbd>를 눌러 뜻과 예문 확인
+                </div>
+              </div>
+
+              <!-- 뒷면: 한글 뜻 + 예문 + 유의어 + 암기 팁 -->
+              <div class="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white rounded-3xl p-6 sm:p-7 border-2 border-blue-500/30 shadow-xl flex flex-col justify-between overflow-y-auto">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-lg font-black">${w.word}</span>
+                    ${(state.settings.showKoPron && w.koPron) ? `<span class="px-2 py-0.5 rounded-full bg-white/15 text-blue-200 text-xs font-extrabold">[${w.koPron}]</span>` : ''}
+                    <button onclick="speakText('${w.word.replace(/'/g, "\\'")}', event)" class="w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-xs">
+                      <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                  </div>
+                  <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-white/15">${w.pos}</span>
+                </div>
+
+                <div class="my-auto space-y-3 py-2">
+                  <div class="text-center">
+                    <h3 class="text-2xl sm:text-3xl font-black text-amber-300">${w.meaning}</h3>
+                    ${w.subMeanings && w.subMeanings.length ? `<p class="text-xs text-blue-200 mt-1">확장 뜻: ${w.subMeanings.join(' · ')}</p>` : ''}
+                  </div>
+
+                  ${w.example ? `
+                    <div class="bg-black/25 rounded-2xl p-3.5 space-y-1 text-left">
+                      <div class="flex items-start justify-between gap-2">
+                        <p class="text-xs sm:text-sm font-semibold text-white leading-relaxed">${exampleDisplay}</p>
+                        <button onclick="speakText('${w.example.replace(/'/g, "\\'")}', event)" class="shrink-0 w-6 h-6 rounded bg-white/15 hover:bg-white/25 flex items-center justify-center text-[11px]">
+                          <i class="fa-solid fa-volume-low"></i>
+                        </button>
+                      </div>
+                      ${w.exampleKo ? `<p class="text-xs text-blue-200/85">${w.exampleKo}</p>` : ''}
+                    </div>
+                  ` : ''}
+
+                  ${(w.synonyms && w.synonyms.length) || w.tip ? `
+                    <div class="space-y-1.5 text-left text-xs">
+                      ${w.synonyms && w.synonyms.length ? `<p class="text-emerald-300 font-bold">유의어: <span class="text-white font-medium">${w.synonyms.join(', ')}</span></p>` : ''}
+                      ${w.tip ? `<p class="bg-amber-400/15 border border-amber-300/30 rounded-xl p-2 text-amber-100"><strong class="text-amber-300">💡 팁:</strong> ${w.tip}</p>` : ''}
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- 클래스카드식 4단계 난이도 평가 버튼 ([1] 모름, [2] 헷갈림, [3] 앎, [4] 완벽함) -->
+          <div class="grid grid-cols-4 gap-2 pt-1">
+            <button onclick="rateMemo('${w.id}', 1)" class="py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 flex flex-col items-center justify-center transition">
+              <span class="text-xs sm:text-sm font-black">[1] 모름</span>
+              <span class="text-[10px] opacity-75">오답 자동등록</span>
+            </button>
+            <button onclick="rateMemo('${w.id}', 2)" class="py-3 rounded-2xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 flex flex-col items-center justify-center transition">
+              <span class="text-xs sm:text-sm font-black">[2] 헷갈림</span>
+              <span class="text-[10px] opacity-75">다시 확인</span>
+            </button>
+            <button onclick="rateMemo('${w.id}', 3)" class="py-3 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 flex flex-col items-center justify-center transition">
+              <span class="text-xs sm:text-sm font-black">[3] 앎</span>
+              <span class="text-[10px] opacity-75">암기 달성</span>
+            </button>
+            <button onclick="rateMemo('${w.id}', 4)" class="py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex flex-col items-center justify-center transition">
+              <span class="text-xs sm:text-sm font-black">[4] 완벽함</span>
+              <span class="text-[10px] text-emerald-100">완벽 마스터</span>
+            </button>
+          </div>
+
+          <!-- 하단 이전/다음 & 리콜 단계 이동 유도 -->
+          <div class="flex items-center justify-between pt-2">
+            <button onclick="stepMemo(-1)" class="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300">
+              <i class="fa-solid fa-chevron-left mr-1"></i>이전 카드
+            </button>
+            <button onclick="switchSetTab('recall')" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold shadow-xs transition">
+              다음 단계: 2. 리콜 학습 <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+            <button onclick="stepMemo(1)" class="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300">
+              다음 카드<i class="fa-solid fa-chevron-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function flipMemoCard() {
+      ui.isFlipped = !ui.isFlipped;
+      document.getElementById('memo-card-inner')?.classList.toggle('rotate-y-180', ui.isFlipped);
+    }
+
+    function rateMemo(wordId, level) {
+      updateWordStatus(wordId, { memo: level }, level === 1);
+      stepMemo(1);
+    }
+
+    function stepMemo(delta) {
+      const words = getSetWords(ui.activeSetId);
+      if (!words.length) return;
+      ui.cardIndex = (ui.cardIndex + delta + words.length) % words.length;
+      ui.isFlipped = false;
+      renderSetWorkspace(document.getElementById('app-main'));
+    }
+
+    /* --------------------------------------------------------------------------
+       6-3. 탭 ③: [2단계: 리콜] 제한시간 타이머 게이지 4지선다 스피드 퀴즈
+       -------------------------------------------------------------------------- */
+    function renderRecallTab(stage, words) {
+      if (ui.recallIndex >= words.length) {
+        // 리콜 완주 화면
+        clearTimers();
+        stage.innerHTML = `
+          <div class="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-lg text-center space-y-4 animate-fade-in">
+            <div class="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-500 flex items-center justify-center mx-auto text-3xl">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-900 dark:text-white">2단계 리콜 학습 완료!</h3>
+            <p class="text-sm text-slate-500">총 ${words.length}문제 중 <strong class="text-amber-500 text-lg">${ui.recallScore}문제</strong> 정답!</p>
+            <div class="pt-3 flex flex-col gap-2">
+              <button onclick="switchSetTab('spell')" class="w-full py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-sm shadow-md transition">
+                다음 단계: 3. 스펠 학습 도전하기 <i class="fa-solid fa-arrow-right ml-1"></i>
+              </button>
+              <button onclick="ui.recallIndex=0; ui.recallScore=0; resetModeSubStates(); renderSetWorkspace(document.getElementById('app-main'));" class="w-full py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs">
+                리콜 처음부터 다시 풀기
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const w = words[ui.recallIndex];
+      const isEn2Ko = ui.recallDirection === 'en2ko';
+
+      if (ui.recallOptions.length === 0) {
+        const all = getAllWords();
+        const distractors = all
+          .filter(item => item.id !== w.id)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+          .map(item => ({ label: isEn2Ko ? item.meaning : item.word, isCorrect: false }));
+        ui.recallOptions = [{ label: isEn2Ko ? w.meaning : w.word, isCorrect: true }, ...distractors].sort(() => Math.random() - 0.5);
+
+        // 타이머 게이지 시작 (8초)
+        ui.recallTimeLeft = 100;
+        clearTimers();
+        ui.recallTimerId = setInterval(() => {
+          ui.recallTimeLeft -= 1.25;
+          const bar = document.getElementById('recall-timer-bar');
+          if (bar) bar.style.width = `${Math.max(0, ui.recallTimeLeft)}%`;
+          if (ui.recallTimeLeft <= 0) {
+            clearTimers();
+            handleRecallAnswer('TIMEOUT', false);
+          }
+        }, 100);
+      }
+
+      stage.innerHTML = `
+        <div class="max-w-xl mx-auto bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 animate-fade-in">
+          <!-- 상단 타이머 게이지 -->
+          <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div id="recall-timer-bar" class="h-full bg-gradient-to-r from-amber-400 to-rose-500 transition-all duration-100" style="width: ${ui.recallTimeLeft}%"></div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-amber-500">리콜 ${ui.recallIndex + 1} / ${words.length}</span>
+            <button onclick="ui.recallDirection = ui.recallDirection==='en2ko'?'ko2en':'en2ko'; resetModeSubStates(); renderSetWorkspace(document.getElementById('app-main'));" class="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300">
+              <i class="fa-solid fa-repeat mr-1"></i>${isEn2Ko ? '영단어 → 뜻' : '뜻 → 영단어'}
+            </button>
+          </div>
+
+          <!-- 제시어 -->
+          <div class="text-center py-6 px-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70">
+            <h3 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white break-words">
+              ${isEn2Ko ? w.word : w.meaning}
+            </h3>
+            ${isEn2Ko ? `
+              <div class="mt-2 flex items-center justify-center gap-2">
+                ${renderPronHTML(w, false)}
+                <button onclick="speakText('${w.word.replace(/'/g, "\\'")}', event)" class="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-600 flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
+              </div>
+            ` : `<span class="text-xs font-bold text-slate-400 mt-1 block">${w.pos}</span>`}
+          </div>
+
+          <!-- 4지선다 보기 -->
+          <div class="space-y-2.5">
+            ${ui.recallOptions.map((opt, idx) => {
+              let cls = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-amber-500 text-slate-800 dark:text-slate-100';
+              if (ui.recallAnswered) {
+                if (opt.isCorrect) cls = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300';
+                else if (opt.label === ui.recallSelected) cls = 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-700 dark:text-rose-300 animate-shake';
+                else cls = 'opacity-45 border-slate-200 dark:border-slate-800';
+              }
+              return `
+                <button ${ui.recallAnswered ? 'disabled' : ''} onclick="handleRecallAnswer('${opt.label.replace(/'/g, "\\'")}', ${opt.isCorrect})" class="w-full p-4 rounded-2xl border-2 text-left font-extrabold text-sm sm:text-base transition flex items-center gap-3 ${cls}">
+                  <span class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-black flex items-center justify-center text-slate-500">${idx + 1}</span>
+                  <span class="flex-1">${opt.label}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          ${ui.recallAnswered ? `
+            <div class="pt-1 animate-fade-in">
+              <button onclick="ui.recallIndex++; resetModeSubStates(); renderSetWorkspace(document.getElementById('app-main'));" class="w-full py-3.5 rounded-2xl bg-slate-900 dark:bg-amber-500 text-white font-extrabold text-sm">
+                다음 문제 <i class="fa-solid fa-arrow-right ml-1"></i>
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function handleRecallAnswer(label, isCorrect) {
+      if (ui.recallAnswered) return;
+      clearTimers();
+      const w = getSetWords(ui.activeSetId)[ui.recallIndex];
+      ui.recallAnswered = true;
+      ui.recallSelected = label;
+
+      if (isCorrect) {
+        ui.recallScore += 1;
+        updateWordStatus(w.id, { recall: true }, false);
+        speakText(w.word);
+        renderSetWorkspace(document.getElementById('app-main'));
+        setTimeout(() => {
+          if (ui.setTab === 'recall' && ui.recallAnswered) {
+            ui.recallIndex++;
+            resetModeSubStates();
+            renderSetWorkspace(document.getElementById('app-main'));
+          }
+        }, 750);
+      } else {
+        updateWordStatus(w.id, { recall: false }, true);
+        renderSetWorkspace(document.getElementById('app-main'));
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+       6-4. 탭 ④: [3단계: 스펠] 한글 뜻·예문 빈칸·발음 듣고 스펠링 타이핑
+       -------------------------------------------------------------------------- */
+    function renderSpellTab(stage, words) {
+      if (ui.spellIndex >= words.length) {
+        stage.innerHTML = `
+          <div class="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-lg text-center space-y-4 animate-fade-in">
+            <div class="w-16 h-16 rounded-2xl bg-purple-100 dark:bg-purple-950 text-purple-600 flex items-center justify-center mx-auto text-3xl">
+              <i class="fa-solid fa-award"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-900 dark:text-white">3단계 스펠 학습 완주!</h3>
+            <p class="text-sm text-slate-500">암기 · 리콜 · 스펠 3단계 완전학습 사이클을 마쳤습니다!</p>
+            <div class="pt-3 flex flex-col gap-2">
+              <button onclick="switchSetTab('test')" class="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-sm shadow-md transition">
+                실전 종합 테스트 응시하기 <i class="fa-solid fa-arrow-right ml-1"></i>
+              </button>
+              <button onclick="ui.spellIndex=0; resetModeSubStates(); renderSetWorkspace(document.getElementById('app-main'));" class="w-full py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs">
+                스펠 다시 연습하기
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const w = words[ui.spellIndex];
+      let clozeEx = '';
+      if (w.example) {
+        const rx = new RegExp(w.word, 'gi');
+        clozeEx = w.example.replace(rx, '<span class="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 font-mono font-bold">______</span>');
+      }
+
+      stage.innerHTML = `
+        <div class="max-w-xl mx-auto bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 animate-fade-in">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-purple-600 dark:text-purple-400">스펠 ${ui.spellIndex + 1} / ${words.length}</span>
+            <div class="flex items-center gap-1.5">
+              <button onclick="ui.spellHintShown=true; renderSetWorkspace(document.getElementById('app-main'));" class="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                <i class="fa-solid fa-lightbulb mr-1"></i>첫 글자 힌트
+              </button>
+              <button onclick="speakText('${w.word.replace(/'/g, "\\'")}', event)" class="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 text-xs font-bold">
+                <i class="fa-solid fa-volume-high mr-1"></i>발음 힌트
+              </button>
+            </div>
+          </div>
+
+          <div class="text-center py-6 px-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 space-y-2.5">
+            <span class="px-2.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-xs font-bold">${w.pos}</span>
+            <h3 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">${w.meaning}</h3>
+            ${clozeEx ? `<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 pt-1">"${clozeEx}"</p>` : ''}
+            <p class="text-xs font-mono font-bold text-slate-400">
+              ${ui.spellHintShown ? `힌트: ${w.word[0]}${' _'.repeat(w.word.length - 1)} (${w.word.length}글자)` : `철자 수: ${w.word.length}글자`}
+            </p>
+          </div>
+
+          <form onsubmit="submitSpellAnswer(event)" class="space-y-3">
+            <input
+              type="text"
+              id="spell-typing-input"
+              autocomplete="off"
+              autocapitalize="none"
+              spellcheck="false"
+              ${ui.spellAnswered ? 'disabled' : ''}
+              value="${ui.spellInput}"
+              placeholder="영단어 스펠링을 입력하세요"
+              class="w-full px-4 py-4 rounded-2xl text-center text-xl font-black tracking-wider bg-slate-50 dark:bg-slate-800 border-2 ${
+                !ui.spellAnswered
+                  ? 'border-slate-200 dark:border-slate-700 focus:border-purple-500'
+                  : ui.spellCorrect
+                    ? 'border-emerald-500 text-emerald-600'
+                    : 'border-rose-500 text-rose-600'
+              } focus:outline-none"
+            >
+
+            ${!ui.spellAnswered ? `
+              <button type="submit" class="w-full py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-sm shadow-md transition">
+                정답 확인
+              </button>
+            ` : `
+              <div class="p-4 rounded-2xl ${ui.spellCorrect ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-200'} space-y-2.5 animate-fade-in">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-black">${ui.spellCorrect ? '🎯 완벽한 스펠링입니다!' : `❌ 정답: ${w.word}`}</span>
+                  ${renderPronHTML(w, false)}
+                </div>
+                <button type="button" onclick="ui.spellIndex++; resetModeSubStates(); renderSetWorkspace(document.getElementById('app-main'));" class="w-full py-3 rounded-xl bg-slate-900 dark:bg-purple-600 text-white font-bold text-sm">
+                  다음 단어 <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            `}
+          </form>
+        </div>
+      `;
+
+      if (!ui.spellAnswered) {
+        setTimeout(() => document.getElementById('spell-typing-input')?.focus(), 40);
+      }
+    }
+
+    function submitSpellAnswer(e) {
+      e.preventDefault();
+      if (ui.spellAnswered) return;
+      const val = document.getElementById('spell-typing-input')?.value.trim() || '';
+      if (!val) { showToast('스펠링을 입력해 주세요!', 'warning'); return; }
+      const w = getSetWords(ui.activeSetId)[ui.spellIndex];
+      const ok = val.toLowerCase() === w.word.toLowerCase();
+      ui.spellAnswered = true;
+      ui.spellInput = val;
+      ui.spellCorrect = ok;
+      updateWordStatus(w.id, { spell: ok }, !ok);
+      if (ok) speakText(w.word);
+      renderSetWorkspace(document.getElementById('app-main'));
+    }
+
+    /* --------------------------------------------------------------------------
+       6-5. 탭 ⑤: 실전 종합 테스트 (객관식 + 주관식 혼합 시험 및 성적표)
+       -------------------------------------------------------------------------- */
+    function renderTestTab(stage, words) {
+      if (ui.testQueue.length === 0) {
+        const shuffled = [...words].sort(() => Math.random() - 0.5).slice(0, Math.min(10, words.length));
+        const all = getAllWords();
+        ui.testQueue = shuffled.map((w, i) => {
+          const mode = i % 2 === 0 ? 'choice' : 'typing';
+          const distractors = all.filter(x => x.id !== w.id).sort(() => Math.random() - 0.5).slice(0, 3).map(x => x.meaning);
+          const options = [w.meaning, ...distractors].sort(() => Math.random() - 0.5);
+          return { wordObj: w, mode, options };
+        });
+        ui.testIndex = 0;
+        ui.testAnswers = [];
+        ui.testFinished = false;
+      }
+
+      if (ui.testFinished) {
+        const correctCnt = ui.testAnswers.filter(a => a.isCorrect).length;
+        const score = Math.round((correctCnt / ui.testQueue.length) * 100);
+        if (score >= 80 && typeof confetti === 'function') confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+
+        stage.innerHTML = `
+          <div class="max-w-2xl mx-auto bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-lg space-y-6 animate-fade-in">
+            <div class="text-center space-y-2">
+              <span class="px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950 text-rose-600 text-xs font-extrabold">실전 종합 테스트 결과</span>
+              <h3 class="text-4xl font-black text-slate-900 dark:text-white">${score}점</h3>
+              <p class="text-xs text-slate-500">총 ${ui.testQueue.length}문항 중 <strong>${correctCnt}문항</strong> 정답 (오답은 오답 노트에 자동 저장됨)</p>
+            </div>
+
+            <div class="divide-y divide-slate-100 dark:divide-slate-800 border-t border-b border-slate-100 dark:border-slate-800 max-h-80 overflow-y-auto">
+              ${ui.testAnswers.map((ans, idx) => `
+                <div class="py-3 flex items-center justify-between gap-3 text-xs sm:text-sm">
+                  <div>
+                    <span class="font-black mr-2 ${ans.isCorrect ? 'text-emerald-600' : 'text-rose-500'}">${ans.isCorrect ? 'O' : 'X'}</span>
+                    <strong class="text-slate-900 dark:text-white">${ans.wordObj.word}</strong>
+                    <span class="text-slate-400 ml-1">(${ans.wordObj.meaning})</span>
+                  </div>
+                  <span class="text-xs ${ans.isCorrect ? 'text-slate-400' : 'text-rose-500 font-bold'}">내 답: ${ans.userAnswer || '(미입력)'}</span>
+                </div>
+              `).join('')}
+            </div>
+
+            <button onclick="resetModeSubStates(); renderSetWorkspace(document.getElementById('app-main'));" class="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-sm">
+              새 시험지로 재응시하기
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const item = ui.testQueue[ui.testIndex];
+      const w = item.wordObj;
+
+      stage.innerHTML = `
+        <div class="max-w-xl mx-auto bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 animate-fade-in">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-rose-600">실전 테스트 ${ui.testIndex + 1} / ${ui.testQueue.length}</span>
+            <span class="px-2.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-500">${item.mode === 'choice' ? '객관식' : '주관식 스펠링'}</span>
+          </div>
+
+          <div class="text-center py-6 px-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70">
+            <h3 class="text-3xl font-black text-slate-900 dark:text-white">${item.mode === 'choice' ? w.word : w.meaning}</h3>
+            <p class="text-xs text-slate-400 mt-1">${item.mode === 'choice' ? (w.phonetic || w.pos) : `${w.pos} · ${w.word.length}글자`}</p>
+          </div>
+
+          ${item.mode === 'choice' ? `
+            <div class="space-y-2.5">
+              ${item.options.map((opt, idx) => `
+                <button onclick="recordTestAnswer('${opt.replace(/'/g, "\\'")}', ${opt === w.meaning})" class="w-full p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 hover:border-rose-500 text-left font-bold text-sm sm:text-base transition flex items-center gap-3">
+                  <span class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold flex items-center justify-center">${idx + 1}</span>
+                  <span>${opt}</span>
+                </button>
+              `).join('')}
+            </div>
+          ` : `
+            <form onsubmit="submitTestTyping(event)" class="space-y-3">
+              <input type="text" id="test-typing-box" required autocomplete="off" placeholder="영단어 철자를 입력하세요" class="w-full px-4 py-4 rounded-2xl text-center text-xl font-black bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 focus:border-rose-500 focus:outline-none">
+              <button type="submit" class="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-sm">제출 및 다음 문항</button>
+            </form>
+          `}
+        </div>
+      `;
+
+      if (item.mode === 'typing') {
+        setTimeout(() => document.getElementById('test-typing-box')?.focus(), 40);
+      }
+    }
+
+    function submitTestTyping(e) {
+      e.preventDefault();
+      const val = document.getElementById('test-typing-box')?.value.trim() || '';
+      const w = ui.testQueue[ui.testIndex].wordObj;
+      recordTestAnswer(val, val.toLowerCase() === w.word.toLowerCase());
+    }
+
+    function recordTestAnswer(userAnswer, isCorrect) {
+      const w = ui.testQueue[ui.testIndex].wordObj;
+      ui.testAnswers.push({ wordObj: w, userAnswer, isCorrect });
+      if (!isCorrect) updateWordStatus(w.id, {}, true);
+      else updateWordStatus(w.id, { recall: true }, false);
+
+      if (ui.testIndex + 1 >= ui.testQueue.length) {
+        ui.testFinished = true;
+      } else {
+        ui.testIndex += 1;
+      }
+      renderSetWorkspace(document.getElementById('app-main'));
+    }
+
+    /* --------------------------------------------------------------------------
+       6-6. 탭 ⑥: 스피드 매칭 게임 (6쌍 카드 짝맞추기)
+       -------------------------------------------------------------------------- */
+    function renderMatchingTab(stage, words) {
+      if (ui.matchCards.length === 0) {
+        const sample = [...words].sort(() => Math.random() - 0.5).slice(0, Math.min(6, words.length));
+        const cards = [];
+        sample.forEach(w => {
+          cards.push({ uid: `${w.id}_en`, wordId: w.id, text: w.word, type: 'en' });
+          cards.push({ uid: `${w.id}_ko`, wordId: w.id, text: w.meaning, type: 'ko' });
+        });
+        ui.matchCards = cards.sort(() => Math.random() - 0.5);
+        ui.matchSelected = [];
+        ui.matchMatchedIds = [];
+        ui.matchStartTime = Date.now();
+        ui.matchElapsed = '0.0';
+
+        clearTimers();
+        ui.matchTimerId = setInterval(() => {
+          ui.matchElapsed = ((Date.now() - ui.matchStartTime) / 1000).toFixed(1);
+          const el = document.getElementById('match-clock');
+          if (el) el.textContent = `${ui.matchElapsed}초`;
+        }, 100);
+      }
+
+      const pairs = ui.matchCards.length / 2;
+      if (ui.matchMatchedIds.length === pairs) {
+        clearTimers();
+        const sec = parseFloat(ui.matchElapsed);
+        let bestMsg = '';
+        if (state.bestMatchTime === null || sec < state.bestMatchTime) {
+          state.bestMatchTime = sec;
+          bestMsg = '🎉 개인 최고 기록 경신!';
+          saveState();
+        }
+        if (typeof confetti === 'function') confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+
+        stage.innerHTML = `
+          <div class="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-lg text-center space-y-4 animate-fade-in">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-500 flex items-center justify-center mx-auto text-3xl">
+              <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-900 dark:text-white">매칭 클리어!</h3>
+            <p class="text-3xl font-black text-emerald-600">${sec}초</p>
+            ${bestMsg ? `<span class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-extrabold">${bestMsg}</span>` : `<p class="text-xs text-slate-400">최고 기록: ${state.bestMatchTime}초</p>`}
+            <button onclick="resetModeSubStates(); renderSetWorkspace(document.getElementById('app-main'));" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm">
+              새 판 도전하기
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      stage.innerHTML = `
+        <div class="max-w-3xl mx-auto space-y-4 animate-fade-in">
+          <div class="flex items-center justify-between bg-white dark:bg-slate-900 px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-extrabold text-emerald-600"><i class="fa-solid fa-puzzle-piece mr-1"></i>영단어와 한글 뜻을 짝지으세요 (남은 짝: ${pairs - ui.matchMatchedIds.length}쌍)</span>
+            <span id="match-clock" class="text-base font-black font-mono text-rose-500">${ui.matchElapsed}초</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            ${ui.matchCards.map(c => {
+              const matched = ui.matchMatchedIds.includes(c.wordId);
+              const selected = ui.matchSelected.some(s => s.uid === c.uid);
+              if (matched) {
+                return `<div class="h-24 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-emerald-400/30 flex items-center justify-center text-emerald-500"><i class="fa-solid fa-check"></i></div>`;
+              }
+              return `
+                <button onclick="clickMatchCard('${c.uid}')" class="h-24 p-3 rounded-2xl border-2 text-center font-extrabold text-sm sm:text-base transition flex items-center justify-center break-words ${
+                  selected
+                    ? 'bg-emerald-600 border-emerald-600 text-white scale-[1.03] shadow-md'
+                    : c.type === 'en'
+                      ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-400 text-slate-900 dark:text-white'
+                      : 'bg-blue-50/60 dark:bg-slate-800 border-blue-100 dark:border-slate-700 hover:border-emerald-400 text-slate-700 dark:text-slate-200'
+                }">
+                  ${c.text}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function clickMatchCard(uid) {
+      if (ui.matchSelected.length >= 2) return;
+      const card = ui.matchCards.find(c => c.uid === uid);
+      if (!card || ui.matchMatchedIds.includes(card.wordId)) return;
+      if (ui.matchSelected.some(s => s.uid === uid)) {
+        ui.matchSelected = [];
+        renderSetWorkspace(document.getElementById('app-main'));
+        return;
+      }
+      if (card.type === 'en') speakText(card.text);
+      ui.matchSelected.push(card);
+
+      if (ui.matchSelected.length === 2) {
+        const [a, b] = ui.matchSelected;
+        if (a.wordId === b.wordId && a.type !== b.type) {
+          ui.matchMatchedIds.push(a.wordId);
+          updateWordStatus(a.wordId, { recall: true }, false);
+          ui.matchSelected = [];
+          renderSetWorkspace(document.getElementById('app-main'));
+        } else {
+          renderSetWorkspace(document.getElementById('app-main'));
+          setTimeout(() => {
+            ui.matchSelected = [];
+            renderSetWorkspace(document.getElementById('app-main'));
+          }, 420);
+        }
+      } else {
+        renderSetWorkspace(document.getElementById('app-main'));
+      }
+    }
+
+    /* ==========================================================================
+       7. 단어 심층 상세 모달 & 나만의 단어 추가 / 백업 / 초기화
+       ========================================================================== */
+    function openWordDetail(wordId) {
+      const w = getAllWords().find(x => x.id === wordId);
+      if (!w) return;
+      const isStar = state.starredIds.includes(w.id);
+
+      document.getElementById('modal-word-detail-body').innerHTML = `
+        <div class="space-y-5">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
+                ${w.level === 'custom' ? '나만의 단어장' : `Day ${w.day} · ${w.level === 'middle' ? '중등 필수' : '고등 핵심'}`}
+              </span>
+              <div class="flex items-center gap-3 mt-2 flex-wrap">
+                <h2 class="text-3xl font-black text-slate-900 dark:text-white">${w.word}</h2>
+                ${renderPronHTML(w, false)}
+                <button onclick="speakText('${w.word.replace(/'/g, "\\'")}', event)" class="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center text-sm shadow-xs">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="toggleStar('${w.id}', event); openWordDetail('${w.id}')" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-lg ${isStar ? 'text-amber-400' : 'text-slate-400'}">
+                <i class="fa-${isStar ? 'solid' : 'regular'} fa-star"></i>
+              </button>
+              <button onclick="closeModal('modal-word-detail')" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 space-y-1.5">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-blue-600 text-white text-xs font-bold">${w.pos}</span>
+              <span class="text-xl font-black text-slate-900 dark:text-white">${w.meaning}</span>
+            </div>
+            ${w.subMeanings && w.subMeanings.length ? `<p class="text-xs text-slate-500">다의어: ${w.subMeanings.join(' · ')}</p>` : ''}
+          </div>
+
+          ${w.example ? `
+            <div class="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-extrabold text-blue-600 dark:text-blue-400">실전 독해 예문</span>
+                <button onclick="speakText('${w.example.replace(/'/g, "\\'")}', event)" class="text-xs font-bold text-blue-600 hover:underline"><i class="fa-solid fa-volume-low mr-1"></i>듣기</button>
+              </div>
+              <p class="text-sm font-bold text-slate-800 dark:text-slate-100">${w.example}</p>
+              ${w.exampleKo ? `<p class="text-xs text-slate-600 dark:text-slate-300">${w.exampleKo}</p>` : ''}
+            </div>
+          ` : ''}
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30">
+              <span class="font-extrabold text-emerald-700 dark:text-emerald-400 block mb-1">유의어</span>
+              <span class="font-bold text-slate-700 dark:text-slate-200">${(w.synonyms && w.synonyms.length) ? w.synonyms.join(', ') : '-'}</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30">
+              <span class="font-extrabold text-rose-700 dark:text-rose-400 block mb-1">반의어</span>
+              <span class="font-bold text-slate-700 dark:text-slate-200">${(w.antonyms && w.antonyms.length) ? w.antonyms.join(', ') : '-'}</span>
+            </div>
+          </div>
+
+          ${w.derivatives ? `<div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 text-xs"><strong class="text-slate-500 block mb-0.5">파생어 확장</strong><span class="font-bold">${w.derivatives}</span></div>` : ''}
+          ${w.tip ? `<div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/70 text-xs text-amber-900 dark:text-amber-100"><strong class="text-amber-700 dark:text-amber-300">💡 어원 & 암기 팁:</strong> ${w.tip}</div>` : ''}
+        </div>
+      `;
+      openModal('modal-word-detail');
+    }
+
+    function handleAddCustomWord(e) {
+      e.preventDefault();
+      const word = document.getElementById('add-word-en').value.trim();
+      const pos = document.getElementById('add-word-pos').value;
+      const meaning = document.getElementById('add-word-ko').value.trim();
+      const koPron = document.getElementById('add-word-kopron').value.trim();
+      const example = document.getElementById('add-word-ex').value.trim();
+      const exampleKo = document.getElementById('add-word-exko').value.trim();
+      const tip = document.getElementById('add-word-tip').value.trim();
+      if (!word || !meaning) return;
+
+      state.customWords.unshift({
+        id: 'cust_' + Date.now(),
+        level: 'custom', day: 0,
+        word, pos, meaning, phonetic: '', koPron, subMeanings: [],
+        example, exampleKo, synonyms: [], antonyms: [], derivatives: '', tip
+      });
+      saveState();
+      e.target.reset();
+      closeModal('modal-add-word');
+      showToast(`'${word}' 단어가 나만의 단어장에 추가되었습니다!`, 'success');
+      renderApp();
+    }
+
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (!m) return;
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+      if (id === 'modal-settings') syncSettingsModal();
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (!m) return;
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function syncSettingsModal() {
+      const ko = document.getElementById('modal-kopron-toggle');
+      const us = document.getElementById('modal-us');
+      const uk = document.getElementById('modal-uk');
+      const rt = document.getElementById('modal-rate');
+      if (ko) {
+        ko.textContent = state.settings.showKoPron ? 'ON' : 'OFF';
+        ko.className = state.settings.showKoPron
+          ? 'px-3 py-1.5 rounded-xl text-xs font-extrabold bg-indigo-600 text-white'
+          : 'px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+      }
+      if (us && uk) {
+        us.className = state.settings.voiceAccent === 'en-US'
+          ? 'px-3 py-1.5 rounded-xl text-xs font-extrabold bg-blue-600 text-white'
+          : 'px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+        uk.className = state.settings.voiceAccent === 'en-GB'
+          ? 'px-3 py-1.5 rounded-xl text-xs font-extrabold bg-blue-600 text-white'
+          : 'px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+      }
+      if (rt) rt.textContent = `${state.settings.voiceRate.toFixed(1)}x`;
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `VocaCard_Backup_${getTodayStr()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('학습 진도 파일이 다운로드되었습니다.', 'success');
+    }
+
+    function importData(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if (parsed && parsed.wordStatus) {
+            state = { ...state, ...parsed };
+            saveState();
+            applyTheme();
+            syncHeaderUI();
+            closeModal('modal-settings');
+            renderApp();
+            showToast('백업 파일이 복원되었습니다!', 'success');
+          }
+        } catch {
+          showToast('잘못된 백업 파일입니다.', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function requestResetAll() {
+      closeModal('modal-settings');
+      const modal = document.getElementById('modal-confirm');
+      document.getElementById('confirm-title').textContent = '전체 학습 기록 초기화';
+      document.getElementById('confirm-msg').textContent = '모든 세트의 암기·리콜·스펠 진도와 오답 기록이 초기화됩니다. 진행할까요?';
+      document.getElementById('confirm-ok').onclick = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        state.wordStatus = {};
+        state.dailyHistory = {};
+        state.streak = 1;
+        state.bestMatchTime = null;
+        saveState();
+        renderApp();
+        showToast('초기화가 완료되었습니다.', 'info');
+      };
+      document.getElementById('confirm-cancel').onclick = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      };
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    /* ==========================================================================
+       8. 초기화 및 키보드 단축키 바인딩
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      renderApp();
+
+      document.addEventListener('keydown', (e) => {
+        const tag = document.activeElement.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+        if (!document.getElementById('modal-word-detail').classList.contains('hidden')) return;
+        if (!document.getElementById('modal-add-word').classList.contains('hidden')) return;
+        if (!document.getElementById('modal-settings').classList.contains('hidden')) return;
+
+        if (ui.view === 'set') {
+          const words = getSetWords(ui.activeSetId);
+          if (ui.setTab === 'memo' && words[ui.cardIndex]) {
+            const w = words[ui.cardIndex];
+            if (e.code === 'Space') { e.preventDefault(); flipMemoCard(); }
+            else if (e.key === '1') rateMemo(w.id, 1);
+            else if (e.key === '2') rateMemo(w.id, 2);
+            else if (e.key === '3') rateMemo(w.id, 3);
+            else if (e.key === '4') rateMemo(w.id, 4);
+            else if (e.code === 'ArrowRight') stepMemo(1);
+            else if (e.code === 'ArrowLeft') stepMemo(-1);
+            else if (e.key.toLowerCase() === 's') speakText(w.word);
+          } else if (ui.setTab === 'recall' && !ui.recallAnswered && ['1', '2', '3', '4'].includes(e.key)) {
+            const idx = Number(e.key) - 1;
+            const opt = ui.recallOptions[idx];
+            if (opt) handleRecallAnswer(opt.label, opt.isCorrect);
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
