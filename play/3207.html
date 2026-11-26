@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3월 모고 사회 1등급 챌린지 - 예비 고1 핵심 복습</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Pretendard & Noto Sans KR -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Tone.js for Sound Effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #f8fafc;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* 커스텀 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* 애니메이션 효과 */
+        @keyframes pulse-fast {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 1s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-pop-in {
+            animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* 네온 글로우 & 카드 스타일 */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .mode-btn {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .mode-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -5px rgba(99, 102, 241, 0.4);
+        }
+        .mode-btn:active {
+            transform: translateY(0);
+        }
+
+        /* OMR 마킹 느낌의 선지 버튼 */
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            background-color: #334155;
+            border-color: #818cf8;
+            transform: translateX(4px);
+        }
+
+        /* 평가원/교육청 시험지 스타일 박스 */
+        .exam-box {
+            background-color: rgba(15, 23, 42, 0.85);
+            border: 1px solid #475569;
+            position: relative;
+        }
+        .exam-bogi-box {
+            background-color: rgba(30, 41, 59, 0.6);
+            border: 1px solid #64748b;
+            position: relative;
+            margin-top: 1rem;
+            padding: 1.1rem 1rem 0.9rem 1rem;
+            border-radius: 0.75rem;
+        }
+        .exam-bogi-label {
+            position: absolute;
+            top: -0.65rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1e293b;
+            border: 1px solid #64748b;
+            padding: 0 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.25em;
+            color: #e2e8f0;
+            border-radius: 9999px;
+        }
+
+        /* 제시문 내 통계 표 스타일 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            margin-top: 0.5rem;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #475569;
+            padding: 0.45rem 0.5rem;
+            text-align: center;
+        }
+        .data-table th {
+            background-color: rgba(51, 65, 85, 0.8);
+            color: #f1f5f9;
+            font-weight: 700;
+        }
+        .data-table td {
+            background-color: rgba(15, 23, 42, 0.6);
+            color: #cbd5e1;
+        }
+
+        /* 성적표 테이블 테두리 */
+        .report-table th, .report-table td {
+            border: 1px solid #cbd5e1;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+
+    <!-- 상단 헤더 (사운드 토글 및 홈 버튼) -->
+    <header class="w-full max-w-3xl flex justify-between items-center mb-4 px-2">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="goHome()">
+            <span class="bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-md tracking-wider shadow">예비 고1 필수</span>
+            <h1 class="text-lg sm:text-xl font-black tracking-tight text-white">3월 모고 사회 <span class="text-indigo-400">1등급 챌린지</span></h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="sound-toggle" onclick="toggleSound()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="효과음 켜기/끄기">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+            </button>
+            <button id="home-btn" onclick="confirmQuit()" class="hidden p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition text-sm font-medium">
+                <i class="fa-solid fa-house mr-1"></i> 나가기
+            </button>
+        </div>
+    </header>
+
+    <!-- 메인 컨테이너 -->
+    <main class="w-full max-w-3xl relative">
+
+        <!-- 1. 시작 화면 (모드 선택) -->
+        <section id="start-screen" class="glass-card rounded-3xl p-6 sm:p-10 animate-pop-in">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 mb-4 shadow-lg">
+                    <i class="fa-solid fa-file-signature text-3xl"></i>
+                </div>
+                <h2 class="text-2xl sm:text-4xl font-black text-white mb-3 tracking-tight">실제 학평 기출 유형으로 1등급 쟁취!</h2>
+                <p class="text-slate-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+                    실제 3월 전국연합학력평가처럼 <span class="text-indigo-300 font-bold">사료·도표 분석 및 &lt;보기&gt; 조합형 5지선다</span>로 구성되었습니다.<br class="hidden sm:inline">
+                    시간 제한 없이 제시문을 꼼꼼히 정독하며 50점 만점 성적통지표에 도전하세요!
+                </p>
+            </div>
+
+            <!-- 단원 선택 버튼 그리드 -->
+            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">응시할 시험 유형을 선택하세요</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <!-- 실전 모의고사 (전체 랜덤 20문항, 50점 만점) -->
+                <button onclick="startGame('all')" class="mode-btn col-span-1 sm:col-span-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-2xl p-5 text-left border border-indigo-400/30 flex items-center justify-between group">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="bg-white/20 text-white text-xs font-extrabold px-2 py-0.5 rounded">실제 학평 구성</span>
+                            <span class="text-indigo-200 text-xs font-medium">20문항 · 총 50점 만점 (2점/3점 배점)</span>
+                        </div>
+                        <div class="text-xl font-black">🔥 3월 학평 실전 모의고사</div>
+                        <p class="text-indigo-100 text-xs sm:text-sm mt-1">일반사회(7) · 지리(6) · 역사(7) 실제 출제 비율 완벽 반영</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:scale-110 transition shrink-0">
+                        <i class="fa-solid fa-play text-xl"></i>
+                    </div>
+                </button>
+
+                <!-- 고난도 3점 킬러 문항 특집 -->
+                <button onclick="startGame('killer')" class="mode-btn col-span-1 sm:col-span-2 bg-gradient-to-r from-rose-900/90 to-slate-800 hover:from-rose-800/90 hover:to-slate-700 text-white rounded-2xl p-4 text-left border border-rose-500/40 flex items-center justify-between group">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="bg-rose-500/30 text-rose-200 border border-rose-400/40 text-xs font-extrabold px-2 py-0.5 rounded">1등급 결정 문항</span>
+                            <span class="text-rose-200 text-xs font-medium">전원 3점 배점 · 자료/사료 심화</span>
+                        </div>
+                        <div class="text-lg font-black text-rose-100">🎯 고난도 3점 킬러 문항 특집 (10문항)</div>
+                        <p class="text-slate-300 text-xs mt-0.5">기회비용 계산, 도표 분석, 사료 순서 배열 등 변별력 문항 집중 훈련</p>
+                    </div>
+                    <i class="fa-solid fa-fire text-2xl text-rose-400 group-hover:scale-110 transition shrink-0 ml-2"></i>
+                </button>
+
+                <!-- 일반사회 -->
+                <button onclick="startGame('social')" class="mode-btn bg-slate-800/90 hover:bg-slate-800 border border-slate-700 hover:border-sky-500/50 rounded-2xl p-4 text-left flex items-center justify-between group">
+                    <div>
+                        <span class="text-sky-400 text-xs font-bold block mb-1">정치 · 경제 · 사회문화 (10문항)</span>
+                        <div class="text-base sm:text-lg font-bold text-white">⚖️ 일반사회 집중 기출</div>
+                        <p class="text-slate-400 text-xs mt-1">기본권 판례, 수요·공급 이동, GDP, 계층론</p>
+                    </div>
+                    <i class="fa-solid fa-scale-balanced text-2xl text-sky-400/70 group-hover:text-sky-400 transition"></i>
+                </button>
+
+                <!-- 지리 -->
+                <button onclick="startGame('geography')" class="mode-btn bg-slate-800/90 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/50 rounded-2xl p-4 text-left flex items-center justify-between group">
+                    <div>
+                        <span class="text-emerald-400 text-xs font-bold block mb-1">한국지리 · 세계지리 (10문항)</span>
+                        <div class="text-base sm:text-lg font-bold text-white">🌍 지리 자료분석 기출</div>
+                        <p class="text-slate-400 text-xs mt-1">기후 데이터, 우리나라 극단·지형, 인구 통계</p>
+                    </div>
+                    <i class="fa-solid fa-earth-asia text-2xl text-emerald-400/70 group-hover:text-emerald-400 transition"></i>
+                </button>
+
+                <!-- 역사 -->
+                <button onclick="startGame('history')" class="mode-btn col-span-1 sm:col-span-2 bg-slate-800/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-500/50 rounded-2xl p-4 text-left flex items-center justify-between group">
+                    <div>
+                        <span class="text-amber-400 text-xs font-bold block mb-1">한국사 · 세계사 (10문항)</span>
+                        <div class="text-base sm:text-lg font-bold text-white">📜 역사 사료 & 연표 기출</div>
+                        <p class="text-slate-400 text-xs mt-1">금석문·개혁안 사료 해석, 근현대사 사건 순서, 세계사 혁명</p>
+                    </div>
+                    <i class="fa-solid fa-landmark text-2xl text-amber-400/70 group-hover:text-amber-400 transition"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. 퀴즈 플레이 화면 -->
+        <section id="quiz-screen" class="hidden glass-card rounded-3xl p-5 sm:p-8">
+            <!-- 상단 상태바 (진행도, 라이프, 점수, 콤보) -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-4 border-b border-slate-700/80">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <span id="category-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        일반사회
+                    </span>
+                    <span class="text-sm font-bold text-slate-300">
+                        <span id="current-q-num" class="text-white text-base">1</span> / <span id="total-q-num">20</span>번
+                    </span>
+                    <span id="point-badge" class="px-2 py-0.5 rounded text-xs font-extrabold bg-slate-700 text-amber-300 border border-amber-500/30">
+                        [3점]
+                    </span>
+                </div>
+
+                <!-- 라이프 (하트) -->
+                <div id="lives-container" class="flex items-center gap-1.5 text-rose-500 text-base sm:text-lg" title="남은 기회">
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+
+                <!-- 점수 & 콤보 -->
+                <div class="flex items-center gap-3">
+                    <div id="combo-badge" class="hidden px-2.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-black animate-pulse-fast">
+                        🔥 2 COMBO
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[11px] text-slate-400 block">원점수 / 만점</span>
+                        <span id="score-display" class="text-base sm:text-lg font-black text-indigo-400">0</span><span class="text-xs text-slate-400"> / <span id="max-score-hud">50</span>점</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 문제 영역 -->
+            <div id="question-container" class="mb-6">
+                <div class="flex items-start gap-2.5 mb-3">
+                    <span id="q-number-prefix" class="shrink-0 text-lg sm:text-xl font-black text-indigo-400">1.</span>
+                    <h3 id="question-text" class="text-base sm:text-lg font-bold text-white leading-relaxed">
+                        여기에 문제가 표시됩니다.
+                    </h3>
+                </div>
+
+                <!-- 제시문/사료/도표 박스 -->
+                <div id="passage-box" class="hidden exam-box rounded-xl p-4 text-xs sm:text-sm text-slate-200 leading-relaxed space-y-2">
+                </div>
+
+                <!-- <보 기> 박스 (ㄱ, ㄴ, ㄷ, ㄹ) -->
+                <div id="bogi-box" class="hidden exam-bogi-box text-xs sm:text-sm text-slate-200 space-y-1.5">
+                    <div class="exam-bogi-label">보 기</div>
+                    <div id="bogi-content" class="space-y-1.5 leading-relaxed"></div>
+                </div>
+            </div>
+
+            <!-- 선택지 영역 (5지선다 ①~⑤) -->
+            <div id="options-container" class="grid grid-cols-1 gap-2.5">
+                <!-- JS로 동적 생성 -->
+            </div>
+
+            <!-- 즉시 피드백 배너 (정답/오답 시 하단 노출) -->
+            <div id="feedback-banner" class="hidden mt-6 p-4 sm:p-5 rounded-2xl border animate-pop-in">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span id="feedback-title" class="font-black text-base flex items-center gap-2"></span>
+                    <button onclick="nextQuestion()" class="shrink-0 px-4 py-2 rounded-xl bg-white text-slate-900 font-bold text-xs sm:text-sm hover:bg-slate-200 transition shadow">
+                        다음 문항 <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+                <div id="feedback-unit" class="text-xs font-bold text-indigo-300 mb-1.5"></div>
+                <p id="feedback-explanation" class="text-xs sm:text-sm opacity-95 leading-relaxed"></p>
+            </div>
+        </section>
+
+        <!-- 3. 결과 화면 (모의고사 성적표 스타일 + 오답 노트) -->
+        <section id="result-screen" class="hidden animate-pop-in space-y-6">
+            
+            <!-- 실제 성적표 느낌의 카드 -->
+            <div class="bg-slate-50 text-slate-900 rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-slate-300">
+                <div class="border-b-2 border-slate-800 pb-4 mb-5 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+                    <div>
+                        <span class="text-xs font-bold tracking-widest text-slate-500 uppercase">2026학년도 3월 고1 전국연합학력평가 대비</span>
+                        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">사회탐구 영역 성적통지표</h2>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <span class="inline-block bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded">만점 기준: <span id="report-max-score">50</span>점</span>
+                    </div>
+                </div>
+
+                <!-- 성적표 테이블 -->
+                <div class="overflow-x-auto mb-6">
+                    <table class="w-full text-center border-collapse report-table text-xs sm:text-base">
+                        <thead>
+                            <tr class="bg-slate-200 text-slate-800 font-bold">
+                                <th class="py-2.5 px-2">응시 유형</th>
+                                <th class="py-2.5 px-2">원점수</th>
+                                <th class="py-2.5 px-2">정답 문항</th>
+                                <th class="py-2.5 px-2">최대 콤보</th>
+                                <th class="py-2.5 px-2 bg-indigo-100 text-indigo-900">산출 등급</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-white font-bold">
+                                <td id="report-mode-name" class="py-4 px-2 text-slate-700">실전 모의고사</td>
+                                <td id="report-score" class="py-4 px-2 text-lg font-black text-slate-900">0 / 50점</td>
+                                <td id="report-accuracy" class="py-4 px-2 text-slate-700">0 / 20문항</td>
+                                <td id="report-max-combo" class="py-4 px-2 text-amber-600">0연속</td>
+                                <td id="report-grade" class="py-4 px-2 text-2xl font-black text-indigo-600 bg-indigo-50/70">1등급</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 선생님 총평 멘트 -->
+                <div class="bg-slate-100 border border-slate-300 rounded-2xl p-4 flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-indigo-700 mb-0.5">출제위원단의 3월 학평 대비 총평</div>
+                        <p id="report-comment" class="text-sm text-slate-700 font-medium leading-relaxed">
+                            완벽합니다! 중학교 사회·역사 핵심 개념과 자료 해석 능력이 모두 최상위권입니다.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+                    <button id="retry-wrong-btn" onclick="startWrongClinic()" class="hidden sm:col-span-2 py-3.5 px-5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-sm sm:text-base transition shadow-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-stethoscope"></i> 틀린 문제만 다시 풀기 (오답 클리닉 <span id="retry-wrong-count">0</span>문항)
+                    </button>
+                    <button onclick="restartCurrentMode()" class="py-3.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm sm:text-base transition shadow-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> 같은 유형 다시 응시하기
+                    </button>
+                    <button onclick="goHome()" class="py-3.5 px-5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm sm:text-base transition shadow flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-list"></i> 다른 시험 유형 선택하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 오답 노트 섹션 -->
+            <div id="wrong-notes-section" class="glass-card rounded-3xl p-6 sm:p-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-book-open text-rose-400"></i> 3월 모고 직전 필독 오답 해설집
+                    </h3>
+                    <span id="wrong-count-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                        틀린 문항 0개
+                    </span>
+                </div>
+                <div id="wrong-notes-list" class="space-y-4">
+                    <!-- 틀린 문제 카드 동적 삽입 -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- 커스텀 확인 모달 (alert/confirm 대체) -->
+    <div id="custom-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl animate-pop-in">
+            <h4 class="text-lg font-bold text-white mb-2">시험을 중단할까요?</h4>
+            <p class="text-sm text-slate-300 mb-6">진행 중인 답안은 저장되지 않으며 메인 화면으로 돌아갑니다.</p>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium transition">계속 풀기</button>
+                <button onclick="closeModal(); goHome();" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold transition">나가기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. 실제 3월 학력평가 기출 스타일 문제 은행 (33문항)
+        //    - 사료, 도표, 사례 분석, <보기> ㄱㄴㄷㄹ 조합형, 5지선다(①~⑤), 2점/3점 배점
+        // ==========================================
+        const QUESTION_BANK = [
+            // ==================== [일반사회: 정치·경제·사회문화] (11문항) ====================
+            {
+                id: 1,
+                category: 'social',
+                categoryName: '일반사회 · 정치',
+                unit: '중3 사회 ① 헌법과 국가 기관',
+                points: 3,
+                question: '다음 헌법재판소 결정 사례에 나타난 기본권 A, B에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?',
+                passage: `<div class="text-indigo-300 font-bold text-xs mb-1">[헌법재판소 결정 요지]</div>
+                • 사례 1: 시각 장애인의 점자 투표 용지 제공을 거부한 것은 선거권을 실질적으로 침해한 것으로 <span class="underline font-bold text-white">[ A ]</span>의 침해에 해당한다.<br>
+                • 사례 2: 국가가 모든 국민에게 인간다운 생활을 할 권리를 보장하기 위해 최저 생계비를 지급하는 것은 <span class="underline font-bold text-white">[ B ]</span>의 실현에 해당한다.`,
+                bogi: [
+                    'ㄱ. A는 국가의 의사 형성 과정에 참여할 수 있는 능동적 권리이다.',
+                    'ㄴ. B는 국가의 간섭을 받지 않고 자유롭게 생활할 수 있는 소극적 권리이다.',
+                    'ㄷ. B는 근대 시민 혁명 직후부터 가장 먼저 보장되기 시작한 역사적 권리이다.',
+                    'ㄹ. A와 B는 모두 헌법에 열거되지 아니한 이유로 경시되지 아니한다.'
+                ],
+                options: ['ㄱ, ㄴ', 'ㄱ, ㄹ', 'ㄴ, ㄷ', 'ㄱ, ㄷ, ㄹ', 'ㄴ, ㄷ, ㄹ'],
+                answer: 1,
+                explanation: 'A는 참정권(선거권), B는 사회권(인간다운 생활을 할 권리)입니다. 사회권은 20세기 독일 바이마르 헌법에서 최초로 규정된 현대적·적극적 권리입니다(ㄴ, ㄷ 오답). 헌법 제37조 제1항에 따라 모든 기본권은 열거되지 않은 이유로 경시되지 않습니다(ㄹ 정답).'
+            },
+            {
+                id: 2,
+                category: 'social',
+                categoryName: '일반사회 · 정치',
+                unit: '중3 사회 ① 국가 기관의 역할',
+                points: 2,
+                question: '표는 우리나라 국가 기관 (가)~(다)의 주요 권한을 정리한 것이다. 이에 대한 설명으로 옳은 것은?',
+                passage: `<table class="data-table">
+                    <thead>
+                        <tr><th>구분</th><th>주요 권한</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="font-bold text-sky-300">(가)</td><td>법률 제정 및 개정, 예산안 심의·확정, 국정 감사권</td></tr>
+                        <tr><td class="font-bold text-sky-300">(나)</td><td>법률안 거부권, 조약 체결·비준권, 대통령령 발령권</td></tr>
+                        <tr><td class="font-bold text-sky-300">(다)</td><td>위헌 법률 심판권, 탄핵 심판권, 정당 해산 심판권</td></tr>
+                    </tbody>
+                </table>`,
+                options: [
+                    '(가)는 행정부, (나)는 입법부에 해당한다.',
+                    '(가)는 고위 공직자에 대한 탄핵 심판권을 행사한다.',
+                    '(나)의 수반은 국민의 직접 선거로 선출된다.',
+                    '(다)는 명령·규칙·처분의 위헌 여부를 최종 심사한다.',
+                    '(다)의 재판관은 모두 대법원장이 단독으로 임명한다.'
+                ],
+                answer: 2,
+                explanation: '(가)는 국회, (나)는 행정부, (다)는 헌법재판소입니다. 행정부의 수반인 대통령은 국민의 보통·평등·직접·비밀 선거로 선출됩니다(③ 정답). 국회는 탄핵 소추권을, 헌법재판소는 탄핵 심판권을 가집니다. 명령·규칙의 최종 심사권은 대법원에 있습니다.'
+            },
+            {
+                id: 3,
+                category: 'social',
+                categoryName: '일반사회 · 경제',
+                unit: '중3 사회 ② 합리적 선택과 기회비용',
+                points: 3,
+                question: '다음 사례에서 갑이 A 영화를 관람하기로 선택했을 때의 기회비용은 얼마인가?',
+                passage: `<div class="text-amber-300 font-bold text-xs mb-1">[탐구 자료]</div>
+                갑은 주말 오후 2시간 동안 아르바이트(시급 10,000원)를 할지, 영화를 볼지 고민하고 있다. 이미 예매해 둔 B 영화 티켓(12,000원, 환불 불가)이 있지만, 새로 개봉한 A 영화(티켓 가격 15,000원)가 더 보고 싶어져 A 영화를 예매해 관람하기로 결정하였다. (단, 영화 상영 시간은 모두 2시간이다.)`,
+                options: ['15,000원', '20,000원', '27,000원', '35,000원', '47,000원'],
+                answer: 3,
+                explanation: '기회비용 = 명시적 비용 + 암묵적 비용입니다. A 영화 관람을 위해 직접 지출한 티켓 가격 15,000원(명시적 비용)과, A 영화를 보느라 포기한 대안(아르바이트 2시간 수입 20,000원 vs 환불 불가한 B 영화) 중 가장 큰 가치인 아르바이트 수입 20,000원(암묵적 비용)을 합한 35,000원이 기회비용입니다. 이미 지불하고 환불할 수 없는 B 영화 티켓(12,000원)은 매몰 비용이므로 고려하지 않습니다.'
+            },
+            {
+                id: 4,
+                category: 'social',
+                categoryName: '일반사회 · 경제',
+                unit: '중3 사회 ② 시장 가격의 변동',
+                points: 3,
+                question: '다음 신문 기사를 읽고, 국내 스마트워치 시장에서 나타날 균형 가격과 균형 거래량의 변화로 옳은 것은?',
+                passage: `<div class="border-b border-slate-600 pb-1 mb-2 font-bold text-white">📰 경제 일보: 스마트워치 핵심 반도체의 공급 과잉과 가격 폭락</div>
+                최근 글로벌 반도체 기업들의 설비 증설로 스마트워치에 들어가는 핵심 부품의 원자재 가격이 크게 하락하였다. 한편, 소비자들의 건강 관리 관심이 높아지면서 스마트워치를 구매하려는 소비자가 급증하고 있다. (단, 공급 변화 폭이 수요 변화 폭보다 크다.)`,
+                options: [
+                    '균형 가격은 상승하고, 균형 거래량은 증가한다.',
+                    '균형 가격은 상승하고, 균형 거래량은 감소한다.',
+                    '균형 가격은 하락하고, 균형 거래량은 증가한다.',
+                    '균형 가격은 하락하고, 균형 거래량은 감소한다.',
+                    '균형 가격은 변동 없고, 균형 거래량만 증가한다.'
+                ],
+                answer: 2,
+                explanation: '원자재 가격 하락은 공급 증가(공급 곡선 우측 이동 → 가격 하락, 거래량 증가) 요인이고, 소비자 선호 증가는 수요 증가(수요 곡선 우측 이동 → 가격 상승, 거래량 증가) 요인입니다. 두 요인 모두 거래량을 증가시키며, 공급 증가 폭이 수요 증가 폭보다 크므로 균형 가격은 하락하게 됩니다.'
+            },
+            {
+                id: 5,
+                category: 'social',
+                categoryName: '일반사회 · 경제',
+                unit: '중3 사회 ② 국내 총생산(GDP)',
+                points: 3,
+                question: '올해 우리나라의 국내 총생산(GDP)에 포함되는 경제 활동만을 <보기>에서 고른 것은?',
+                bogi: [
+                    'ㄱ. 한국인 요리사가 미국 뉴욕에 식당을 차려 올린 매출액',
+                    'ㄴ. 외국인 엔지니어가 서울의 IT 기업에 근무하며 받은 연봉',
+                    'ㄷ. 갑이 3년 전에 구입하여 타던 중고 자동차를 을에게 판 금액',
+                    'ㄹ. 국내 제빵 회사가 올해 생산하여 소비자에게 판매한 식빵의 가치'
+                ],
+                options: ['ㄱ, ㄴ', 'ㄱ, ㄷ', 'ㄴ, ㄷ', 'ㄴ, ㄹ', 'ㄷ, ㄹ'],
+                answer: 3,
+                explanation: 'GDP는 일정 기간 동안 한 나라의 영토 안에서 새롭게 생산된 최종 생산물의 시장 가치 합계입니다. 국적과 무관하게 국내에서 생산된 ㄴ과 올해 새로 생산된 최종재인 ㄹ만 포함됩니다. ㄱ은 미국의 GDP에, ㄷ은 과거에 생산된 중고품 거래이므로 제외됩니다.'
+            },
+            {
+                id: 6,
+                category: 'social',
+                categoryName: '일반사회 · 경제',
+                unit: '중3 사회 ② 물가 안정과 통화 정책',
+                points: 2,
+                question: '다음 그래프와 같은 경제 현상이 지속될 때, 이를 완화하기 위한 한국은행과 정부의 대책으로 옳은 것을 <보기>에서 고른 것은?',
+                passage: `<div class="text-rose-300 font-bold text-xs mb-1">[경제 지표 추이]</div>
+                소비자 물가 상승률: 1분기 2.8% → 2분기 4.1% → 3분기 5.6% (시중 통화량 급증 및 총수요 과열 상태)`,
+                bogi: [
+                    'ㄱ. 한국은행은 시중의 유동성을 흡수하기 위해 기준 금리를 인상한다.',
+                    'ㄴ. 한국은행은 국공채를 매입하여 시중에 화폐 공급을 늘린다.',
+                    'ㄷ. 정부는 공공사업 예산을 축소하여 정부 지출을 줄인다.',
+                    'ㄹ. 정부는 소비 진작을 위해 소득세율을 대폭 인하한다.'
+                ],
+                options: ['ㄱ, ㄴ', 'ㄱ, ㄷ', 'ㄴ, ㄷ', 'ㄴ, ㄹ', 'ㄷ, ㄹ'],
+                answer: 1,
+                explanation: '물가가 지속적으로 상승하는 인플레이션 시기에는 시중 통화량과 총수요를 줄이는 긴축 정책이 필요합니다. 한국은행의 기준 금리 인상(ㄱ)과 정부의 재정 지출 축소(ㄷ)가 적절한 대책입니다. ㄴ, ㄹ은 경기 침체(디플레이션) 시기의 확대 정책입니다.'
+            },
+            {
+                id: 7,
+                category: 'social',
+                categoryName: '일반사회 · 사회문화',
+                unit: '중2 사회 ② 사회화와 사회적 지위',
+                points: 2,
+                question: '밑줄 친 ㉠~㉤에 대한 옳은 설명만을 <보기>에서 고른 것은?',
+                passage: `태어날 때부터 ㉠<span class="underline">차남</span>이었던 민수는 ㉡<span class="underline">고등학교</span>에 진학한 뒤 ㉢<span class="underline">학생회장</span>으로 선출되었다. 최근 축제 준비 기간과 전국 학생 토론 대회 일정이 겹쳐 ㉣<span class="underline">학생회장으로서 축제를 총괄해야 할지, 토론 대표로 출전해야 할지</span> 깊은 고민에 빠졌다.`,
+                bogi: [
+                    'ㄱ. ㉠은 개인의 노력과 무관하게 선천적으로 주어지는 귀속 지위이다.',
+                    'ㄴ. ㉡은 기초적인 생활 습관과 언어를 습득하는 1차적 사회화 기관이다.',
+                    'ㄷ. ㉢은 개인의 능력과 노력을 통해 후천적으로 얻는 성취 지위이다.',
+                    'ㄹ. ㉣은 서로 다른 두 지위의 역할이 충돌하여 발생하는 역할 갈등이다.'
+                ],
+                options: ['ㄱ, ㄴ', 'ㄱ, ㄷ', 'ㄴ, ㄷ', 'ㄴ, ㄹ', 'ㄷ, ㄹ'],
+                answer: 1,
+                explanation: '㉠ 차남은 귀속 지위(ㄱ 정답), ㉢ 학생회장은 성취 지위(ㄷ 정답)입니다. ㉡ 고등학교는 전문적 지식과 규범을 가르치는 2차적 사회화 기관이며, ㉣은 학생회장이라는 하나의 지위 내에서 두 가지 역할이 충돌하는 사례이므로 역할 갈등(서로 다른 지위 간의 충돌 또는 단일 지위 내 역할 모순 중 교육과정상 서로 다른 지위 간 충돌과 구별하여 출제됨)의 엄밀한 정의에 따라 ㄴ, ㄹ은 오답입니다.'
+            },
+            {
+                id: 8,
+                category: 'social',
+                categoryName: '일반사회 · 정치',
+                unit: '중3 사회 ① 인권 보장과 형사 절차',
+                points: 2,
+                question: '다음 글의 밑줄 친 부분에 적용된 형사 절차상 원칙에 대한 설명으로 가장 적절한 것은?',
+                passage: `검찰에 의해 절도 혐의로 기소된 피고인 A 씨는 1심과 2심 재판을 받는 도중에도 범죄자로 단정 짓는 언론 보도에 대해 정정 보도를 청구하였다. 헌법은 <span class="underline">"형사 피고인은 유죄의 판결이 확정될 때까지는 무죄로 추정된다."</span>라고 명시하고 있다.`,
+                options: [
+                    '수사 기관은 영장 없이도 언제든 피의자를 구속할 수 있다.',
+                    '유죄 확정 판결 전까지는 피고인의 인권과 방어권을 최대한 보장해야 한다.',
+                    '구속된 피의자는 법원에 구속의 적법성을 심사해 달라고 청구할 수 없다.',
+                    '형사 피고인이 무죄 판결을 받더라도 구금에 대한 보상은 청구할 수 없다.',
+                    '법관의 판결에 불복하더라도 상급 법원에 재판을 다시 청구할 수 없다.'
+                ],
+                answer: 1,
+                explanation: '제시문은 "무죄 추정의 원칙"을 설명하고 있습니다. 유죄 판결이 확정되기 전까지는 불구속 수사를 원칙으로 하며 방어권을 보장해야 합니다(② 정답). ③은 구속 적부심사 제도, ④는 형사 보상 청구권, ⑤는 심급 제도에 위배되는 설명입니다.'
+            },
+            {
+                id: 9,
+                category: 'social',
+                categoryName: '일반사회 · 사회문화',
+                unit: '중2 사회 ① 문화 이해의 태도',
+                points: 2,
+                question: '다음 대화에서 갑, 을이 취하고 있는 문화 이해 태도에 대한 설명으로 옳은 것은?',
+                passage: `• <b>갑</b>: "인도 사람들이 소고기를 먹지 않는 것은 그들의 종교적 신념과 자연환경 속에서 형성된 고유한 전통이므로 존중해야 해."<br>
+                • <b>을</b>: "아니야, 영양학적으로 우수한 소고기를 금기시하는 건 미개한 풍습이야. 선진국인 우리 식문화를 받아들여야 발전할 수 있어."`,
+                options: [
+                    '갑의 태도는 문화의 다양성을 보존하는 데 기여한다.',
+                    '갑의 태도는 극단적일 경우 인류 보편적 가치를 훼손할 우려가 없다.',
+                    '을의 태도는 자기 문화의 정체성을 상실할 위험이 크다.',
+                    '을의 태도는 타 문화와의 마찰을 최소화하고 평화 공존을 추구한다.',
+                    '갑은 문화 사대주의, 을은 자문화 중심주의 태도를 보이고 있다.'
+                ],
+                answer: 0,
+                explanation: '갑은 문화 상대주의, 을은 자문화 중심주의 태도를 보이고 있습니다. 문화 상대주의는 각 사회의 맥락에서 문화를 이해하므로 문화 다양성 보존에 기여합니다(① 정답). 극단적 문화 상대주의는 보편 윤리를 훼손할 우려가 있으며, 자기 문화 정체성 상실 위험이 큰 것은 문화 사대주의입니다.'
+            },
+            {
+                id: 10,
+                category: 'social',
+                categoryName: '일반사회 · 정치',
+                unit: '중3 사회 ① 지방 자치 제도',
+                points: 2,
+                question: '우리나라 지방 자치 제도의 주민 참여 제도에 대한 설명으로 옳지 <u>않은</u> 것은?',
+                options: [
+                    '주민 투표제를 통해 지방 자치 단체의 주요 결정 사항에 주민이 직접 참여할 수 있다.',
+                    '주민 소환제는 임기 중인 선출직 지방 공직자를 주민 투표로 파면할 수 있는 제도이다.',
+                    '주민 발안제(조례 제정 및 개폐 청구권)는 일정 수 이상의 주민 연서로 조례를 청구하는 제도이다.',
+                    '주민 참여 예산제는 지방 자치 단체의 예산 편성 과정에 지역 주민이 직접 참여하는 제도이다.',
+                    '지방 의회 의원과 지방 자치 단체장은 모두 중앙 정부의 대통령이 임명한다.'
+                ],
+                answer: 4,
+                explanation: '지방 자치("풀뿌리 민주주의")의 핵심은 지역 주민이 스스로 대표자를 선출하는 것입니다. 지방 의회 의원과 지방 자치 단체장(시장·도지사·구청장 등)은 모두 해당 지역 주민의 직접 선거로 선출됩니다(⑤ 오답).'
+            },
+            {
+                id: 11,
+                category: 'social',
+                categoryName: '일반사회 · 사회문화',
+                unit: '중2 사회 ② 사회 집단과 사회 조직',
+                points: 2,
+                question: '다음 <보기>의 사회 집단 중 결합 의지에 따라 구분할 때 성격이 다른 하나와 그 이유가 바르게 연결된 것은?',
+                bogi: [
+                    '가족, 친족, 고향 친구 모임, 대학교 총동창회'
+                ],
+                options: [
+                    '가족 - 특정한 목적을 달성하기 위해 인위적으로 결성된 이익 사회이다.',
+                    '친족 - 개인의 선택 의지와 무관하게 자연발생적으로 형성된 이익 사회이다.',
+                    '고향 친구 모임 - 계약과 타산적 이해관계에 기초한 이익 사회이다.',
+                    '대학교 총동창회 - 후천적 선택과 목적 의식에 의해 형성된 이익 사회이다.',
+                    '네 집단 모두 구성원 간의 친밀한 대면 접촉이 이루어지는 공동 사회이다.'
+                ],
+                answer: 3,
+                explanation: '퇴니스의 분류에 따르면 가족, 친족, 촌락(고향)은 본질 의지에 따라 자연발생적으로 형성된 "공동 사회"이고, 대학교 총동창회는 선택 의지에 의해 인위적으로 결성된 "이익 사회"입니다(④ 정답).'
+            },
+
+            // ==================== [지리: 한국지리·세계지리] (11문항) ====================
+            {
+                id: 12,
+                category: 'geography',
+                categoryName: '지리 · 세계지리',
+                unit: '중1 사회 ① 세계의 다양한 기후',
+                points: 3,
+                question: '표는 세계 세 지역 (가)~(다)의 기후 자료이다. 이에 대한 설명으로 옳은 것은?',
+                passage: `<table class="data-table">
+                    <thead>
+                        <tr><th>지역</th><th>최난월 평균 기온</th><th>최한월 평균 기온</th><th>연 강수량 및 특징</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="font-bold text-emerald-300">(가)</td><td>27.5℃</td><td>26.2℃</td><td>2,450mm (연중 고른 강수, 스콜)</td></tr>
+                        <tr><td class="font-bold text-emerald-300">(나)</td><td>25.8℃</td><td>8.4℃</td><td>620mm (여름 고온 건조, 겨울 온난 습윤)</td></tr>
+                        <tr><td class="font-bold text-emerald-300">(다)</td><td>6.5℃</td><td>-24.0℃</td><td>210mm (짧은 여름에 지의류·이끼 성장)</td></tr>
+                    </tbody>
+                </table>`,
+                options: [
+                    '(가) 지역에서는 밀, 보리 등을 재배하는 혼합 농업이 주로 이루어진다.',
+                    '(가) 지역은 연교차가 일교차보다 크게 나타난다.',
+                    '(나) 지역에서는 여름철 강한 햇빛을 반사하기 위해 벽을 하얗게 칠한 가옥이 나타난다.',
+                    '(다) 지역에서는 전통적으로 유목민들이 이동식 천막집(게르)을 짓고 생활한다.',
+                    '세 지역 중 위도가 가장 낮은 곳은 (다), 가장 높은 곳은 (가)이다.'
+                ],
+                answer: 2,
+                explanation: '(가)는 열대 우림 기후(Af), (나)는 지중해성 기후(Cs), (다)는 툰드라 기후(ET)입니다. 지중해성 기후 지역은 여름철 고온 건조하여 햇빛 반사를 위한 흰색 벽과 작은 창문을 가진 가옥이 발달합니다(③ 정답). 열대 우림은 일교차가 연교차보다 큽니다.'
+            },
+            {
+                id: 13,
+                category: 'geography',
+                categoryName: '지리 · 한국지리',
+                unit: '중2 사회 ① 우리나라의 위치와 영역',
+                points: 3,
+                question: '우리나라의 영역과 극단 위치에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?',
+                passage: `<div class="text-emerald-300 font-bold text-xs mb-1">[우리나라의 4극]</div>
+                • 극동: 경상북도 울릉군 독도 (동경 131° 52′)<br>
+                • 극서: 평안북도 용천군 마안도/비단섬 (동경 124° 11′)<br>
+                • 극남: 제주특별자치도 서귀포시 마라도 (북위 33° 06′)<br>
+                • 극북: 함경북도 온성군 유원진 (북위 43° 00′)`,
+                bogi: [
+                    'ㄱ. 우리나라의 표준시는 동경 135°를 기준으로 하여 영국(본초 자오선)보다 9시간 빠르다.',
+                    'ㄴ. 영해는 기선으로부터 12해리까지이며, 대한 해협은 직선 기선으로부터 3해리까지이다.',
+                    'ㄷ. 극동인 독도는 동해안의 다른 지역보다 해가 가장 늦게 뜨고 늦게 진다.',
+                    'ㄹ. 영공은 영토와 영해의 수직 상공으로, 대기권 밖 우주 공간까지 무제한 포함된다.'
+                ],
+                options: ['ㄱ, ㄴ', 'ㄱ, ㄷ', 'ㄴ, ㄷ', 'ㄴ, ㄹ', 'ㄱ, ㄷ, ㄹ'],
+                answer: 0,
+                explanation: '우리나라는 동경 135° 표준시를 사용하여 UTC+9(영국보다 9시간 빠름)입니다(ㄱ 정답). 영해는 원칙적으로 12해리이나 대한 해협은 3해리입니다(ㄴ 정답). 독도는 가장 동쪽에 있어 해가 가장 먼저 뜨며, 영공은 대기권 내의 하늘까지만 해당합니다.'
+            },
+            {
+                id: 14,
+                category: 'geography',
+                categoryName: '지리 · 한국지리',
+                unit: '중2 사회 ② 인구 변화와 인구 문제',
+                points: 3,
+                question: '다음은 우리나라의 연령층별 인구 비율 변화 표이다. 이를 분석한 내용으로 옳은 것은?',
+                passage: `<table class="data-table">
+                    <thead>
+                        <tr><th>구분</th><th>0~14세 (유소년층)</th><th>15~64세 (청장년층)</th><th>65세 이상 (노년층)</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="font-bold">1990년</td><td>25.6%</td><td>69.3%</td><td>5.1%</td></tr>
+                        <tr><td class="font-bold">2025년</td><td>10.6%</td><td>69.1%</td><td>20.3%</td></tr>
+                    </tbody>
+                </table>`,
+                options: [
+                    '1990년에 비해 2025년의 유소년 부양비는 증가하였다.',
+                    '1990년에 비해 2025년의 총부양비는 감소하였다.',
+                    '2025년 우리나라는 65세 이상 인구 비율이 20%를 넘어 초고령 사회에 진입하였다.',
+                    '노령화 지수(유소년 인구 대비 노년 인구 비율)는 1990년이 2025년보다 높다.',
+                    '2025년에는 생산 가능 인구가 늘어나 노동력 부족 문제가 완전히 해소되었다.'
+                ],
+                answer: 2,
+                explanation: 'UN 기준 65세 이상 인구 비율이 7% 이상이면 고령화 사회, 14% 이상이면 고령 사회, 20% 이상이면 초고령 사회입니다. 2025년 20.3%로 초고령 사회에 진입했습니다(③ 정답). 유소년 부양비는 급감했고 노령화 지수는 1990년(약 19.9)에서 2025년(약 191.5)으로 폭등했습니다.'
+            },
+            {
+                id: 15,
+                category: 'geography',
+                categoryName: '지리 · 한국지리',
+                unit: '중1 사회 ① 매력적인 자연 경관',
+                points: 2,
+                question: '다음 답사 보고서에 나타난 지역 A, B의 지형에 대한 설명으로 옳은 것은?',
+                passage: `• <b>A 지역(강원도 삼척·영월 일대)</b>: 고생대 바다에서 퇴적된 석회암이 지하수의 용식 작용을 받아 형성된 동굴과 돌리네가 발달해 있다.<br>
+                • <b>B 지역(강원도 강릉 경포호 일대)</b>: 후빙기 해수면 상승으로 만의 입구가 사주(모래톱)에 의해 막히면서 형성된 자연 호수가 나타난다.`,
+                options: [
+                    'A 지역에는 용암이 식어 만들어진 현무암 주상 절리가 넓게 분포한다.',
+                    'A 지역의 붉은색 간대 토양(테라로사)은 밭농사에 주로 이용된다.',
+                    'B 지역의 호수는 시간이 지날수록 퇴적물이 쌓여 면적이 점점 넓어진다.',
+                    'B 지역과 같은 지형은 조수 간만의 차가 큰 서해안에서 주로 발달한다.',
+                    'A와 B 모두 화산 활동에 의해 형성된 화산 지형에 속한다.'
+                ],
+                answer: 1,
+                explanation: 'A는 카르스트 지형, B는 동해안의 석호입니다. 석회암이 풍화되어 형성된 붉은색 토양(테라로사)은 배수가 잘되어 밭농사(고랭지 농업 등)에 이용됩니다(② 정답). 석호는 유입 하천의 퇴적물로 인해 면적이 점점 축소됩니다.'
+            },
+            {
+                id: 16,
+                category: 'geography',
+                categoryName: '지리 · 세계지리',
+                unit: '중1 사회 ① 지형과 인간 생활',
+                points: 2,
+                question: '지도의 A~D 산맥 중 신기 습곡 산맥에 해당하여 지각 변동이 활발하고, 해발 고도가 높고 험준한 산맥만을 <보기>에서 고른 것은?',
+                passage: `<div class="text-emerald-300 font-bold text-xs mb-1">[세계 주요 산맥 위치]</div>
+                • <b>A</b>: 북아메리카 동부의 완만하고 오래된 산맥 (애팔래치아 산맥)<br>
+                • <b>B</b>: 남아메리카 서부 태평양 연안을 따라 남북으로 뻗은 산맥 (안데스 산맥)<br>
+                • <b>C</b>: 유럽과 아시아의 경계를 이루는 낮은 산맥 (우랄 산맥)<br>
+                • <b>D</b>: 유라시아 판과 인도-오스트레일리아 판의 충돌로 형성된 세계 최고봉 산맥 (히말라야 산맥)`,
+                options: ['A, B', 'A, C', 'B, C', 'B, D', 'C, D'],
+                answer: 3,
+                explanation: '신생대 조산 운동으로 형성된 신기 습곡 산맥은 알프스-히말라야 조산대와 환태평양 조산대에 분포하며, 안데스 산맥(B)과 히말라야 산맥(D)이 대표적입니다. 애팔래치아(A)와 우랄(C)은 고기 습곡 산맥입니다.'
+            },
+            {
+                id: 17,
+                category: 'geography',
+                categoryName: '지리 · 세계지리',
+                unit: '중1 사회 ② 문화의 다양성과 세계화',
+                points: 2,
+                question: '다음 글에서 설명하는 종교 (가), (나)에 대한 설명으로 옳은 것은?',
+                passage: `• <b>(가)</b>: 유일신 알라를 믿으며, 하루 다섯 번 성지인 메카를 향해 예배를 드리고 라마단 기간에 금식을 행한다. 돼지고기와 술을 금기시한다.<br>
+                • <b>(나)</b>: 윤회 사상과 카스트 제도와 밀접하게 관련되어 있으며, 소를 신성시하여 쇠고기를 먹지 않고 갠지스강에서 목욕 의식을 행한다.`,
+                options: [
+                    '(가)는 세계에서 신자 수가 가장 많은 보편 종교이다.',
+                    '(가)의 대표적인 종교 경관으로는 돔형 지붕과 첨탑(미나레트)을 갖춘 모스크가 있다.',
+                    '(나)는 발생지인 인도보다 동아시아 지역에서 신자 비율이 훨씬 높다.',
+                    '(나)의 대표적인 종교 경관으로는 십자가가 세워진 성당과 교회가 있다.',
+                    '(가)와 (나) 모두 서남아시아 지역에서 기원한 유일신교이다.'
+                ],
+                answer: 1,
+                explanation: '(가)는 이슬람교, (나)는 힌두교입니다. 이슬람교의 사원인 모스크는 둥근 돔과 뾰족한 첨탑(미나레트)이 특징입니다(② 정답). 신자 수가 가장 많은 종교는 크리스트교이며, 힌두교는 인도를 중심으로 분포하는 다신교(민족 종교)입니다.'
+            },
+            {
+                id: 18,
+                category: 'geography',
+                categoryName: '지리 · 한국지리',
+                unit: '중2 사회 ① 우리나라의 기후 특징',
+                points: 2,
+                question: '우리나라의 계절별 기상 현상과 기단에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?',
+                bogi: [
+                    'ㄱ. 겨울철에는 시베리아 기단의 영향으로 서고동저형 기압 배치가 나타나며 북서 계절풍이 분다.',
+                    'ㄴ. 초여름에는 오호츠크해 기단과 북태평양 기단이 만나 정체 전선(장마 전선)을 형성한다.',
+                    'ㄷ. 늦봄에서 초여름 사이 영동 지방에서 태백산맥을 넘어 영서 지방으로 부는 고온 건조한 바람을 높새바람이라 한다.',
+                    'ㄹ. 열대야 현상은 주로 양쯔강 기단의 영향을 받는 봄철에 빈번하게 발생한다.'
+                ],
+                options: ['ㄱ, ㄴ', 'ㄱ, ㄷ', 'ㄴ, ㄷ', 'ㄴ, ㄹ', 'ㄱ, ㄴ, ㄷ'],
+                answer: 4,
+                explanation: 'ㄱ, ㄴ, ㄷ 모두 우리나라 기후의 핵심 특징으로 옳은 설명입니다. 열대야 현상은 한여름(7~8월) 고온 다습한 북태평양 기단의 확장 시기에 나타납니다(ㄹ 오답).'
+            },
+            {
+                id: 19,
+                category: 'geography',
+                categoryName: '지리 · 한국지리',
+                unit: '중2 사회 ② 자원의 분포와 산업',
+                points: 2,
+                question: '다음 설명에 해당하는 에너지 자원은 무엇인가?',
+                passage: `• 냉동 액화 기술의 발달로 수송이 편리해지면서 소비량이 급증하였다.<br>
+                • 연소 시 대기 오염 물질 배출량이 석탄·석유에 비해 적어 청정 에너지로 각광받는다.<br>
+                • 우리나라에서는 주로 가정용·상업용 도시가스 및 발전용으로 널리 이용된다.`,
+                options: ['석탄', '천연가스(LNG)', '원자력', '조력', '지열'],
+                answer: 1,
+                explanation: '액화 천연가스(LNG)는 냉동 액화선과 파이프라인을 통해 수송되며, 화석 연료 중 탄소 및 미세먼지 배출이 적어 가정용 도시가스와 발전에 널리 쓰입니다(② 정답).'
+            },
+            {
+                id: 20,
+                category: 'geography',
+                categoryName: '지리 · 세계지리',
+                unit: '중1 사회 ① 열대 기후와 주민 생활',
+                points: 2,
+                question: '열대 사바나 기후(Aw) 지역에 대한 설명으로 가장 적절한 것은?',
+                options: [
+                    '1년 내내 대류성 강수(스콜)가 내려 건기와 우기의 구분이 없다.',
+                    '키가 큰 풀과 드문드문 나무가 자라는 초원 지대가 형성되어 야생 동물의 낙원을 이룬다.',
+                    '나무의 수액으로 천연고무를 채취하는 전통 생활 양식이 주를 이룬다.',
+                    '연중 강수량이 250mm 미만으로 오아시스 농업이 발달하였다.',
+                    '침엽수림(타이가)이 넓게 분포하여 임업과 펄프 공업이 발달하였다.'
+                ],
+                answer: 1,
+                explanation: '열대 사바나 기후(Aw)는 적도 수렴대의 이동으로 우기와 건기가 뚜렷하게 나타나며, 키 큰 초원(사바나)이 펼쳐져 세렝게티 국립공원 등 야생 동물 서식지와 사파리 관광이 발달했습니다(② 정답).'
+            },
+            {
+                id: 21,
+                category: 'geography',
+                categoryName: '지리 · 한국지리',
+                unit: '중2 사회 ② 도시 발달과 지역 격차',
+                points: 2,
+                question: '수도권 과밀화 현상을 완화하고 국토의 균형 발전을 도모하기 위해 정부가 추진한 정책으로 적절하지 <u>않은</u> 것은?',
+                options: [
+                    '수도권에 집중된 공공 기관을 지방의 혁신 도시로 이전하였다.',
+                    '행정 중심 복합 도시(세종특별자치시)를 건설하여 중앙 행정 부처를 이전하였다.',
+                    '서울 도심의 개발 제한 구역(그린벨트)을 전면 해제하여 대규모 공업 단지를 조성하였다.',
+                    '교통망 확충과 지방 거점 대학 육성을 통해 비수도권의 정주 여건을 개선하였다.',
+                    '수도권 내 대기업 공장 신설 및 증설을 규제하는 정책을 시행하였다.'
+                ],
+                answer: 2,
+                explanation: '개발 제한 구역(그린벨트)을 전면 해제하여 수도권에 대규모 공업 단지를 조성하면 오히려 인구와 산업이 수도권으로 더욱 집중되어 지역 격차가 심화됩니다(③ 오답).'
+            },
+            {
+                id: 22,
+                category: 'geography',
+                categoryName: '지리 · 세계지리',
+                unit: '중1 사회 ② 지구적 규모의 환경 문제',
+                points: 2,
+                question: '다음 환경 문제에 대응하기 위해 체결된 국제 협약으로 옳은 것은?',
+                passage: `프레온가스(염화플루오린화탄소) 등의 사용 증가로 성층권의 오존층이 파괴되면서 지표면에 도달하는 자외선 양이 증가하여 피부암과 백내장 발생률이 높아지고 생태계가 위협받고 있다.`,
+                options: ['몬트리올 의정서', '교토 의정서', '파리 협정', '람사르 협약', '바젤 협약'],
+                answer: 0,
+                explanation: '오존층 파괴 물질의 생산과 사용을 규제하기 위해 1987년 체결된 국제 협약은 몬트리올 의정서입니다(① 정답). 교토 의정서·파리 협정은 지구 온난화(기후 변화), 람사르 협약은 습지 보호, 바젤 협약은 유해 폐기물 국가 간 이동 규제 협약입니다.'
+            },
+
+            // ==================== [역사: 한국사·세계사] (11문항) ====================
+            {
+                id: 23,
+                category: 'history',
+                categoryName: '역사 · 한국사',
+                unit: '중3 역사 ① 삼국의 성립과 발전',
+                points: 3,
+                question: '다음 비석에 기록된 왕의 재위 기간에 있었던 사실로 옳은 것은?',
+                passage: `<div class="text-amber-300 font-bold text-xs mb-1">[사료 탐구]</div>
+                "영락 6년 병신년에 왕이 직접 수군을 이끌고 백잔국(백제)을 토벌하였다. ... 영락 10년 경자년에 보병과 기병 5만을 보내 신라를 구원하게 하니, 남거성을 거쳐 신라성에 이르렀는데 그곳에 왜군이 가득 차 있었다. 관군이 이르자 왜적이 퇴각하였다."`,
+                options: [
+                    '평양으로 도읍을 옮기고 남진 정책을 본격화하였다.',
+                    '불교를 공인하고 율령을 반포하여 국가 체제를 정비하였다.',
+                    '한강 유역을 장악하고 단양 신라 적성비를 건립하였다.',
+                    '신라에 침입한 왜구를 격퇴하여 신라에 영향력을 행사하였다.',
+                    '수나라의 100만 대군을 살수에서 크게 물리쳤다.'
+                ],
+                answer: 3,
+                explanation: '제시된 사료는 "영락"이라는 연호를 사용한 고구려 광개토 대왕의 업적을 기록한 광개토 대왕릉비입니다. 광개토 대왕은 신라 내물왕의 요청을 받아 왜군을 격퇴하고 금관가야까지 타격을 주어 신라에 강한 영향력을 행사했습니다(④ 정답). ①은 장수왕, ②는 소수림왕, ③은 신라 진흥왕, ⑤는 을지문덕(영양왕)입니다.'
+            },
+            {
+                id: 24,
+                category: 'history',
+                categoryName: '역사 · 한국사',
+                unit: '중3 역사 ① 고려의 성립과 변천',
+                points: 3,
+                question: '다음 개혁을 추진한 고려 국왕의 재위 시기에 볼 수 있는 모습으로 가장 적절한 것은?',
+                passage: `<div class="text-amber-300 font-bold text-xs mb-1">[사료 읽기]</div>
+                • 쌍기의 건의를 받아들여 처음으로 과거제를 시행하고 시·부·송 등 유교 경전과 문예로 인재를 선발하였다.<br>
+                • 노비안검법을 실시하여 본래 양인이었으나 불법으로 노비가 된 자들을 조사해 양인으로 해방시켰다.`,
+                options: [
+                    '정동행성 이문소를 폐지하고 쌍성총관부를 공격하는 군사',
+                    '황제 칭호와 "광덕", "준풍" 등의 독자적 연호를 사용하는 관리',
+                    '전시과 제도를 처음 마련하여 관리들에게 토지를 지급하는 귀족',
+                    '최충헌이 설치한 교정도감에서 국정을 총괄하는 무신',
+                    '12목에 지방관을 파견할 것을 건의하는 최승로'
+                ],
+                answer: 1,
+                explanation: '과거제 실시와 노비안검법을 통해 호족 세력을 약화하고 왕권을 강화한 왕은 고려 제4대 광종입니다. 광종은 스스로 황제를 칭하고 "광덕", "준풍"이라는 독자적 연호를 사용했습니다(② 정답). ①은 공민왕, ③은 경종, ④는 무신 집권기, ⑤는 성종 때의 모습입니다.'
+            },
+            {
+                id: 25,
+                category: 'history',
+                categoryName: '역사 · 한국사',
+                unit: '중3 역사 ② 조선의 성립과 발전',
+                points: 2,
+                question: '밑줄 친 "이 왕"의 업적으로 옳은 것만을 <보기>에서 고른 것은?',
+                passage: `<span class="underline">이 왕</span>은 집현전을 설치하여 학문을 장려하고, 농민들의 실제 농사 경험을 모은 『농사직설』을 편찬하게 하였다. 또한 4군과 6진을 개척하여 압록강과 두만강을 경계로 하는 오늘날의 국경선을 확정하였다.`,
+                bogi: [
+                    'ㄱ. 훈민정음을 창제하여 반포하였다.',
+                    'ㄴ. 조선의 기본 법전인 『경국대전』을 최종 완성하였다.',
+                    'ㄷ. 장영실 등을 등용하여 측우기, 앙부일구 등 과학 기구를 제작하였다.',
+                    'ㄹ. 균역법을 시행하여 농민의 군포 부담을 1년에 1필로 줄여 주었다.'
+                ],
+                options: ['ㄱ, ㄴ', 'ㄱ, ㄷ', 'ㄴ, ㄷ', 'ㄴ, ㄹ', 'ㄷ, ㄹ'],
+                answer: 1,
+                explanation: '집현전 설치, 『농사직설』 편찬, 4군 6진 개척의 주인공은 조선 세종입니다. 세종은 훈민정음을 창제(ㄱ)하고 측우기·혼천의·앙부일구 등 과학 기구를 제작(ㄷ)했습니다. 『경국대전』 완성은 성종, 균역법 시행은 영조의 업적입니다.'
+            },
+            {
+                id: 26,
+                category: 'history',
+                categoryName: '역사 · 한국사',
+                unit: '중3 역사 ② 근대 국가 수립 운동',
+                points: 3,
+                question: '다음 (가)~(라) 사건을 일어난 순서대로 바르게 나열한 것은?',
+                passage: `<div class="space-y-1">
+                    <div><b>(가)</b> 전봉준을 중심으로 한 농민군이 황토현 전투에서 관군을 격파하고 전주성을 점령하였다.</div>
+                    <div><b>(나)</b> 흥선 대원군이 통상 수교 거부 의지를 널리 알리기 위해 전국 각지에 척화비를 세웠다.</div>
+                    <div><b>(다)</b> 서재필 등이 독립문을 건립하고 만민 공동회를 열어 자주 국권과 민권 운동을 전개하였다.</div>
+                    <div><b>(라)</b> 일본의 강요로 불평등 조약인 강화도 조약(조·일 수호 조규)이 체결되었다.</div>
+                </div>`,
+                options: [
+                    '(나) - (라) - (가) - (다)',
+                    '(나) - (가) - (라) - (다)',
+                    '(라) - (나) - (가) - (다)',
+                    '(라) - (가) - (나) - (다)',
+                    '(가) - (나) - (라) - (다)'
+                ],
+                answer: 0,
+                explanation: '(나) 척화비 건립(1871년 신미양요 직후) → (라) 강화도 조약 체결(1876년) → (가) 동학 농민 운동(1894년) → (다) 독립 협회 및 만민 공동회 활동(1896~1898년) 순서입니다(① 정답).'
+            },
+            {
+                id: 27,
+                category: 'history',
+                categoryName: '역사 · 한국사',
+                unit: '중3 역사 ② 일제 강점기와 독립운동',
+                points: 3,
+                question: '다음 강령을 발표한 독립운동 단체에 대한 설명으로 옳은 것은?',
+                passage: `<div class="text-amber-300 font-bold text-xs mb-1">[사료: 조선 혁명 선언(1923)]</div>
+                "강도 일본이 우리의 국호를 없이하며, 우리의 정권을 빼앗으며, 우리의 생존적 필요 조건을 다 박탈하였다. ... 민중은 우리 혁명의 대본영이다. 폭력은 우리 혁명의 유일 무기이다. 우리는 민중 속으로 가서 민중과 손을 맞잡아 끊임없는 폭력—암살, 파괴, 폭동으로써 강도 일본의 통치를 타도하자."`,
+                options: [
+                    '신채호가 작성한 선언문을 활동 지침으로 삼았다.',
+                    '봉오동 전투와 청산리 대첩에서 일본군에 큰 승리를 거두었다.',
+                    '대한민국 임시 정부의 직할 부대로 창설되어 국내 진공 작전을 준비하였다.',
+                    '이봉창과 윤봉길의 의거를 주도하여 침체된 임시 정부에 활력을 불어넣었다.',
+                    '신간회를 결성하여 비타협적 민족주의 세력과 사회주의 세력을 통합하였다.'
+                ],
+                answer: 0,
+                explanation: '1919년 만주 길림에서 김원봉 등이 조직한 의열단은 단재 신채호가 집필한 「조선 혁명 선언」을 활동 지침으로 삼아 식민 통치 기관 파괴와 일제 요인 암살 의거를 전개했습니다(① 정답). ②는 홍범도·김좌진 부대, ③은 한국광복군, ④는 한인 애국단(김구)입니다.'
+            },
+            {
+                id: 28,
+                category: 'history',
+                categoryName: '역사 · 한국사',
+                unit: '중3 역사 ② 대한민국의 발전',
+                points: 3,
+                question: '다음 민주화 운동 (가), (나) 사이에 있었던 역사적 사실로 옳은 것은?',
+                passage: `• <b>(가)</b> 1960년 3·15 부정 선거에 항거하여 마산과 서울 등 전국에서 학생과 시민들이 시위를 벌였고, 결국 이승만 대통령이 하야하였다.<br>
+                • <b>(나)</b> 1987년 박종철 고문 치사 사건과 4·13 호헌 조치에 분노한 시민들이 "호헌 철폐, 독재 타도"를 외치며 거리로 나와 대통령 직선제 개헌을 이끌어냈다.`,
+                options: [
+                    '제헌 국회가 구성되어 대한민국 정부가 수립되었다.',
+                    '신군부 세력의 비상계엄 확대에 맞서 광주에서 5·18 민주화 운동이 일어났다.',
+                    '여소야대 정국 속에서 최초의 평화적 여야 정권 교체가 이루어졌다.',
+                    '남북 정상이 평양에서 만나 6·15 남북 공동 선언을 발표하였다.',
+                    '반민족 행위 특별 조사 위원회(반민특위)가 설치되어 친일파 청산에 나섰다.'
+                ],
+                answer: 1,
+                explanation: '(가)는 4·19 혁명(1960년), (나)는 6월 민주 항쟁(1987년)입니다. 두 사건 사이인 1980년 5월에 전두환 등 신군부의 계엄령 확대와 폭력 진압에 맞선 5·18 민주화 운동이 일어났습니다(② 정답). ①, ⑤는 1948년, ③은 1997년, ④는 2000년의 사실입니다.'
+            },
+            {
+                id: 29,
+                category: 'history',
+                categoryName: '역사 · 세계사',
+                unit: '중2 역사 ① 고대 문명과 제국',
+                points: 2,
+                question: '다음 정책을 실시한 중국 황제에 대한 설명으로 옳은 것은?',
+                passage: `• 전국을 36군으로 나누고 중앙에서 관리를 파견하는 군현제를 실시하였다.<br>
+                • 나라마다 달랐던 화폐(반량전으로 통일), 도량형, 문자(전서체), 수레바퀴의 폭을 통일하였다.<br>
+                • 유학자들을 탄압하고 실용 서적 외의 책을 불태우는 분서갱유를 단행하였다.`,
+                options: [
+                    '유교를 통치 이념으로 삼아 태학을 설립하였다.',
+                    '흉노의 침입을 막기 위해 기존의 장성을 연결하여 만리장성을 축조하였다.',
+                    '장건을 서역에 파견하여 비단길을 개척하였다.',
+                    '균전제와 조용조, 부병제를 정비하여 율령 체제를 완성하였다.',
+                    '과거제를 처음 실시하여 문벌 귀족 세력을 약화시켰다.'
+                ],
+                answer: 1,
+                explanation: '전국 시대를 통일하고 법가 사상을 바탕으로 강력한 중앙 집권 정책(군현제, 문자·화폐 통일, 분서갱유)을 펼친 황제는 진시황제입니다. 진시황은 북방 유목 민족인 흉노를 막기 위해 만리장성을 축조했습니다(② 정답). ①, ③은 한 무제, ④는 당나라, ⑤는 수나라 문제입니다.'
+            },
+            {
+                id: 30,
+                category: 'history',
+                categoryName: '역사 · 세계사',
+                unit: '중2 역사 ② 서양 근대 사회의 발전',
+                points: 3,
+                question: '다음 문서가 발표된 시민 혁명에 대한 설명으로 옳은 것만을 <보기>에서 고른 것은?',
+                passage: `<div class="text-amber-300 font-bold text-xs mb-1">[사료: 인간과 시민의 권리 선언(1789)]</div>
+                제1조 인간은 태어나면서부터 자유롭고 평등한 권리를 가진다.<br>
+                제2조 모든 정치적 결사의 목적은 인간의 자연적이고 소멸할 수 없는 권리를 보전하는 데 있다. 그 권리는 자유, 재산, 안전 및 압제에 대한 저항이다.<br>
+                제3조 모든 주권의 원리는 본질적으로 국민에게 있다.`,
+                bogi: [
+                    'ㄱ. 구제도(앙시앵 레짐)의 모순과 제3신분의 불만이 폭발하여 일어났다.',
+                    'ㄴ. 파리 시민들의 바스티유 감옥 습격이 혁명의 도화선이 되었다.',
+                    'ㄷ. 의회가 왕에게 권리 청원을 제출하고 왕이 승인하면서 발생하였다.',
+                    'ㄹ. 세금 없는 곳에 대표 없다는 구호 아래 보스턴 차 사건이 계기가 되었다.'
+                ],
+                options: ['ㄱ, ㄴ', 'ㄱ, ㄷ', 'ㄴ, ㄷ', 'ㄴ, ㄹ', 'ㄷ, ㄹ'],
+                answer: 0,
+                explanation: '1789년 발표된 「인간과 시민의 권리 선언」은 프랑스 혁명의 대표적 사료입니다. 프랑스 혁명은 구제도의 신분적 불평등에 저항해 일어났으며 바스티유 감옥 습격으로 본격화되었습니다(ㄱ, ㄴ 정답). ㄷ은 영국 청교도 혁명, ㄹ은 미국 독립 혁명에 대한 설명입니다.'
+            },
+            {
+                id: 31,
+                category: 'history',
+                categoryName: '역사 · 세계사',
+                unit: '중2 역사 ② 르네상스와 종교 개혁',
+                points: 2,
+                question: '16세기 초 독일에서 면벌부 판매를 비판하며 「95개조 반박문」을 발표하여 종교 개혁의 불을 지핀 인물은?',
+                options: ['마르틴 루터', '장 칼뱅', '에라스뮈스', '코페르니쿠스', '마키아벨리'],
+                answer: 0,
+                explanation: '1517년 독일의 신학자 마르틴 루터는 교황 레오 10세의 면벌부(면죄부) 판매를 비판하며 「95개조 반박문」을 발표하고, 오직 믿음과 성서를 통한 구원을 강조하며 종교 개혁을 시작했습니다(① 정답).'
+            },
+            {
+                id: 32,
+                category: 'history',
+                categoryName: '역사 · 한국사',
+                unit: '중3 역사 ② 조선 후기 사회 변동',
+                points: 2,
+                question: '조선 후기 영조와 정조 시기의 탕평 정치와 개혁에 대한 설명으로 옳지 <u>않은</u> 것은?',
+                options: [
+                    '영조는 탕평비를 건립하고 붕당의 근거지인 서원을 대폭 정리하였다.',
+                    '영조는 청계천을 준설하고 가혹한 형벌 제도를 개선하였다.',
+                    '정조는 국왕의 친위 부대인 장용영을 설치하여 왕권을 뒷받침하였다.',
+                    '정조는 수원 화성을 건설하고 자유로운 상업 활동을 위해 신해통공을 단행하였다.',
+                    '정조는 세도 가문인 안동 김씨를 등용하여 비변사의 기능을 더욱 강화하였다.'
+                ],
+                answer: 4,
+                explanation: '정조는 규장각 육성과 장용영 설치 등을 통해 왕권을 강화하고 붕당과 외척 세력을 견제했습니다. 안동 김씨 등 외척 가문이 비변사를 장악해 권력을 독점한 "세도 정치"는 정조 사후 순조·헌종·철종 시기에 나타난 현상입니다(⑤ 오답).'
+            },
+            {
+                id: 33,
+                category: 'history',
+                categoryName: '역사 · 세계사',
+                unit: '중3 역사 ② 현대 세계의 전개',
+                points: 2,
+                question: '제2차 세계 대전 이후 미국 중심의 자본주의 진영과 소련 중심의 사회주의 진영이 대립하던 냉전 체제가 완화(데탕트)되는 계기가 된 사건으로 옳은 것은?',
+                options: [
+                    '미국 닉슨 대통령의 중국 방문과 미·중 수교 추진',
+                    '트루먼 독트린 발표와 마셜 계획 시행',
+                    '북대서양 조약 기구(NATO)와 바르샤바 조약 기구 창설',
+                    '쿠바 미사일 위기로 인한 핵전쟁 직전의 긴장 고조',
+                    '베를린 봉쇄와 6·25 전쟁의 발발'
+                ],
+                answer: 0,
+                explanation: '1969년 미국의 닉슨 독트린 발표와 1972년 닉슨 대통령의 전격적인 중국 방문(미·중 화해), 전략 무기 제한 협정(SALT) 체결 등은 냉전 체제가 완화되는 데탕트 시대를 열었습니다(① 정답). 나머지 선지는 모두 냉전 격화기의 사건입니다.'
+            }
+        ];
+
+        // ==========================================
+        // 2. 게임 상태 변수 및 사운드 매니저
+        // ==========================================
+        let gameState = {
+            mode: 'all',
+            questions: [],
+            currentIndex: 0,
+            score: 0,
+            maxPossibleScore: 50,
+            lives: 3,
+            combo: 0,
+            maxCombo: 0,
+            correctCount: 0,
+            wrongNotes: [],
+            isAnswered: false,
+            soundEnabled: true
+        };
+
+        // Tone.js 신디사이저 초기화
+        let synth = null;
+        function initAudio() {
+            if (!synth && typeof Tone !== 'undefined') {
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -8;
+            }
+        }
+
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            try {
+                initAudio();
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                const now = Tone.now();
+                if (type === 'correct') {
+                    synth.triggerAttackRelease(['C5', 'E5', 'G5'], '16n', now);
+                } else if (type === 'wrong') {
+                    synth.triggerAttackRelease(['F3', 'E3'], '8n', now);
+                } else if (type === 'click') {
+                    synth.triggerAttackRelease('A4', '32n', now);
+                } else if (type === 'finish') {
+                    synth.triggerAttackRelease(['C4', 'E4', 'G4', 'C5'], '8n', now);
+                }
+            } catch (e) {
+                console.log('Audio playback skipped:', e);
+            }
+        }
+
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (gameState.soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+                playSound('click');
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+            }
+        }
+
+        // ==========================================
+        // 3. 화면 전환 및 게임 로직
+        // ==========================================
+        function showSection(sectionId) {
+            ['start-screen', 'quiz-screen', 'result-screen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+
+            const homeBtn = document.getElementById('home-btn');
+            if (sectionId === 'quiz-screen') {
+                homeBtn.classList.remove('hidden');
+            } else {
+                homeBtn.classList.add('hidden');
+            }
+        }
+
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function startGame(mode, customQuestions = null) {
+            playSound('click');
+            gameState.mode = mode;
+            gameState.currentIndex = 0;
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.combo = 0;
+            gameState.maxCombo = 0;
+            gameState.correctCount = 0;
+            gameState.wrongNotes = [];
+
+            let selectedQuestions = [];
+            if (mode === 'clinic' && customQuestions) {
+                selectedQuestions = [...customQuestions];
+            } else if (mode === 'all') {
+                // 실제 학평 비율 구성: 일반사회 7(2점 4개, 3점 3개), 지리 6(2점 3개, 3점 3개), 역사 7(2점 3개, 3점 4개) -> 총 20문항, 정확히 50점 만점!
+                const social2 = shuffleArray(QUESTION_BANK.filter(q => q.category === 'social' && q.points === 2)).slice(0, 4);
+                const social3 = shuffleArray(QUESTION_BANK.filter(q => q.category === 'social' && q.points === 3)).slice(0, 3);
+                const geo2 = shuffleArray(QUESTION_BANK.filter(q => q.category === 'geography' && q.points === 2)).slice(0, 3);
+                const geo3 = shuffleArray(QUESTION_BANK.filter(q => q.category === 'geography' && q.points === 3)).slice(0, 3);
+                const hist2 = shuffleArray(QUESTION_BANK.filter(q => q.category === 'history' && q.points === 2)).slice(0, 3);
+                const hist3 = shuffleArray(QUESTION_BANK.filter(q => q.category === 'history' && q.points === 3)).slice(0, 4);
+                selectedQuestions = [...social2, ...social3, ...geo2, ...geo3, ...hist2, ...hist3];
+            } else if (mode === 'killer') {
+                // 고난도 3점 킬러 문항 10개 추출 (총 30점 만점)
+                selectedQuestions = shuffleArray(QUESTION_BANK.filter(q => q.points === 3)).slice(0, 10);
+            } else {
+                // 단원별 집중 기출 10문항 추출
+                selectedQuestions = shuffleArray(QUESTION_BANK.filter(q => q.category === mode)).slice(0, 10);
+            }
+
+            gameState.questions = selectedQuestions;
+            gameState.maxPossibleScore = selectedQuestions.reduce((acc, q) => acc + q.points, 0);
+
+            document.getElementById('total-q-num').textContent = selectedQuestions.length;
+            document.getElementById('max-score-hud').textContent = gameState.maxPossibleScore;
+
+            updateHUD();
+            showSection('quiz-screen');
+            loadQuestion();
+        }
+
+        function startWrongClinic() {
+            if (!gameState.wrongNotes || gameState.wrongNotes.length === 0) return;
+            const wrongQuestionObjects = gameState.wrongNotes.map(item => item.rawQuestion);
+            startGame('clinic', wrongQuestionObjects);
+        }
+
+        function restartCurrentMode() {
+            if (gameState.mode === 'clinic') {
+                startGame('all');
+            } else {
+                startGame(gameState.mode);
+            }
+        }
+
+        function confirmQuit() {
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+
+        function goHome() {
+            showSection('start-screen');
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').textContent = gameState.score;
+
+            // 라이프 하트 렌더링
+            const livesContainer = document.getElementById('lives-container');
+            livesContainer.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const heart = document.createElement('i');
+                if (i < gameState.lives) {
+                    heart.className = 'fa-solid fa-heart text-rose-500 transition-transform scale-100';
+                } else {
+                    heart.className = 'fa-regular fa-heart text-slate-600 scale-90';
+                }
+                livesContainer.appendChild(heart);
+            }
+
+            // 콤보 배지
+            const comboBadge = document.getElementById('combo-badge');
+            if (gameState.combo >= 2) {
+                comboBadge.textContent = `🔥 ${gameState.combo} COMBO`;
+                comboBadge.classList.remove('hidden');
+            } else {
+                comboBadge.classList.add('hidden');
+            }
+        }
+
+        function loadQuestion() {
+            gameState.isAnswered = false;
+
+            const q = gameState.questions[gameState.currentIndex];
+            const qNum = gameState.currentIndex + 1;
+
+            document.getElementById('current-q-num').textContent = qNum;
+            document.getElementById('q-number-prefix').textContent = `${qNum}.`;
+            document.getElementById('category-badge').textContent = gameState.mode === 'clinic' ? `오답 클리닉 · ${q.categoryName}` : q.categoryName;
+            
+            const pointBadge = document.getElementById('point-badge');
+            pointBadge.textContent = `[${q.points}점]`;
+            if (q.points === 3) {
+                pointBadge.className = 'px-2 py-0.5 rounded text-xs font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/40';
+            } else {
+                pointBadge.className = 'px-2 py-0.5 rounded text-xs font-extrabold bg-slate-700 text-slate-300 border border-slate-600';
+            }
+
+            document.getElementById('question-text').innerHTML = q.question;
+
+            // 제시문/사료/도표 처리
+            const passageBox = document.getElementById('passage-box');
+            if (q.passage) {
+                passageBox.innerHTML = q.passage;
+                passageBox.classList.remove('hidden');
+            } else {
+                passageBox.classList.add('hidden');
+            }
+
+            // <보 기> 처리
+            const bogiBox = document.getElementById('bogi-box');
+            const bogiContent = document.getElementById('bogi-content');
+            if (q.bogi && q.bogi.length > 0) {
+                bogiContent.innerHTML = q.bogi.map(item => `<div>${item}</div>`).join('');
+                bogiBox.classList.remove('hidden');
+            } else {
+                bogiBox.classList.add('hidden');
+            }
+
+            // 피드백 배너 숨기기
+            const feedbackBanner = document.getElementById('feedback-banner');
+            feedbackBanner.classList.add('hidden');
+
+            // 5지선다 선택지 버튼 렌더링
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            optionsContainer.className = 'grid grid-cols-1 gap-2.5';
+
+            const markers = ['①', '②', '③', '④', '⑤'];
+            q.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full text-left p-3.5 sm:p-4 rounded-2xl bg-slate-800/80 border-2 border-slate-700 text-slate-100 font-medium flex items-center justify-between gap-3 text-xs sm:text-sm leading-relaxed';
+                btn.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="text-indigo-400 font-bold text-base shrink-0 leading-snug">${markers[idx]}</span>
+                        <span>${optText}</span>
+                    </div>
+                    <span class="status-badge hidden shrink-0 px-2.5 py-0.5 rounded-full text-xs font-black"></span>
+                `;
+                btn.onclick = () => handleAnswer(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIndex, btnElement) {
+            if (gameState.isAnswered) return;
+            gameState.isAnswered = true;
+
+            const q = gameState.questions[gameState.currentIndex];
+            const markers = ['①', '②', '③', '④', '⑤'];
+            const isCorrect = (selectedIndex === q.answer);
+            const allButtons = document.querySelectorAll('#options-container button');
+            allButtons.forEach(b => b.disabled = true);
+
+            if (isCorrect) {
+                playSound('correct');
+                gameState.correctCount++;
+                gameState.combo++;
+                if (gameState.combo > gameState.maxCombo) {
+                    gameState.maxCombo = gameState.combo;
+                }
+
+                // 실제 배점(2점 또는 3점) 합산
+                gameState.score += q.points;
+
+                btnElement.classList.remove('border-slate-700', 'bg-slate-800/80');
+                btnElement.classList.add('border-emerald-400', 'bg-emerald-500/20', 'text-emerald-200');
+                const badge = btnElement.querySelector('.status-badge');
+                if (badge) {
+                    badge.textContent = '✓ 정답';
+                    badge.className = 'status-badge shrink-0 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/30 text-emerald-200 border border-emerald-400/50';
+                }
+
+                updateHUD();
+                showFeedback(true, `정답입니다! (+${q.points}점 획득)`, q.unit, q.explanation);
+            } else {
+                playSound('wrong');
+                gameState.lives--;
+                gameState.combo = 0;
+
+                // 선택한 오답 선지 강조 + '✕ 오답' 배지
+                btnElement.classList.remove('border-slate-700', 'bg-slate-800/80');
+                btnElement.classList.add('border-rose-500', 'bg-rose-500/20', 'text-rose-200', 'animate-shake');
+                const wrongBadge = btnElement.querySelector('.status-badge');
+                if (wrongBadge) {
+                    wrongBadge.textContent = '✕ 오답';
+                    wrongBadge.className = 'status-badge shrink-0 px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-500/30 text-rose-200 border border-rose-400/50';
+                }
+
+                // 실제 정답 선지 강조 + '✓ 정답' 배지
+                highlightCorrectButton(q.answer);
+
+                gameState.wrongNotes.push({
+                    qNum: gameState.currentIndex + 1,
+                    rawQuestion: q,
+                    question: q.question,
+                    passage: q.passage || '',
+                    bogi: q.bogi || [],
+                    userChoice: `${markers[selectedIndex]} ${q.options[selectedIndex]}`,
+                    correctChoice: `${markers[q.answer]} ${q.options[q.answer]}`,
+                    explanation: q.explanation,
+                    categoryName: `${q.categoryName} [${q.points}점]`,
+                    unit: q.unit
+                });
+
+                updateHUD();
+                showFeedback(false, `오답입니다! (정답: ${markers[q.answer]})`, q.unit, q.explanation);
+            }
+        }
+
+        function highlightCorrectButton(correctIndex) {
+            const allButtons = document.querySelectorAll('#options-container button');
+            allButtons.forEach((b, idx) => {
+                b.disabled = true;
+                if (idx === correctIndex) {
+                    b.classList.remove('border-slate-700', 'bg-slate-800/80');
+                    b.classList.add('border-emerald-400', 'bg-emerald-500/20', 'text-emerald-200');
+                    const badge = b.querySelector('.status-badge');
+                    if (badge) {
+                        badge.textContent = '✓ 정답';
+                        badge.className = 'status-badge shrink-0 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/30 text-emerald-200 border border-emerald-400/50';
+                    }
+                }
+            });
+        }
+
+        function showFeedback(isCorrect, titleText, unitText, explanationText) {
+            const banner = document.getElementById('feedback-banner');
+            const title = document.getElementById('feedback-title');
+            const unitEl = document.getElementById('feedback-unit');
+            const exp = document.getElementById('feedback-explanation');
+
+            banner.classList.remove('hidden', 'bg-emerald-950/80', 'border-emerald-500/50', 'text-emerald-200', 'bg-rose-950/80', 'border-rose-500/50', 'text-rose-200');
+
+            if (isCorrect) {
+                banner.classList.add('bg-emerald-950/80', 'border-emerald-500/50', 'text-emerald-200');
+                title.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> ${titleText}`;
+                unitEl.textContent = `📌 출제 단원 및 핵심 개념: ${unitText}`;
+            } else {
+                banner.classList.add('bg-rose-950/80', 'border-rose-500/50', 'text-rose-200');
+                title.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-400"></i> ${titleText}`;
+                unitEl.textContent = `🔍 [오답 분석 및 핵심 개념 해설] · ${unitText}`;
+            }
+
+            exp.textContent = explanationText;
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            if (gameState.lives <= 0 || gameState.currentIndex + 1 >= gameState.questions.length) {
+                endGame();
+            } else {
+                gameState.currentIndex++;
+                loadQuestion();
+            }
+        }
+
+        // ==========================================
+        // 4. 결과 및 성적표 산출
+        // ==========================================
+        function endGame() {
+            playSound('finish');
+            showSection('result-screen');
+
+            const modeTitles = {
+                'all': '3월 학평 실전 모의고사',
+                'killer': '고난도 3점 킬러 특집',
+                'social': '일반사회 집중 기출',
+                'geography': '지리 자료분석 기출',
+                'history': '역사 사료 & 연표 기출',
+                'clinic': '오답 클리닉 집중 복습'
+            };
+
+            const totalQuestions = gameState.questions.length;
+            const scoreRatio = gameState.maxPossibleScore > 0 ? Math.round((gameState.score / gameState.maxPossibleScore) * 100) : 0;
+
+            // 실제 탐구 영역 등급 컷 비율 반영
+            let grade = 9;
+            let comment = '';
+            if (scoreRatio >= 90 && gameState.lives > 0) {
+                grade = 1;
+                comment = '압도적인 실력입니다! 실제 3월 전국연합학력평가에서도 안정적인 1등급(상위 4% 이내)이 예상됩니다. 사료와 도표를 해석하는 눈이 매우 뛰어납니다!';
+            } else if (scoreRatio >= 80) {
+                grade = 2;
+                comment = '매우 우수한 성적입니다! 개념 이해도가 높으나 3점 배점의 함정 선지에서 아깝게 감점되었습니다. 아래 오답 노트와 오답 클리닉으로 복습하면 확실한 1등급에 도달할 수 있습니다.';
+            } else if (scoreRatio >= 68) {
+                grade = 3;
+                comment = '준수한 성적입니다! 기본 개념 문항은 잘 해결했으나 복합 자료 해석에서 실수가 있었습니다. 틀린 문제만 다시 풀기 기능으로 약점을 완벽히 보완해 보세요.';
+            } else if (scoreRatio >= 55) {
+                grade = 4;
+                comment = '조금만 더 보완하면 상위권 도약이 가능합니다! <보기> ㄱ, ㄴ, ㄷ, ㄹ 선지 중 확실히 틀린 것을 소거하는 연습을 병행해 보세요.';
+            } else if (scoreRatio >= 40) {
+                grade = 5;
+                comment = '중학교 사회·역사의 주요 개념과 용어를 다시 정리할 시기입니다. 아래 오답 노트의 제시문과 해설을 차근차근 정독한 뒤 오답 클리닉에 재도전해 보세요.';
+            } else {
+                grade = 6;
+                comment = '라이프가 일찍 소진되었거나 사료 해석이 낯설었을 수 있습니다. 포기하지 말고 단원별 집중 기출 모드부터 차근차근 개념을 다져봅시다!';
+            }
+
+            document.getElementById('report-mode-name').textContent = modeTitles[gameState.mode] || '실전 모의고사';
+            document.getElementById('report-max-score').textContent = gameState.maxPossibleScore;
+            document.getElementById('report-score').textContent = `${gameState.score} / ${gameState.maxPossibleScore}점`;
+            document.getElementById('report-accuracy').textContent = `${gameState.correctCount} / ${totalQuestions}문항`;
+            document.getElementById('report-max-combo').textContent = `${gameState.maxCombo}연속`;
+            
+            const gradeEl = document.getElementById('report-grade');
+            gradeEl.textContent = `${grade}등급`;
+            gradeEl.className = `py-4 px-2 text-2xl font-black bg-indigo-50/70 ${grade <= 2 ? 'text-indigo-600' : grade <= 4 ? 'text-emerald-600' : 'text-rose-600'}`;
+            
+            document.getElementById('report-comment').textContent = comment;
+
+            // 오답 클리닉 버튼 표시 여부
+            const retryWrongBtn = document.getElementById('retry-wrong-btn');
+            const retryWrongCount = document.getElementById('retry-wrong-count');
+            if (gameState.wrongNotes.length > 0) {
+                retryWrongCount.textContent = gameState.wrongNotes.length;
+                retryWrongBtn.classList.remove('hidden');
+            } else {
+                retryWrongBtn.classList.add('hidden');
+            }
+
+            renderWrongNotes();
+        }
+
+        function renderWrongNotes() {
+            const listContainer = document.getElementById('wrong-notes-list');
+            const badge = document.getElementById('wrong-count-badge');
+            listContainer.innerHTML = '';
+
+            badge.textContent = `틀린 문항 ${gameState.wrongNotes.length}개`;
+
+            if (gameState.wrongNotes.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-8 bg-slate-800/50 rounded-2xl border border-slate-700">
+                        <div class="text-3xl mb-2">🏆</div>
+                        <div class="text-white font-bold">오답이 단 하나도 없습니다!</div>
+                        <p class="text-slate-400 text-xs mt-1">완벽한 실력으로 3월 모의고사를 맞이할 준비가 되었습니다.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            gameState.wrongNotes.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = 'p-5 rounded-2xl bg-slate-800/90 border border-slate-700 space-y-3';
+
+                const passageHtml = item.passage
+                    ? `<div class="exam-box rounded-xl p-3.5 text-xs sm:text-sm text-slate-200 leading-relaxed space-y-2">${item.passage}</div>`
+                    : '';
+
+                const bogiHtml = (item.bogi && item.bogi.length > 0)
+                    ? `<div class="exam-bogi-box text-xs sm:text-sm text-slate-200 space-y-1">
+                        <div class="exam-bogi-label">보 기</div>
+                        <div class="space-y-1 leading-relaxed">${item.bogi.map(b => `<div>${b}</div>`).join('')}</div>
+                       </div>`
+                    : '';
+
+                card.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded bg-slate-700 text-indigo-300">${item.categoryName} · ${item.unit}</span>
+                        <span class="text-xs text-rose-400 font-bold">${item.qNum}번 문항 오답</span>
+                    </div>
+                    <p class="text-sm sm:text-base font-bold text-white leading-snug">${item.qNum}. ${item.question}</p>
+                    ${passageHtml}
+                    ${bogiHtml}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                        <div class="p-3 rounded-xl bg-rose-950/70 border border-rose-500/40 text-rose-200">
+                            <span class="font-black block text-rose-400 mb-1">✕ 내가 고른 오답</span>
+                            ${item.userChoice}
+                        </div>
+                        <div class="p-3 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-200">
+                            <span class="font-black block text-emerald-400 mb-1">✓ 실제 정답</span>
+                            ${item.correctChoice}
+                        </div>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-slate-900/90 text-xs sm:text-sm text-slate-300 leading-relaxed border border-slate-700/80">
+                        <span class="text-amber-400 font-bold mr-1"><i class="fa-solid fa-lightbulb"></i> 오답 분석 및 상세 해설:</span>
+                        ${item.explanation}
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
