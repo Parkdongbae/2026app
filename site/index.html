@@ -249,6 +249,7 @@
 
 <script src="./config.js"></script>
 <script type="module">
+import { initAdminPanel, isAdmin, loadOverrides, applyOverrides, visibleRejected } from "./admin-panel.js";
 const CFG = window.APP_CONFIG || {};
 const DOMAIN = String(CFG.allowedDomain || "").toLowerCase();
 const PLAY_BASE = String(CFG.playBase || "./");
@@ -575,6 +576,7 @@ async function initFirebase() {
   fb.api.onAuthStateChanged(fb.auth, async (user) => {
     if (user && !String(user.email || "").toLowerCase().endsWith("@" + DOMAIN)) {
       state.likeAfterLogin = null;
+      if (await isAdmin(fb)) return; // 관리자 계정은 F9 관리자 창용으로 로그인 유지 (도움돼요는 학교 계정만)
       await fb.api.signOut(fb.auth);
       toast(`학교 계정(@${DOMAIN})으로만 도움돼요를 누를 수 있어요`);
       return;
@@ -612,6 +614,15 @@ loginBtn.addEventListener("click", () => {
   if (state.user) fb.api.signOut(fb.auth); else login();
 });
 
+function assignIcons() {
+  const seen = {};
+  state.iconOf = new Map();
+  [...state.apps].sort((a, b) => time(a) - time(b) || a.id.localeCompare(b.id)).forEach((g) => {
+    const k = catOf(g);
+    seen[k] = (seen[k] || 0) + 1;
+    state.iconOf.set(g.id, `${k}${((seen[k] - 1) % ICONS_PER_CAT) + 1}`);
+  });
+}
 render();
 const fbReady = initFirebase();
 try {
@@ -619,7 +630,7 @@ try {
   if (!res.ok) throw new Error(String(res.status));
   const data = await res.json();
   window.__dataUpdatedAt = String(data.updatedAt || "");
-  state.apps = (Array.isArray(data.games) ? data.games : [])
+  state.allApps = (Array.isArray(data.games) ? data.games : [])
     .filter((g) => g && typeof g.id === "string" && typeof g.file === "string" && FILE_RE.test(g.file))
     .map((g) => ({
       ...g,
@@ -627,15 +638,12 @@ try {
       desc: String(g.desc || ""), category: String(g.category || "etc"),
     }));
   // 아이콘: 분류마다 3종을 등록 순서대로 돌려 쓴다 (같은 분류 앱끼리 겹치지 않게)
-  const seen = {};
-  [...state.apps].sort((a, b) => time(a) - time(b) || a.id.localeCompare(b.id)).forEach((g) => {
-    const k = catOf(g);
-    seen[k] = (seen[k] || 0) + 1;
-    state.iconOf.set(g.id, `${k}${((seen[k] - 1) % ICONS_PER_CAT) + 1}`);
-  });
-  state.rejected = (Array.isArray(data.rejected) ? data.rejected : [])
+  state.apps = state.allApps;
+  assignIcons();
+  state.allRejected = (Array.isArray(data.rejected) ? data.rejected : [])
     .filter((r) => r && r.who)
-    .map((r) => ({ who: String(r.who), reason: String(r.reason || ""), fix: String(r.fix || "") }));
+    .map((r) => ({ who: String(r.who), reason: String(r.reason || ""), fix: String(r.fix || ""), driveId: String(r.driveId || "") }));
+  state.rejected = state.allRejected;
   renderNotice();
 } catch (e) {
   console.warn("games.json 읽기 실패", e);
@@ -661,6 +669,25 @@ fetch("./api/refresh", { cache: "no-store" })
   .catch(() => {});
 await fbReady;
 loadCounts();
+
+// ---------- F9 관리자 창 ----------
+// 관리자가 고친 값(제목·이름·학번·분류 바꾸기, 내리기)을 바로 화면에 반영 (다음 동기화 때 games.json 에도 반영됨)
+function applyAdmin(o) {
+  state.apps = applyOverrides(state.allApps || [], o, CATS);
+  state.rejected = visibleRejected(state.allRejected || [], o);
+  assignIcons();
+  renderNotice();
+  renderCats();
+  render();
+  loadCounts();
+}
+const ADMIN = { docPath: ["appAdmin", "overrides"], itemName: "웹앱", categories: CATS, playBase: PLAY_BASE, toast };
+if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.hash === "#admin-preview") {
+  initAdminPanel({ ...ADMIN, fb: null, preview: true }); // 로컬 모양 확인용
+} else if (fb) {
+  initAdminPanel({ ...ADMIN, fb, onChange: applyAdmin });
+  loadOverrides(fb, ADMIN.docPath).then((o) => { if (Object.keys(o).length) applyAdmin(o); });
+}
 </script>
 </body>
 </html>
